@@ -154,101 +154,137 @@ window.PBAudio = (() => {
     }
   }
 
-  // Cheerful polka-arcade melody for Polandball action!
-  const MELODY_NORMAL = [
-    523, 659, 784, 659, 880, 784, 659, 587,
-    523, 659, 784, 1047, 880, 784, 659, 0,
-    698, 880, 1047, 880, 784, 659, 587, 523,
-    587, 659, 784, 587, 523, 0, 523, 0
-  ];
-  const BASS_NORMAL = [
-    131, 196, 131, 196, 175, 220, 196, 147,
-    131, 196, 131, 196, 175, 196, 131, 196
-  ];
-  const MELODY_BOSS = [
-    294, 0, 349, 294, 440, 0, 415, 349,
-    294, 349, 440, 523, 466, 440, 349, 330,
-    294, 294, 440, 440, 587, 523, 466, 440,
-    392, 349, 330, 294, 262, 294, 330, 0
-  ];
-  const BASS_BOSS = [
-    110, 110, 131, 110, 147, 147, 131, 110,
-    110, 110, 165, 147, 131, 123, 110, 98
-  ];
+  // Stage & Boss MP3 BGM Tracks (from Google Drive ゲームBGM)
+  const BGM_TRACKS = {
+    meadow: { src: 'bgm/stage1_meadow.mp3', label: 'かけっこ競争' },
+    sky: { src: 'bgm/stage2_sky.mp3', label: 'Moment' },
+    space: { src: 'bgm/stage3_space.mp3', label: 'Warp_Area' },
+    midboss: { src: 'bgm/boss_mid.mp3', label: 'Will_you_still_cry_' },
+    finalboss: { src: 'bgm/boss_final.mp3', label: '全てを創造する者「Dominus_Deus」' }
+  };
 
-  function playBgmTick() {
-    if (muted || !bgmEnabled) return;
-    const ac = ensure();
-    if (!ac || ac.state !== 'running') return;
-    const isBoss = bgmMode === 'boss';
-    const mel = isBoss ? MELODY_BOSS : MELODY_NORMAL;
-    const bas = isBoss ? BASS_BOSS : BASS_NORMAL;
-    const mFreq = mel[bgmStep % mel.length];
-    const bFreq = bas[Math.floor(bgmStep / 2) % bas.length];
-    const now = ac.currentTime;
+  const audioPool = {};
+  let currentTrackKey = null;
+  let currentAudio = null;
+  let bgmPlaying = false;
+  const MP3_BGM_VOLUME = 0.44;
 
-    if (mFreq > 0) {
-      const o = ac.createOscillator();
-      const g = ac.createGain();
-      o.type = isBoss ? 'sawtooth' : 'square';
-      o.frequency.setValueAtTime(mFreq, now);
-      g.gain.setValueAtTime(0.11 * bgmVol, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-      o.connect(g); g.connect(ac.destination);
-      o.start(now); o.stop(now + 0.15);
+  function getTrackAudio(key) {
+    const k = BGM_TRACKS[key] ? key : 'meadow';
+    if (!audioPool[k]) {
+      const a = new Audio(BGM_TRACKS[k].src);
+      a.loop = true;
+      a.preload = 'auto';
+      a.volume = MP3_BGM_VOLUME;
+      audioPool[k] = a;
     }
-    if (bgmStep % 2 === 0 && bFreq > 0) {
-      const o2 = ac.createOscillator();
-      const g2 = ac.createGain();
-      o2.type = 'triangle';
-      o2.frequency.setValueAtTime(bFreq, now);
-      g2.gain.setValueAtTime(0.18 * bgmVol, now);
-      g2.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-      o2.connect(g2); g2.connect(ac.destination);
-      o2.start(now); o2.stop(now + 0.25);
-    }
-    bgmStep++;
+    return audioPool[k];
   }
 
-  function startBgm(mode = 'normal') {
-    bgmMode = mode;
-    stopBgm();
-    if (!bgmEnabled) return;
-    bgmStep = 0;
-    bgmTimer = setInterval(playBgmTick, mode === 'boss' ? 145 : 175);
+  function startBgm(trackKey = 'meadow') {
+    const key = BGM_TRACKS[trackKey] ? trackKey : (trackKey === 'boss' ? 'finalboss' : 'meadow');
+    const prevKey = currentTrackKey;
+    currentTrackKey = key;
+    bgmMode = key;
+    bgmPlaying = true;
+
+    if (muted || !bgmEnabled) {
+      if (currentAudio) {
+        try { currentAudio.pause(); } catch {}
+      }
+      return;
+    }
+
+    const nextAudio = getTrackAudio(key);
+    if (currentAudio && currentAudio !== nextAudio) {
+      try {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      } catch {}
+    }
+
+    currentAudio = nextAudio;
+    currentAudio.volume = MP3_BGM_VOLUME;
+    if (prevKey !== key) {
+      try { currentAudio.currentTime = 0; } catch {}
+    }
+    const p = currentAudio.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => {});
+    }
   }
 
-  function setBgmMode(mode) {
-    if (bgmMode === mode && bgmTimer) return;
-    if (bgmTimer) startBgm(mode);
-    else bgmMode = mode;
+  function setBgmMode(trackKey) {
+    const key = BGM_TRACKS[trackKey] ? trackKey : (trackKey === 'boss' ? 'finalboss' : 'meadow');
+    if (currentTrackKey === key && currentAudio && !currentAudio.paused) return;
+    if (bgmPlaying) startBgm(key);
+    else {
+      currentTrackKey = key;
+      bgmMode = key;
+    }
   }
 
   function stopBgm() {
-    if (bgmTimer) {
-      clearInterval(bgmTimer);
-      bgmTimer = null;
+    bgmPlaying = false;
+    if (currentAudio) {
+      try {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      } catch {}
+    }
+  }
+
+  function resumeBgmIfNeeded() {
+    if (bgmPlaying && !muted && bgmEnabled && currentTrackKey) {
+      const a = getTrackAudio(currentTrackKey);
+      currentAudio = a;
+      if (a.paused) {
+        const p = a.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      }
     }
   }
 
   function setMuted(val) {
     muted = !!val;
-    if (muted) stopBgm();
+    if (muted) {
+      if (currentAudio) {
+        try { currentAudio.pause(); } catch {}
+      }
+    } else {
+      resumeBgmIfNeeded();
+    }
   }
 
   function setBgmEnabled(val) {
     bgmEnabled = !!val;
-    if (!bgmEnabled) stopBgm();
+    if (!bgmEnabled) {
+      if (currentAudio) {
+        try { currentAudio.pause(); } catch {}
+      }
+    } else {
+      resumeBgmIfNeeded();
+    }
+  }
+
+  function getTrackLabel(key) {
+    return BGM_TRACKS[key]?.label || '';
   }
 
   return {
-    ensure,
+    ensure: () => {
+      const ac = ensure();
+      resumeBgmIfNeeded();
+      return ac;
+    },
     playSfx,
     startBgm,
     setBgmMode,
     stopBgm,
     setMuted,
     setBgmEnabled,
+    getTrackLabel,
+    getCurrentTrack: () => currentTrackKey,
     isMuted: () => muted,
     isBgmEnabled: () => bgmEnabled
   };

@@ -192,6 +192,7 @@
         <div class="stage-badge">${st.badge} ・ コイン ×${st.coinMult}</div>
         <div style="font-weight:900;font-size:1rem;">${st.name}</div>
         <div style="font-size:0.78rem;color:#475569;line-height:1.35;">${st.desc}</div>
+        <div style="font-size:0.74rem;font-weight:800;color:#b45309;">${st.bgmName || ''}</div>
         <div style="font-size:0.74rem;font-weight:800;color:#1d4ed8;margin-top:auto;">${best}</div>
       `;
       if (editable) {
@@ -311,8 +312,8 @@
             </div>
           </div>
           <div style="background:#fef9c3;border:2px solid #1a1d26;border-radius:10px;padding:7px 9px;font-size:0.78rem;">
-            <div style="font-weight:900;color:#b45309;">🌟 進化レシピ (Lv.8 + パッシブ)</div>
-            <div>${w.icon} ${w.name} ＋ ${pDef.icon} ${pDef.name}</div>
+            <div style="font-weight:900;color:#b45309;">🌟 進化条件（両方Lv.5 → 次のLvUPで必ず進化！）</div>
+            <div>${w.icon} ${w.name} Lv.5 ＋ ${pDef.icon} ${pDef.name} Lv.5</div>
             <div style="font-weight:900;margin-top:2px;">→ ${w.evolvedIcon} ${w.evolvedName} ${evolvedSeen ? '✅' : ''}</div>
           </div>
         `;
@@ -888,7 +889,6 @@
     save.settings.muted = nextMuted;
     Storage.save();
     updateSoundButtons();
-    if (!nextMuted && Engine.isRunning()) Audio.startBgm('normal');
   }
 
   function updateSoundButtons() {
@@ -1026,7 +1026,6 @@
     Audio.setBgmEnabled(next);
     Storage.get().settings.bgm = next;
     Storage.save();
-    if (next && Engine.isRunning() && !Audio.isMuted()) Audio.startBgm('normal');
     updateSoundButtons();
   });
   $('btn-quit-run').addEventListener('click', exitToTitle);

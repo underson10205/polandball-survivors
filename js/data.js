@@ -166,9 +166,9 @@ window.PBData = (() => {
       id: 'gear',
       name: 'ドイツ製歯車',
       icon: '⚙️',
-      maxLevel: 3,
-      desc: '全武器の発射数 +1/Lv（ソーセージ進化素材）',
-      stat: 'amountFlat',
+      maxLevel: 5,
+      desc: '発射数 +1 (Lv.1/3/5) ＆ 攻撃速度 +4%/Lv（ソーセージ進化素材）',
+      stat: 'gearBonus',
       perLevel: 1,
       evolves: 'bratwurst'
     },
@@ -219,7 +219,7 @@ window.PBData = (() => {
       id: 'plunger',
       name: 'ラバーカップ',
       icon: '🪠',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'rocket_fuel',
       evolvedName: 'ギャラクシー・プランジャー',
       evolvedIcon: '🌌',
@@ -229,20 +229,17 @@ window.PBData = (() => {
       type: 'boomerang',
       base: { damage: 22, cooldown: 1.35, count: 1, speed: 390, area: 1.0, pierce: 99 },
       levelUp: [
-        '威力 +7',
-        '発射数 +1',
-        'クールダウン -12% ＆ 範囲 +15%',
-        '威力 +10',
-        '発射数 +1',
-        '速度 +15% ＆ 威力 +10',
-        '威力 +14 ＆ 範囲 +20%'
+        '威力大幅UP ＆ 発射数 +1',
+        'クールダウン短縮 ＆ 範囲 +15%',
+        '威力大幅UP ＆ 速度UP',
+        '【MAX】発射数 +1 ＆ 威力・範囲強化！'
       ]
     },
     katana: {
       id: 'katana',
       name: '居合カタナ',
       icon: '⚔️',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'matcha',
       evolvedName: '新幹線ブレード・極',
       evolvedIcon: '🌸',
@@ -252,20 +249,17 @@ window.PBData = (() => {
       type: 'slash',
       base: { damage: 26, cooldown: 1.15, count: 1, speed: 0, area: 1.0, pierce: 99 },
       levelUp: [
-        '前後同時斬撃（斬撃数 +1）',
-        '威力 +9 ＆ 範囲 +15%',
-        'クールダウン -12%',
-        '威力 +12',
-        '斬撃数 +1 ＆ 範囲 +15%',
-        'クールダウン -12% ＆ 威力 +12',
-        '威力 +18 ＆ 範囲 +25%'
+        '前後同時斬撃（斬撃数 +1）＆ 威力UP',
+        '威力大幅UP ＆ 斬撃範囲 +18%',
+        'クールダウン短縮 ＆ 斬撃数 +1',
+        '【MAX】威力・範囲・速度が大幅強化！'
       ]
     },
     missile: {
       id: 'missile',
       name: 'フリーダム・ミサイル',
       icon: '🚀',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'burger',
       evolvedName: 'デモクラシー絨毯爆撃',
       evolvedIcon: '💥',
@@ -275,20 +269,17 @@ window.PBData = (() => {
       type: 'homing',
       base: { damage: 24, cooldown: 1.65, count: 1, speed: 320, area: 1.0, pierce: 1 },
       levelUp: [
-        '爆風範囲 +20% ＆ 威力 +7',
-        '発射数 +1',
-        'クールダウン -12%',
-        '威力 +11',
-        '発射数 +1 ＆ 爆風範囲 +15%',
-        '威力 +13',
-        '発射数 +1 ＆ 威力 +15'
+        '爆風範囲UP ＆ 発射数 +1',
+        '威力大幅UP ＆ クールダウン短縮',
+        '発射数 +1 ＆ 爆風拡大',
+        '【MAX】威力・爆風が最大級に強化！'
       ]
     },
     teacup: {
       id: 'teacup',
       name: 'ロイヤル・ティーカップ',
       icon: '☕',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'monocle',
       evolvedName: 'アフタヌーン・ストーム',
       evolvedIcon: '🫖',
@@ -298,20 +289,17 @@ window.PBData = (() => {
       type: 'orbit',
       base: { damage: 17, cooldown: 4.2, duration: 3.1, count: 2, speed: 3.2, area: 1.0 },
       levelUp: [
-        'ティーカップ +1',
-        '威力 +6 ＆ 回転速度 +20%',
-        '持続時間 +0.6秒 ＆ 範囲 +12%',
-        'ティーカップ +1',
-        '威力 +8 ＆ 範囲 +12%',
-        'ティーカップ +1',
-        '威力 +12 ＆ 持続時間 +0.8秒'
+        'ティーカップ +1 ＆ 威力UP',
+        '回転速度UP ＆ 持続時間延長',
+        'ティーカップ +1 ＆ 範囲拡大',
+        '【MAX】ティーカップ +1 ＆ 威力大幅強化！'
       ]
     },
     baguette: {
       id: 'baguette',
       name: 'バゲット乱舞',
       icon: '🥖',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'croissant',
       evolvedName: 'パリジャン・トルネード',
       evolvedIcon: '🌪️',
@@ -321,20 +309,17 @@ window.PBData = (() => {
       type: 'arc',
       base: { damage: 28, cooldown: 1.5, count: 2, speed: 360, area: 1.0, pierce: 4 },
       levelUp: [
-        'バゲット +1',
-        '威力 +9 ＆ 貫通 +2',
-        'クールダウン -12%',
-        'バゲット +1 ＆ 範囲 +15%',
-        '威力 +12',
-        'バゲット +1 ＆ 貫通 +3',
-        '威力 +16 ＆ 範囲 +20%'
+        'バゲット +1 ＆ 貫通力UP',
+        '威力大幅UP ＆ クールダウン短縮',
+        'バゲット +1 ＆ 範囲拡大',
+        '【MAX】威力・貫通力が大幅強化！'
       ]
     },
     bratwurst: {
       id: 'bratwurst',
       name: 'ソーセージ連射',
       icon: '🌭',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'gear',
       evolvedName: 'アウトバーン・ガトリング',
       evolvedIcon: '⚡',
@@ -344,20 +329,17 @@ window.PBData = (() => {
       type: 'rapid',
       base: { damage: 15, cooldown: 0.72, count: 2, speed: 580, area: 1.0, pierce: 2 },
       levelUp: [
-        '発射数 +1',
-        '威力 +5 ＆ 貫通 +1',
-        'クールダウン -12%',
-        '発射数 +1 ＆ 威力 +5',
-        '貫通 +2 ＆ 速度 +15%',
-        '発射数 +1 ＆ クールダウン -10%',
-        '威力 +10 ＆ 貫通 +2'
+        '発射数 +1 ＆ 威力UP',
+        '貫通力 +1 ＆ クールダウン短縮',
+        '発射数 +1 ＆ 弾速UP',
+        '【MAX】威力・貫通力が大幅強化！'
       ]
     },
     pilum: {
       id: 'pilum',
       name: 'ピルム投槍陣',
       icon: '🔱',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'shield',
       evolvedName: 'レギオン大行進',
       evolvedIcon: '🏛️',
@@ -367,20 +349,17 @@ window.PBData = (() => {
       type: 'fan',
       base: { damage: 23, cooldown: 1.45, count: 3, speed: 500, area: 1.0, pierce: 3 },
       levelUp: [
-        '槍の本数 +1',
-        '威力 +8 ＆ 貫通 +1',
-        'クールダウン -12%',
-        '槍の本数 +2',
-        '威力 +10 ＆ 貫通 +2',
-        'クールダウン -12% ＆ 範囲 +15%',
-        '槍の本数 +2 ＆ 威力 +14'
+        '槍の本数 +1 ＆ 威力UP',
+        '貫通力 +1 ＆ クールダウン短縮',
+        '槍の本数 +1 ＆ 範囲拡大',
+        '【MAX】槍の本数 +1 ＆ 威力大幅強化！'
       ]
     },
     roar: {
       id: 'roar',
       name: 'ヒマラヤ咆哮',
       icon: '📢',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'compass',
       evolvedName: 'エベレスト・アバランチ',
       evolvedIcon: '❄️',
@@ -390,20 +369,17 @@ window.PBData = (() => {
       type: 'nova',
       base: { damage: 20, cooldown: 1.75, count: 1, speed: 0, area: 1.0, knockback: 260 },
       levelUp: [
-        '範囲 +20% ＆ 威力 +6',
-        'クールダウン -12%',
-        'ノックバック強化 ＆ 威力 +8',
-        '範囲 +20%',
-        'クールダウン -12% ＆ 威力 +10',
-        '範囲 +20% ＆ 威力 +10',
-        '威力 +16 ＆ クールダウン -12%'
+        '衝撃波範囲 +18% ＆ 威力UP',
+        'クールダウン短縮 ＆ ノックバック強化',
+        '衝撃波範囲 +18% ＆ 威力大幅UP',
+        '【MAX】超広範囲＆大威力ショックウェーブ！'
       ]
     },
     laser: {
       id: 'laser',
       name: 'プリズムレーザー',
       icon: '🔺',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'atlas',
       evolvedName: 'サテライト軌道砲',
       evolvedIcon: '🛰️',
@@ -413,20 +389,17 @@ window.PBData = (() => {
       type: 'lightning',
       base: { damage: 32, cooldown: 1.4, count: 2, area: 1.0 },
       levelUp: [
-        '照射本数 +1',
-        '威力 +10',
-        'クールダウン -12% ＆ 範囲 +15%',
-        '照射本数 +1',
-        '威力 +14',
-        '照射本数 +1 ＆ クールダウン -12%',
-        '威力 +20 ＆ 範囲 +25%'
+        '照射本数 +1 ＆ 威力UP',
+        'クールダウン短縮 ＆ 範囲拡大',
+        '照射本数 +1 ＆ 威力大幅UP',
+        '【MAX】照射本数 +1 ＆ 破壊力MAX！'
       ]
     },
     molotov: {
       id: 'molotov',
       name: 'ウォッカ火炎瓶',
       icon: '🔥',
-      maxLevel: 8,
+      maxLevel: 5,
       evolvePassive: 'curry',
       evolvedName: 'ウィンター・インフェルノ',
       evolvedIcon: '☄️',
@@ -436,13 +409,10 @@ window.PBData = (() => {
       type: 'zone',
       base: { damage: 12, cooldown: 2.3, duration: 3.4, count: 2, area: 1.0 },
       levelUp: [
-        '火炎瓶 +1',
-        '範囲 +20% ＆ 威力 +4',
-        '持続時間 +0.7秒',
-        '火炎瓶 +1',
-        '威力 +5 ＆ 範囲 +15%',
-        'クールダウン -14%',
-        '火炎瓶 +1 ＆ 威力 +7'
+        '火炎瓶 +1 ＆ 炎エリア拡大',
+        '持続時間延長 ＆ 威力UP',
+        '火炎瓶 +1 ＆ クールダウン短縮',
+        '【MAX】広範囲・高火力の業火エリア！'
       ]
     }
   };
@@ -457,12 +427,12 @@ window.PBData = (() => {
     kazakh_brick: { id: 'kazakh_brick', name: 'カザフスタン・ブリック', hp: 155, speed: 62, damage: 16, radius: 24, xp: 15, score: 50, desc: 'ずっしり重い長方形の守護壁。ノックバックに強い！' },
     turret_ball: { id: 'turret_ball', name: '砲台ボール', hp: 65, speed: 68, damage: 12, radius: 18, xp: 11, score: 40, shooter: true, desc: '距離を取りながらエネルギー弾を撃ってくる厄介者。' },
     alien_ball: { id: 'alien_ball', name: 'エイリアン6ボール', hp: 90, speed: 110, damage: 15, radius: 18, xp: 13, score: 48, desc: '宇宙空間を漂う謎の緑エイリアン6ボール。' },
-    // Mid-bosses
-    boss_viking: { id: 'boss_viking', name: '巨大バイキング王', hp: 1100, speed: 92, damage: 22, radius: 38, xp: 80, score: 400, isBoss: true, isMidBoss: true, desc: '1分半に出現する中ボス。倒すと進化宝箱をドロップ！' },
-    boss_prussia: { id: 'boss_prussia', name: 'プロイセン帝国', hp: 2400, speed: 104, damage: 26, radius: 42, xp: 130, score: 750, isBoss: true, isMidBoss: true, shooter: true, desc: '3分に出現する誇り高き鉄十字の覇者。弾幕を放つ！' },
-    boss_ufo: { id: 'boss_ufo', name: 'マザーUFOボール', hp: 3800, speed: 98, damage: 28, radius: 44, xp: 180, score: 1100, isBoss: true, isMidBoss: true, shooter: true, desc: '4分半に出現する宇宙円盤。全方位弾を撃ちまくる！' },
-    // Final Boss
-    reichtangle: { id: 'reichtangle', name: 'ライヒタングル (REICHTANGLE)', hp: 8500, speed: 108, damage: 34, radius: 48, xp: 500, score: 3000, isBoss: true, isFinalBoss: true, shooter: true, desc: '「Guten Tag...」6分に出現する最恐の最終ボス！突進と全方位弾幕を潜り抜けろ！' }
+    // Mid-bosses (Rebalanced for epic boss battles!)
+    boss_viking: { id: 'boss_viking', name: '巨大バイキング王', hp: 4200, speed: 104, damage: 28, radius: 40, xp: 120, score: 600, isBoss: true, isMidBoss: true, dasher: true, shooter: true, desc: '1分半に出現する中ボス。猛突進と衝撃弾で襲いかかる！倒すと宝箱ドロップ！' },
+    boss_prussia: { id: 'boss_prussia', name: 'プロイセン帝国', hp: 9500, speed: 114, damage: 32, radius: 44, xp: 200, score: 1100, isBoss: true, isMidBoss: true, dasher: true, shooter: true, desc: '3分に出現する誇り高き鉄十字の覇者。7連弾幕と突進で迫る！' },
+    boss_ufo: { id: 'boss_ufo', name: 'マザーUFOボール', hp: 16500, speed: 108, damage: 36, radius: 46, xp: 280, score: 1600, isBoss: true, isMidBoss: true, shooter: true, summoner: true, desc: '4分半に出現する宇宙円盤。全方位プラズマ弾＆エイリアン6ボール召喚！' },
+    // Final Boss (2-Phase Raid Boss!)
+    reichtangle: { id: 'reichtangle', name: 'ライヒタングル (REICHTANGLE)', hp: 38000, speed: 118, damage: 42, radius: 50, xp: 800, score: 5000, isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true, desc: '「Guten Tag...」6分に出現する最恐の最終ボス！HP半分以下で本気モード（螺旋弾幕＆連続突進）へ！' }
   };
 
   const STAGES = [
@@ -471,6 +441,7 @@ window.PBData = (() => {
       name: 'ヨーロッパ大草原',
       subtitle: 'Stage 1 — はじまりの地',
       desc: 'のどかな草原と石畳。まずはここでポーランドボール軍団をなぎ倒そう！',
+      bgmName: '♪ かけっこ競争',
       duration: 360, // 6 minutes to Final Boss
       bg: '#6ab04c',
       bgAccent: '#5ea142',
@@ -484,6 +455,7 @@ window.PBData = (() => {
       name: '成層圏スカイウェイ',
       subtitle: 'Stage 2 — 雲の上へ！',
       desc: '見渡す限りの青空と雲海！速い敵と砲台ボールが増えてスリル満点！',
+      bgmName: '♪ Moment',
       duration: 360,
       bg: '#38bdf8',
       bgAccent: '#0ea5e9',
@@ -497,6 +469,7 @@ window.PBData = (() => {
       name: '宇宙軌道 — INTO SPACE!',
       subtitle: 'Stage 3 — ポーランドの夢',
       desc: 'ついに宇宙へ到達！エイリアン軍団と強化ライヒタングルが待つ最終決戦！',
+      bgmName: '♪ Warp_Area',
       duration: 360,
       bg: '#0f172a',
       bgAccent: '#1e293b',

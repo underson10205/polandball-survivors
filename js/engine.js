@@ -199,6 +199,10 @@ window.PBEngine = (() => {
       if (def.stat === 'regenFlat') regenBonus += def.perLevel * lvl;
       if (def.stat === 'armorFlat') armorBonus += def.perLevel * lvl;
       if (def.stat === 'amountFlat') amountBonus += def.perLevel * lvl;
+      if (def.stat === 'gearBonus') {
+        amountBonus += Math.ceil(lvl / 2); // +1 at Lv.1, +2 at Lv.3, +3 at Lv.5
+        cooldownMult -= 0.04 * lvl;
+      }
     }
 
     if (p.synergyActive) {
@@ -222,16 +226,16 @@ window.PBEngine = (() => {
   function getWeaponStats(w, pStats) {
     const def = Data.WEAPONS[w.id];
     const b = def.base;
-    const lv = w.level;
+    const lv = Math.min(def.maxLevel, w.level);
     const evo = w.evolved;
 
-    let damage = b.damage * (1 + (lv - 1) * 0.24) * (evo ? 1.85 : 1);
-    let cooldown = b.cooldown * Math.pow(0.94, lv - 1) * (evo ? 0.68 : 1);
-    let count = b.count + Math.floor(lv / 2.6) + (evo ? 2 : 0) + pStats.amount;
-    let area = (b.area || 1) * (1 + (lv - 1) * 0.08) * (evo ? 1.45 : 1) * pStats.area;
-    let speed = (b.speed || 350) * (1 + (lv - 1) * 0.04) * (evo ? 1.2 : 1);
-    let pierce = (b.pierce || 1) + Math.floor((lv - 1) / 2) + (evo ? 99 : 0);
-    let duration = (b.duration || 2.5) * (1 + (lv - 1) * 0.1) * (evo ? 1.6 : 1);
+    let damage = b.damage * (1 + (lv - 1) * 0.35) * (evo ? 1.9 : 1);
+    let cooldown = b.cooldown * Math.pow(0.915, lv - 1) * (evo ? 0.66 : 1);
+    let count = b.count + Math.floor(lv / 2) + (evo ? 2 : 0) + pStats.amount;
+    let area = (b.area || 1) * (1 + (lv - 1) * 0.11) * (evo ? 1.48 : 1) * pStats.area;
+    let speed = (b.speed || 350) * (1 + (lv - 1) * 0.06) * (evo ? 1.22 : 1);
+    let pierce = (b.pierce || 1) + Math.floor(lv / 2) + (evo ? 99 : 0);
+    let duration = (b.duration || 2.5) * (1 + (lv - 1) * 0.14) * (evo ? 1.65 : 1);
 
     if (w.id === 'katana' && lv >= 2) count = Math.max(count, 2);
     if (w.id === 'teacup' && evo) { count = Math.max(6, count); duration = 999; cooldown = 0.1; }
@@ -319,7 +323,7 @@ window.PBEngine = (() => {
     if (config.mode !== 'solo') tryUnlockAch('coop_play');
 
     Audio.ensure();
-    Audio.startBgm('normal');
+    Audio.startBgm(stage.id);
 
     if (rafId) cancelAnimationFrame(rafId);
     lastFrameTs = performance.now();
@@ -406,7 +410,6 @@ window.PBEngine = (() => {
         if (payload.sfx) Audio.playSfx(payload.sfx);
         if (payload.shake) state.shake = Math.max(state.shake, payload.shake);
         if (payload.bossWarn) {
-          Audio.setBgmMode('boss');
           callbacks.onBossWarning(payload.bossWarn);
         }
         if (payload.bgm) Audio.setBgmMode(payload.bgm);
@@ -914,10 +917,23 @@ window.PBEngine = (() => {
     }
   }
 
+  function syncActiveBgm() {
+    if (!state) return;
+    let targetTrack = state.stage.id;
+    if (state.enemies.some(e => e.isFinalBoss)) targetTrack = 'finalboss';
+    else if (state.enemies.some(e => e.isMidBoss)) targetTrack = 'midboss';
+    if (Audio.getCurrentTrack() !== targetTrack) {
+      Audio.setBgmMode(targetTrack);
+      if (state.mode === 'coop_host') broadcastFx({ bgm: targetTrack });
+    }
+  }
+
   // === SPAWNING & WAVES ===
   function updateSpawning(dt) {
     const t = state.time;
-    const diff = state.stage.difficulty * (state.players.length === 2 ? 1.42 : 1.0);
+    const isCoop = state.players.length === 2;
+    const diff = state.stage.difficulty * (isCoop ? 1.42 : 1.0);
+    const bossDiff = state.stage.difficulty * (isCoop ? 1.85 : 1.0);
     const timeMult = 1 + t / 115;
 
     // Mid-bosses at 90s, 180s, 270s
@@ -929,28 +945,29 @@ window.PBEngine = (() => {
     if (state.midBossIndex < midSchedule.length && t >= midSchedule[state.midBossIndex].at) {
       const b = midSchedule[state.midBossIndex];
       state.midBossIndex++;
-      spawnEnemy(b.id, diff * (1 + t / 240));
+      spawnEnemy(b.id, bossDiff * (1 + t / 210));
       const def = Data.ENEMIES[b.id];
-      triggerBossAlert(`⚠️ 中ボス出現: ${def.name}！`);
+      syncActiveBgm();
+      triggerBossAlert(`⚠️ 中ボス出現: ${def.name}！（♪ Will_you_still_cry_）`);
     }
 
     // Final Boss Reichtangle at stage.duration (360s = 6 min)
     if (!state.finalBossSpawned && t >= state.stage.duration) {
       state.finalBossSpawned = true;
-      spawnEnemy('reichtangle', diff * 1.15);
-      Audio.setBgmMode('boss');
-      triggerBossAlert('🚨 最終ボス襲来: ライヒタングル "Guten Tag..."');
-      if (state.mode === 'coop_host') broadcastFx({ bgm: 'boss' });
+      spawnEnemy('reichtangle', bossDiff * 1.25);
+      syncActiveBgm();
+      triggerBossAlert('🚨 最終ボス襲来: ライヒタングル "Guten Tag..."（♪ Dominus_Deus）');
     }
 
     // Endless extra bosses every 90s after 6 min
     if (state.endless && Math.floor(t) > state.stage.duration + 30 && Math.floor(t) % 90 === 0 && Math.floor(t - dt) % 90 !== 0) {
-      spawnEnemy('reichtangle', diff * (1.2 + (t - state.stage.duration) / 180));
+      spawnEnemy('reichtangle', bossDiff * (1.35 + (t - state.stage.duration) / 140));
+      syncActiveBgm();
       triggerBossAlert('🚨 強化ライヒタングル出現！');
     }
 
     // Regular wave spawns
-    const spawnRate = Math.min(9.5, (1.55 + t / 44) * (state.players.length === 2 ? 1.35 : 1.0));
+    const spawnRate = Math.min(9.5, (1.55 + t / 44) * (isCoop ? 1.35 : 1.0));
     state.spawnAccum += dt * spawnRate;
     while (state.spawnAccum >= 1 && state.enemies.length < ENEMY_CAP) {
       state.spawnAccum -= 1;
@@ -978,7 +995,7 @@ window.PBEngine = (() => {
     return ['cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'alien_ball'];
   }
 
-  function spawnEnemy(id, scale = 1) {
+  function spawnEnemy(id, scale = 1, customPos = null) {
     const def = Data.ENEMIES[id];
     if (!def) return;
     const alivePlayers = state.players.filter(p => !p.downed);
@@ -991,24 +1008,29 @@ window.PBEngine = (() => {
       id: state.nextEid++,
       type: def.id,
       name: def.name,
-      x: anchor.x + Math.cos(angle) * dist,
-      y: anchor.y + Math.sin(angle) * dist,
+      x: customPos ? customPos.x : anchor.x + Math.cos(angle) * dist,
+      y: customPos ? customPos.y : anchor.y + Math.sin(angle) * dist,
       vx: 0, vy: 0,
       kbX: 0, kbY: 0,
       hp,
       maxHp: hp,
       speed: def.speed * (1 + Math.min(0.45, state.time / 900)),
-      damage: Math.round(def.damage * (0.9 + scale * 0.15)),
+      damage: Math.round(def.damage * (0.92 + scale * 0.14)),
       radius: def.radius,
       xp: def.xp,
       isBoss: !!def.isBoss,
       isMidBoss: !!def.isMidBoss,
       isFinalBoss: !!def.isFinalBoss,
+      dasher: !!def.dasher,
+      summoner: !!def.summoner,
       shooter: !!def.shooter,
-      shootCd: 1.5 + Math.random() * 2,
-      chargeCd: 4.5,
+      phase2: false,
+      shootCd: def.isBoss ? 1.4 : (1.5 + Math.random() * 2),
+      chargeCd: def.isFinalBoss ? 4.2 : 4.8,
       chargeTime: 0,
       chargeDx: 0, chargeDy: 0,
+      summonCd: 6.5,
+      spiralAngle: 0,
       hitFlash: 0,
       orbitHitCd: 0,
       slowTimer: 0,
@@ -1055,25 +1077,39 @@ window.PBEngine = (() => {
       e.lookX = nx;
       e.lookY = ny;
 
-      const slowFactor = e.slowTimer > 0 ? 0.45 : 1.0;
+      const slowFactor = e.slowTimer > 0 ? (e.isBoss ? 0.78 : 0.45) : 1.0;
 
-      // Final Boss dash-charge behavior!
-      if (e.isFinalBoss) {
+      // Final Boss Phase 2 Rage Transition at 50% HP!
+      if (e.isFinalBoss && !e.phase2 && e.hp <= e.maxHp * 0.5) {
+        e.phase2 = true;
+        e.speed *= 1.24;
+        state.shake = Math.max(state.shake, 14);
+        Audio.playSfx('boss');
+        addFloatingText(e.x, e.y - 72, '🔥 ANSCHLUSS MODE!!', '#ef4444', true);
+        if (state.mode === 'coop_host') {
+          broadcastFx({ sfx: 'boss', shake: 14, text: '🔥 ANSCHLUSS MODE!!', x: e.x, y: e.y - 72, color: '#ef4444', big: true });
+        }
+      }
+
+      // Boss Dash-Charge AI (Reichtangle + Mid-boss dashers!)
+      if (e.dasher) {
         if (e.chargeTime > 0) {
           e.chargeTime -= dt;
-          e.vx = e.chargeDx * e.speed * 3.1;
-          e.vy = e.chargeDy * e.speed * 3.1;
+          const mult = e.isFinalBoss ? (e.phase2 ? 3.5 : 3.1) : 2.65;
+          e.vx = e.chargeDx * e.speed * mult;
+          e.vy = e.chargeDy * e.speed * mult;
         } else {
           e.chargeCd -= dt;
           e.vx = nx * e.speed * slowFactor;
           e.vy = ny * e.speed * slowFactor;
-          if (e.chargeCd <= 0 && minDist < 480) {
-            e.chargeCd = 5.2;
-            e.chargeTime = 0.65;
+          if (e.chargeCd <= 0 && minDist < 520) {
+            e.chargeCd = e.isFinalBoss ? (e.phase2 ? 3.2 : 4.5) : 5.0;
+            e.chargeTime = e.isFinalBoss ? 0.72 : 0.55;
             e.chargeDx = nx;
             e.chargeDy = ny;
-            addFloatingText(e.x, e.y - 60, 'GUTEN TAG!', '#ef4444', true);
-            if (state.mode === 'coop_host') broadcastFx({ text: 'GUTEN TAG!', x: e.x, y: e.y - 60, color: '#ef4444', big: true });
+            const cry = e.isFinalBoss ? (e.phase2 ? 'ANSCHLUSS!!' : 'GUTEN TAG!') : (e.type === 'boss_prussia' ? '⚡ 電撃突進！' : '⚔️ 猛突撃！');
+            addFloatingText(e.x, e.y - e.radius - 16, cry, '#ef4444', true);
+            if (state.mode === 'coop_host') broadcastFx({ text: cry, x: e.x, y: e.y - e.radius - 16, color: '#ef4444', big: true });
           }
         }
       } else if (e.shooter && !e.isBoss && minDist < 240) {
@@ -1084,22 +1120,55 @@ window.PBEngine = (() => {
         e.vy = ny * e.speed * slowFactor;
       }
 
+      // Boss Summoner AI (Mother UFO & Final Boss Phase 2!)
+      if (e.summoner && (!e.isFinalBoss || e.phase2) && state.enemies.length < ENEMY_CAP - 6) {
+        e.summonCd -= dt;
+        if (e.summonCd <= 0) {
+          e.summonCd = e.isFinalBoss ? 7.5 : 8.5;
+          const count = e.isFinalBoss ? 4 : 3;
+          const mobId = e.type === 'boss_ufo' ? 'alien_ball' : 'cameroon_ball';
+          for (let s = 0; s < count; s++) {
+            const a = (s * Math.PI * 2) / count + state.time;
+            spawnEnemy(mobId, state.stage.difficulty * (1 + state.time / 180), {
+              x: e.x + Math.cos(a) * (e.radius + 36),
+              y: e.y + Math.sin(a) * (e.radius + 36)
+            });
+          }
+        }
+      }
+
       // Shooting logic
-      if (e.shooter && minDist < 540) {
+      if (e.shooter && minDist < 600) {
         e.shootCd -= dt;
         if (e.shootCd <= 0) {
           const baseA = Math.atan2(target.y - e.y, target.x - e.x);
           if (e.isFinalBoss) {
-            e.shootCd = 2.6;
-            for (let k = 0; k < 10; k++) {
-              const a = baseA + (k * Math.PI * 2) / 10;
-              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 235, vy: Math.sin(a) * 235, r: 9, damage: Math.round(e.damage * 0.7), life: 3.4, color: '#ef4444' });
+            e.shootCd = e.phase2 ? 1.55 : 2.15;
+            e.spiralAngle += 0.42;
+            const bullets = e.phase2 ? 14 : 10;
+            const spd = e.phase2 ? 275 : 245;
+            for (let k = 0; k < bullets; k++) {
+              const a = baseA + e.spiralAngle + (k * Math.PI * 2) / bullets;
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 9.5, damage: Math.round(e.damage * 0.72), life: 3.6, color: e.phase2 ? '#dc2626' : '#ef4444' });
+            }
+          } else if (e.type === 'boss_ufo') {
+            e.shootCd = 2.0;
+            e.spiralAngle += 0.35;
+            for (let k = 0; k < 12; k++) {
+              const a = e.spiralAngle + (k * Math.PI * 2) / 12;
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 230, vy: Math.sin(a) * 230, r: 8.5, damage: Math.round(e.damage * 0.65), life: 3.5, color: '#38bdf8' });
+            }
+          } else if (e.type === 'boss_prussia') {
+            e.shootCd = 1.95;
+            for (let k = -3; k <= 3; k++) {
+              const a = baseA + k * 0.22;
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 245, vy: Math.sin(a) * 245, r: 8.5, damage: Math.round(e.damage * 0.68), life: 3.2, color: '#f97316' });
             }
           } else if (e.isBoss) {
-            e.shootCd = 2.4;
+            e.shootCd = 2.3;
             for (let k = -2; k <= 2; k++) {
-              const a = baseA + k * 0.28;
-              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 215, vy: Math.sin(a) * 215, r: 8, damage: Math.round(e.damage * 0.65), life: 3.2, color: '#f97316' });
+              const a = baseA + k * 0.3;
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 220, vy: Math.sin(a) * 220, r: 8, damage: Math.round(e.damage * 0.65), life: 3.0, color: '#f59e0b' });
             }
           } else {
             e.shootCd = 2.9;
@@ -1163,6 +1232,7 @@ window.PBEngine = (() => {
         addFloatingText(p.x, p.y - 34, '✨ 不屈の復活!!', '#fde047', true);
         // Push away nearby enemies
         for (const e of state.enemies) {
+          if (e.isBoss) continue;
           const d = Math.hypot(e.x - p.x, e.y - p.y);
           if (d < 220 && d > 1) {
             e.kbX += ((e.x - p.x) / d) * 420;
@@ -1189,15 +1259,15 @@ window.PBEngine = (() => {
     e.hitFlash = 0.9;
     if (weapon) weapon.damageDealt += finalDmg;
 
-    // Knockback
-    const resist = e.isBoss ? 0.08 : (e.type === 'kazakh_brick' ? 0.25 : 1.0);
+    // Bosses have 96% knockback resistance so they feel heavy and threatening
+    const resist = e.isBoss ? 0.04 : (e.type === 'kazakh_brick' ? 0.25 : 1.0);
     const dx = e.x - srcX;
     const dy = e.y - srcY;
     const d = Math.hypot(dx, dy) || 1;
     e.kbX += (dx / d) * kbForce * resist;
     e.kbY += (dy / d) * kbForce * resist;
 
-    if (state.texts.length < 45) {
+    if (state.texts.length < MAX_TEXTS) {
       addFloatingText(e.x + (Math.random() - 0.5) * 14, e.y - e.radius, `${finalDmg}`, isCrit ? '#fde047' : '#ffffff', isCrit);
     }
 
@@ -1231,11 +1301,12 @@ window.PBEngine = (() => {
       tier: e.xp >= 15 ? 2 : (e.xp >= 7 ? 1 : 0)
     });
 
-    // Drop random goodies
+    // Drop random goodies & restore stage BGM when bosses are cleared!
     if (e.isMidBoss) {
       state.pickups.push({ id: state.nextEid++, kind: 'chest', x: e.x + 12, y: e.y, val: 1 });
-      addFloatingText(e.x, e.y - 30, '🎁 進化宝箱ドロップ！', '#fde047', true);
-      if (state.mode === 'coop_host') broadcastFx({ sfx: 'explosion', burst: true, x: e.x, y: e.y, color: '#facc15', count: 28, text: '🎁 進化宝箱ドロップ！', big: true });
+      addFloatingText(e.x, e.y - 30, '🎁 ボス宝箱ドロップ！', '#fde047', true);
+      if (state.mode === 'coop_host') broadcastFx({ sfx: 'explosion', burst: true, x: e.x, y: e.y, color: '#facc15', count: 28, text: '🎁 ボス宝箱ドロップ！', big: true });
+      syncActiveBgm();
     } else if (e.isFinalBoss) {
       state.pickups.push({ id: state.nextEid++, kind: 'chest', x: e.x, y: e.y, val: 1 });
       tryUnlockAch('defeat_reichtangle');
@@ -1245,6 +1316,8 @@ window.PBEngine = (() => {
       if (!state.victoryTriggered) {
         state.victoryTriggered = true;
         finishRun(true);
+      } else {
+        syncActiveBgm();
       }
     } else {
       const r = Math.random();
@@ -1565,36 +1638,44 @@ window.PBEngine = (() => {
   function generateChoicesForPlayer(p) {
     const pool = [];
 
-    // 1. Check ready Weapon Evolutions FIRST (high priority!)
+    // 1. Strict Evolution Rule: Weapon Lv.5 + Matching Passive Lv.5 -> GUARANTEED on next Level-Up!
     for (const w of p.weapons) {
       const def = Data.WEAPONS[w.id];
-      if (!w.evolved && w.level >= def.maxLevel && (p.passives[def.evolvePassive] || 0) >= 1) {
+      const passDef = Data.PASSIVES[def.evolvePassive];
+      const passLv = p.passives[def.evolvePassive] || 0;
+      if (!w.evolved && w.level >= def.maxLevel && passLv >= passDef.maxLevel) {
         pool.push({
           kind: 'evolve',
           id: w.id,
           title: `★ ${def.evolvedName}`,
           icon: def.evolvedIcon,
-          badge: '🌟 武器進化！',
+          badge: '🌟 進化確定！(Lv.5＋Lv.5)',
           desc: def.evolvedDesc,
-          priority: 100
+          evolveHint: `条件達成: ${def.icon}Lv.5 ＋ ${passDef.icon}Lv.5`,
+          priority: 1000
         });
       }
     }
 
-    // 2. Existing weapons upgrade
+    // 2. Existing weapons upgrade (Lv.1 -> Lv.5)
     for (const w of p.weapons) {
       const def = Data.WEAPONS[w.id];
       if (!w.evolved && w.level < def.maxLevel) {
         const nextLv = w.level + 1;
+        const passDef = Data.PASSIVES[def.evolvePassive];
+        const passLv = p.passives[def.evolvePassive] || 0;
+        const hint = passLv >= passDef.maxLevel
+          ? `✅ 相棒 ${passDef.icon}${passDef.name} Lv.5達成！（武器Lv.5で次LvUP進化）`
+          : `進化相棒: ${passDef.icon} ${passDef.name} (現在 Lv.${passLv}/5)`;
         pool.push({
           kind: 'weapon',
           id: w.id,
           title: def.name,
           icon: def.icon,
-          badge: `Lv.${w.level} → Lv.${nextLv}`,
+          badge: nextLv === def.maxLevel ? `Lv.${w.level} → Lv.5 (MAX)` : `Lv.${w.level} → Lv.${nextLv}`,
           desc: def.levelUp[w.level - 1] || '威力・性能アップ！',
-          evolveHint: `進化素材: ${Data.PASSIVES[def.evolvePassive].icon} ${Data.PASSIVES[def.evolvePassive].name}`,
-          priority: 20
+          evolveHint: hint,
+          priority: passLv >= passDef.maxLevel ? 30 : 22
         });
       }
     }
@@ -1603,40 +1684,52 @@ window.PBEngine = (() => {
     if (p.weapons.length < MAX_WEAPONS) {
       for (const def of Object.values(Data.WEAPONS)) {
         if (p.weapons.some(w => w.id === def.id)) continue;
+        const passDef = Data.PASSIVES[def.evolvePassive];
+        const passLv = p.passives[def.evolvePassive] || 0;
         pool.push({
           kind: 'weapon',
           id: def.id,
           title: def.name,
           icon: def.icon,
-          badge: 'NEW 武器!',
+          badge: passLv > 0 ? '🔥 進化ペア武器!' : 'NEW 武器!',
           desc: def.desc,
-          evolveHint: `進化素材: ${Data.PASSIVES[def.evolvePassive].icon} ${Data.PASSIVES[def.evolvePassive].name}`,
-          priority: 14
+          evolveHint: `進化相棒: ${passDef.icon} ${passDef.name} (現在 Lv.${passLv}/5)`,
+          priority: passLv > 0 ? 24 : 14
         });
       }
     }
 
-    // 4. Passives (upgrade existing or new if slots left)
+    // 4. Passives (Lv.1 -> Lv.5)
     const passiveCount = Object.keys(p.passives).length;
     for (const def of Object.values(Data.PASSIVES)) {
       const cur = p.passives[def.id] || 0;
       if (cur >= def.maxLevel) continue;
       if (cur === 0 && passiveCount >= MAX_PASSIVES) continue;
-      const matchesOwnedWeapon = p.weapons.some(w => w.id === def.evolves && !w.evolved);
+      const ownedW = p.weapons.find(w => w.id === def.evolves && !w.evolved);
+      const wDef = Data.WEAPONS[def.evolves];
+      const nextLv = cur + 1;
+      const hint = ownedW
+        ? (ownedW.level >= wDef.maxLevel
+            ? `🔥 相棒 ${wDef.icon}${wDef.name} Lv.5達成！（これをLv.5で次LvUP進化）`
+            : `進化相棒: ${wDef.icon} ${wDef.name} (現在 Lv.${ownedW.level}/5)`)
+        : `進化対象: ${wDef.icon} ${wDef.name}`;
       pool.push({
         kind: 'passive',
         id: def.id,
         title: def.name,
         icon: def.icon,
-        badge: cur === 0 ? (matchesOwnedWeapon ? '🔥 進化シナジー!' : 'NEW パッシブ') : `Lv.${cur} → Lv.${cur + 1}`,
+        badge: cur === 0
+          ? (ownedW ? '🔥 進化シナジー!' : 'NEW パッシブ')
+          : (nextLv === def.maxLevel ? `Lv.${cur} → Lv.5 (MAX)` : `Lv.${cur} → Lv.${nextLv}`),
         desc: def.desc,
-        priority: matchesOwnedWeapon ? 26 : 12
+        evolveHint: hint,
+        priority: ownedW ? (ownedW.level >= wDef.maxLevel ? 34 : 26) : 12
       });
     }
 
-    // Weighted shuffle keeping evolutions at top
+    // GUARANTEED: all ready Lv.5+Lv.5 evolutions always appear first!
     const evos = pool.filter(c => c.kind === 'evolve');
-    const rest = pool.filter(c => c.kind !== 'evolve').sort((a, b) => (Math.random() * 25 + b.priority) - (Math.random() * 25 + a.priority));
+    const rest = pool.filter(c => c.kind !== 'evolve').sort((a, b) => (Math.random() * 22 + b.priority) - (Math.random() * 22 + a.priority));
     const picked = [...evos, ...rest].slice(0, 3);
 
     // Fallback if everything maxed!
@@ -1703,7 +1796,7 @@ window.PBEngine = (() => {
       Storage.recordWeaponSeen(choice.id, false);
       Audio.playSfx('click');
     } else if (choice.kind === 'passive') {
-      p.passives[choice.id] = (p.passives[choice.id] || 0) + 1;
+      p.passives[choice.id] = Math.min(Data.PASSIVES[choice.id].maxLevel, (p.passives[choice.id] || 0) + 1);
       if (choice.id === 'burger') {
         p.maxHp = getComputedStats(p).maxHp;
         p.hp = Math.min(p.maxHp, p.hp + 25);
@@ -1745,7 +1838,7 @@ window.PBEngine = (() => {
     if (!state) return;
     state.ended = false;
     state.endless = true;
-    Audio.startBgm('normal');
+    Audio.startBgm(state.stage.id);
   }
 
   function finishRun(victory) {
