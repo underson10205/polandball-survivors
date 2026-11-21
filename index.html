@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ポーランドボール・サバイバーズ | 2人協力対応 ヴァンサバアクション</title>
+  <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット2台でのオンライン協力プレイ対応。" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+  <canvas id="title-bg-canvas"></canvas>
+
+  <!-- === SCREEN: TITLE === -->
+  <section id="screen-title" class="screen active">
+    <div class="title-card">
+      <div class="title-logo-wrap">
+        <canvas id="logo-ball-left" width="76" height="76"></canvas>
+        <div>
+          <h1 class="title-h1">ポーランドボール<br />サバイバーズ</h1>
+          <p class="title-sub">各国ネタ武器×進化×2台協力マルチ！宇宙へ進め！</p>
+        </div>
+        <canvas id="logo-ball-right" width="76" height="76"></canvas>
+      </div>
+
+      <div class="coin-pill">🪙 所持コイン: <span id="title-coins">0</span></div>
+
+      <div class="title-actions-main">
+        <button id="btn-solo" class="btn btn-primary">
+          <span>🎮 1人で遊ぶ</span>
+          <span class="btn-desc">ソロ出撃・ステージ選択</span>
+        </button>
+        <button id="btn-coop" class="btn btn-coop">
+          <span>🤝 2人で協力プレイ</span>
+          <span class="btn-desc">PC＋タブレット等2台で同時プレイ！</span>
+        </button>
+      </div>
+
+      <div class="title-actions-sub">
+        <button id="btn-shop" class="btn btn-gold btn-sm">🛒 強化ショップ</button>
+        <button id="btn-codex" class="btn btn-sm">📖 図鑑・進化表</button>
+        <button id="btn-ach" class="btn btn-sm">🏆 実績</button>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:0.82rem;font-weight:800;color:#475569;">
+        <span>PC: WASD / 矢印＋Space(ダッシュ)</span>
+        <span>・</span>
+        <span>タブレット/スマホ: 画面ドラッグ移動＋ボタン</span>
+        <button id="btn-title-sound" class="btn btn-sm" style="padding:4px 10px;">🔊 音ON</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- === SCREEN: SOLO SELECT === -->
+  <section id="screen-solo" class="screen">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🎮 ソロ出撃 — キャラ＆ステージ選択</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="coin-pill">🪙 <span id="solo-coins">0</span></span>
+          <button class="btn btn-sm" data-back="title">← もどる</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:900;margin-bottom:8px;">① キャラクター（ポーランドボール）を選ぶ</div>
+        <div id="solo-char-grid" class="char-grid"></div>
+      </div>
+
+      <div>
+        <div style="font-weight:900;margin-bottom:8px;">② ステージを選ぶ</div>
+        <div id="solo-stage-grid" class="stage-grid"></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
+        <button id="btn-start-solo" class="btn btn-primary" style="min-width:220px;">🚀 出撃する！</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- === SCREEN: 2P CO-OP === -->
+  <section id="screen-coop" class="screen">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🤝 2人同時プレイ（2台端末・P2P協力）</h2>
+        <button id="btn-coop-back" class="btn btn-sm">← もどる</button>
+      </div>
+
+      <div id="coop-status" class="status-banner">
+        PCとタブレットなど、2台の端末で同じページを開いて「部屋をつくる」または「部屋に入る」を選んでね！
+      </div>
+
+      <!-- Step 1: Choose Host or Join -->
+      <div id="coop-entry" class="coop-split">
+        <div class="coop-box">
+          <div style="font-size:1.15rem;font-weight:900;">👑 1P（ホスト）になる</div>
+          <div style="font-size:0.84rem;color:#475569;">部屋を作成し、4桁のコードまたはQRコードを2Pの端末に共有します。</div>
+          <button id="btn-create-room" class="btn btn-primary" style="width:100%;">🏠 部屋をつくる</button>
+        </div>
+
+        <div class="coop-box">
+          <div style="font-size:1.15rem;font-weight:900;">📱 2P（ゲスト）で参加</div>
+          <div style="font-size:0.84rem;color:#475569;">1Pの画面に表示された4桁のルームコードを入力して合流します。</div>
+          <input id="input-room-code" class="code-input" type="tel" maxlength="6" placeholder="1234" autocomplete="off" />
+          <button id="btn-join-room" class="btn btn-coop" style="width:100%;">🔗 部屋に入る</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Active Room / Lobby -->
+      <div id="coop-lobby" style="display:none;flex-direction:column;gap:14px;">
+        <div id="host-share-box" class="coop-box" style="flex-direction:row;flex-wrap:wrap;justify-content:space-around;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+            <div style="font-weight:900;font-size:0.9rem;">ルームコード（2Pに教えてね！）</div>
+            <div id="display-room-code" class="room-code-big">----</div>
+            <button id="btn-copy-url" class="btn btn-gold btn-sm">📋 招待URLをコピー</button>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <div style="font-weight:900;font-size:0.82rem;">タブレットのカメラでQR読取！</div>
+            <div id="qr-box"></div>
+          </div>
+        </div>
+
+        <div class="lobby-players">
+          <div class="lobby-slot">
+            <canvas id="lobby-p1-canvas" width="64" height="64"></canvas>
+            <div>
+              <div style="font-weight:900;">1P（ホスト）: <span id="lobby-p1-name">ポーランド</span></div>
+              <div id="lobby-p1-state" style="font-size:0.82rem;font-weight:800;color:#16a34a;">準備OK！</div>
+            </div>
+          </div>
+          <div class="lobby-slot">
+            <canvas id="lobby-p2-canvas" width="64" height="64"></canvas>
+            <div>
+              <div style="font-weight:900;">2P（ゲスト）: <span id="lobby-p2-name">参加待ち…</span></div>
+              <div id="lobby-p2-state" style="font-size:0.82rem;font-weight:800;color:#64748b;">未接続</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight:900;margin-bottom:8px;">自分のキャラクターを選ぶ</div>
+          <div id="coop-char-grid" class="char-grid"></div>
+        </div>
+
+        <div id="coop-stage-section">
+          <div style="font-weight:900;margin-bottom:8px;">ステージ選択（ホストが選択）</div>
+          <div id="coop-stage-grid" class="stage-grid"></div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <button id="btn-leave-room" class="btn btn-sm">🚪 部屋を出る</button>
+          <div style="display:flex;gap:10px;">
+            <button id="btn-guest-ready" class="btn btn-emerald" style="display:none;">✅ 準備OKにする</button>
+            <button id="btn-start-coop" class="btn btn-primary" style="display:none;" disabled>🚀 2人で出撃する！</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- === SCREEN: SHOP === -->
+  <section id="screen-shop" class="screen">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🛒 永続強化ショップ ＆ キャラ解放</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="coin-pill">🪙 <span id="shop-coins">0</span></span>
+          <button class="btn btn-sm" data-back="title">← もどる</button>
+        </div>
+      </div>
+      <div style="font-weight:900;">パワーアップ（全プレイに永続反映！）</div>
+      <div id="shop-upgrade-grid" class="list-grid"></div>
+      <div style="font-weight:900;margin-top:6px;">隠しポーランドボール解放</div>
+      <div id="shop-char-grid" class="list-grid"></div>
+    </div>
+  </section>
+
+  <!-- === SCREEN: CODEX === -->
+  <section id="screen-codex" class="screen">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>📖 ポーランドボール図鑑 ＆ 進化レシピ</h2>
+        <button class="btn btn-sm" data-back="title">← もどる</button>
+      </div>
+      <div class="tabs">
+        <button class="btn btn-sm tab-btn active" data-codex-tab="weapons">⚔️ 武器＆進化レシピ</button>
+        <button class="btn btn-sm tab-btn" data-codex-tab="chars">🌍 キャラクター</button>
+        <button class="btn btn-sm tab-btn" data-codex-tab="enemies">👾 敵ボール＆ボス</button>
+      </div>
+      <div id="codex-content" class="list-grid"></div>
+    </div>
+  </section>
+
+  <!-- === SCREEN: ACHIEVEMENTS === -->
+  <section id="screen-ach" class="screen">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🏆 実績コレクション</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="coin-pill">🪙 <span id="ach-coins">0</span></span>
+          <button class="btn btn-sm" data-back="title">← もどる</button>
+        </div>
+      </div>
+      <div id="ach-grid" class="list-grid"></div>
+    </div>
+  </section>
+
+  <!-- === IN-GAME HUD === -->
+  <div id="hud">
+    <div class="hud-xp-bar">
+      <div id="hud-xp-fill" class="hud-xp-fill"></div>
+    </div>
+
+    <div class="hud-top">
+      <div class="hud-left">
+        <div id="hud-p1-card" class="hud-player-card">
+          <div class="hud-player-row">
+            <span id="hud-p1-name">1P ポーランド</span>
+            <span id="hud-p1-hp">110/110</span>
+          </div>
+          <div class="hud-hp-track"><div id="hud-p1-hp-fill" class="hud-hp-fill"></div></div>
+        </div>
+        <div id="hud-p2-card" class="hud-player-card" style="display:none;">
+          <div class="hud-player-row">
+            <span id="hud-p2-name">2P 日本</span>
+            <span id="hud-p2-hp">100/100</span>
+          </div>
+          <div class="hud-hp-track"><div id="hud-p2-hp-fill" class="hud-hp-fill"></div></div>
+        </div>
+        <div id="hud-loadout" class="hud-loadout"></div>
+      </div>
+
+      <div class="hud-center">
+        <div id="hud-timer" class="hud-timer">00:00</div>
+        <div class="hud-stats-row">
+          <span class="hud-chip">Lv.<span id="hud-level">1</span></span>
+          <span class="hud-chip">💥 <span id="hud-kills">0</span></span>
+          <span class="hud-chip">🪙 <span id="hud-coins">0</span></span>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <button id="btn-hud-sound" class="hud-icon-btn" title="音量切替">🔊</button>
+        <button id="btn-hud-pause" class="hud-icon-btn" title="ポーズ/メニュー">⏸️</button>
+      </div>
+    </div>
+
+    <div id="hud-boss-bar" class="hud-boss-bar">
+      <div id="hud-boss-name" class="boss-name">BOSS</div>
+      <div class="boss-hp-track"><div id="hud-boss-fill" class="boss-hp-fill"></div></div>
+    </div>
+
+    <div class="hud-bottom-right">
+      <div id="hud-emotes" class="emote-strip"></div>
+      <button id="btn-dash" class="dash-btn">
+        <span>⚡</span>
+        <span>DASH</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="boss-warning"></div>
+
+  <div id="joystick-visual">
+    <div class="joy-base">
+      <div id="joy-knob" class="joy-knob"></div>
+    </div>
+  </div>
+
+  <!-- === MODAL: LEVEL UP === -->
+  <div id="modal-levelup" class="modal-backdrop">
+    <div class="modal-card">
+      <div style="text-align:center;">
+        <div style="font-size:1.55rem;font-weight:900;color:#b45309;">⭐ LEVEL UP! (Lv.<span id="lvl-num">2</span>)</div>
+        <div id="lvl-subtitle" style="font-size:0.9rem;font-weight:800;color:#475569;">好きな強化を1つ選んでね！</div>
+      </div>
+      <div id="upgrade-grid" class="upgrade-grid"></div>
+      <div id="lvl-wait-banner" class="status-banner" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- === MODAL: BOSS CHEST === -->
+  <div id="modal-chest" class="modal-backdrop">
+    <div class="modal-card panel-sm" style="text-align:center;">
+      <div style="font-size:2.4rem;">🎁✨</div>
+      <div style="font-size:1.5rem;font-weight:900;color:#b45309;">ボス宝箱ゲット！！</div>
+      <div id="chest-rewards-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <button id="btn-close-chest" class="btn btn-gold" style="align-self:center;min-width:180px;">やったぜ！(OK)</button>
+    </div>
+  </div>
+
+  <!-- === MODAL: PAUSE === -->
+  <div id="modal-pause" class="modal-backdrop">
+    <div class="modal-card panel-sm" style="text-align:center;">
+      <h2 style="margin:0;font-size:1.5rem;">⏸️ メニュー / ポーズ</h2>
+      <div id="pause-note" style="font-size:0.86rem;color:#475569;">ひと休み中…</div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:280px;margin:0 auto;width:100%;">
+        <button id="btn-resume" class="btn btn-primary">▶ ゲームに戻る</button>
+        <button id="btn-toggle-bgm" class="btn btn-sm">🎵 BGM: ON</button>
+        <button id="btn-quit-run" class="btn btn-sm">🏠 タイトルへ戻る</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- === MODAL: GAME OVER / VICTORY === -->
+  <div id="modal-gameover" class="modal-backdrop">
+    <div class="modal-card" style="text-align:center;">
+      <div id="go-title" style="font-size:1.9rem;font-weight:900;">🏆 STAGE CLEAR!</div>
+      <div id="go-stats" style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-weight:900;"></div>
+      <div id="go-weapons" class="list-grid" style="text-align:left;"></div>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:6px;">
+        <button id="btn-endless" class="btn btn-emerald" style="display:none;">♾️ エンドレス続行！</button>
+        <button id="btn-retry" class="btn btn-primary">🔄 もう一度遊ぶ</button>
+        <button id="btn-go-home" class="btn">🏠 タイトルへ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- Local Bundled Libraries (No external CDN dependency!) -->
+  <script src="lib/peerjs.min.js"></script>
+  <script src="lib/qrcode.min.js"></script>
+
+  <!-- Game Modules -->
+  <script src="js/data.js"></script>
+  <script src="js/polandballRenderer.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/network.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
