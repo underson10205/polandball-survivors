@@ -6,7 +6,7 @@ window.PBStorage = (() => {
     coins: 0,
     totalKills: 0,
     totalRuns: 0,
-    unlockedChars: ['poland', 'japan', 'usa', 'uk', 'france', 'germany'],
+    unlockedChars: ['poland', 'japan', 'usa', 'uk', 'france', 'germany', 'italy', 'russia'],
     shop: {
       might: 0,
       maxHp: 0,
@@ -55,6 +55,14 @@ window.PBStorage = (() => {
       }
     } catch {
       state = JSON.parse(JSON.stringify(DEFAULT_SAVE));
+    }
+    // Automatically ensure all free starter characters (including newly added ones!) are unlocked
+    if (window.PBData && Array.isArray(window.PBData.CHARACTERS)) {
+      for (const ch of window.PBData.CHARACTERS) {
+        if (ch.unlockCost === 0 && !state.unlockedChars.includes(ch.id)) {
+          state.unlockedChars.push(ch.id);
+        }
+      }
     }
     return state;
   }
@@ -138,7 +146,7 @@ window.PBStorage = (() => {
       cooldownMult: Math.max(0.65, 1 - (shop.cooldown || 0) * 0.05),
       magnetMult: 1 + (shop.magnet || 0) * 0.2,
       armorFlat: shop.armor || 0,
-      greedMult: 1 + (shop.greed || 0) * 0.2,
+      greedMult: 1 + (shop.greed || 0) * 0.15,
       revives: shop.revive || 0
     };
   }

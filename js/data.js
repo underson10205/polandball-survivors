@@ -74,13 +74,49 @@ window.PBData = (() => {
       badgeColor: '#ca8a04'
     },
     {
+      id: 'italy',
+      name: 'イタリア',
+      en: 'Italy',
+      tagline: '情熱のコック帽＆窯焼きファイヤー！',
+      lore: '陽気なシェフ帽がトレードマーク。アツアツの炎エリアと俊敏な動きで敵を翻弄する！',
+      startWeapon: 'molotov',
+      unlockCost: 0,
+      stats: { maxHp: 112, speed: 206, might: 1.04, cooldown: 0.96, area: 1.15, amount: 0, armor: 0, regen: 0.45, magnet: 90, xpMult: 1.05 },
+      passiveDesc: '攻撃範囲 +15% / 移動速度 +8% / HP回復 +0.45/秒',
+      badgeColor: '#16a34a'
+    },
+    {
+      id: 'russia',
+      name: 'ロシア',
+      en: 'Russia',
+      tagline: 'ウシャンカ帽の冬将軍・重戦車！',
+      lore: '極寒を生き抜く分厚いウシャンカ帽と圧倒的なタフネス。ウォッカの炎で敵を焼き尽くす！',
+      startWeapon: 'molotov',
+      unlockCost: 0,
+      stats: { maxHp: 155, speed: 176, might: 1.15, cooldown: 0.98, area: 1.1, amount: 0, armor: 2, regen: 0.25, magnet: 85, xpMult: 1.0 },
+      passiveDesc: '最大HP +55 / 攻撃力 +15% / アーマー +2',
+      badgeColor: '#1d4ed8'
+    },
+    {
+      id: 'sweden',
+      name: 'スウェーデン',
+      en: 'Sweden',
+      tagline: '北欧バイキングの誇りと超回転！',
+      lore: 'ツノ付き兜を被った北欧の匠。高速回転する武器と広い範囲攻撃で盤面を制圧する！',
+      startWeapon: 'teacup',
+      unlockCost: 300,
+      stats: { maxHp: 120, speed: 196, might: 1.08, cooldown: 0.86, area: 1.16, amount: 0, armor: 1, regen: 0.2, magnet: 95, xpMult: 1.05 },
+      passiveDesc: '攻撃クールダウン -14% / 攻撃範囲 +16%',
+      badgeColor: '#0284c7'
+    },
+    {
       id: 'spqr',
       name: 'ローマ帝国',
       en: 'SPQR',
       tagline: 'すべての道はローマに通ず！',
       lore: '黄金の月桂冠を戴く古の覇者。投槍ピルムの雨で軍団を粉砕する。',
       startWeapon: 'pilum',
-      unlockCost: 350,
+      unlockCost: 380,
       stats: { maxHp: 150, speed: 188, might: 1.18, cooldown: 0.96, area: 1.1, amount: 0, armor: 2, regen: 0.2, magnet: 85, xpMult: 1.0 },
       passiveDesc: '最大HP +50 / 攻撃力 +18% / アーマー +2',
       badgeColor: '#991b1b'
@@ -98,6 +134,18 @@ window.PBData = (() => {
       badgeColor: '#be123c'
     },
     {
+      id: 'singapore',
+      name: 'シンガポール',
+      en: 'Tringapore',
+      tagline: '鋭角トライアングルの超音速スター！',
+      lore: 'ポーランドボール名物の三角形「トラインガポール」！圧倒的な機動と成長速度を誇る。',
+      startWeapon: 'laser',
+      unlockCost: 580,
+      stats: { maxHp: 102, speed: 226, might: 1.08, cooldown: 0.89, area: 1.05, amount: 0, armor: 0, regen: 0.15, magnet: 115, xpMult: 1.22 },
+      passiveDesc: '移動速度 +20% / 経験値 +22% / CD -11%',
+      badgeColor: '#e11d48'
+    },
+    {
       id: 'israel',
       name: 'イスラエル',
       en: 'Israel Cube',
@@ -108,6 +156,18 @@ window.PBData = (() => {
       stats: { maxHp: 105, speed: 198, might: 1.1, cooldown: 0.9, area: 1.05, amount: 0, armor: 1, regen: 0.15, magnet: 145, xpMult: 1.15 },
       passiveDesc: '回収範囲 +70% / 経験値 +15% / CD -10%',
       badgeColor: '#0284c7'
+    },
+    {
+      id: 'switzerland',
+      name: 'スイス',
+      en: 'Switzerland',
+      tagline: '永世中立・正方形の不沈要塞！',
+      lore: '国旗が正方形なため四角い姿で参戦！赤十字の超回復力と重装甲でどんな猛攻も耐え抜く。',
+      startWeapon: 'roar',
+      unlockCost: 850,
+      stats: { maxHp: 145, speed: 190, might: 1.08, cooldown: 0.94, area: 1.15, amount: 0, armor: 3, regen: 1.6, magnet: 95, xpMult: 1.05 },
+      passiveDesc: 'HP自然回復 +1.6/秒 / アーマー +3 / 最大HP +45',
+      badgeColor: '#dc2626'
     }
   ];
 
@@ -303,16 +363,16 @@ window.PBData = (() => {
       evolvePassive: 'croissant',
       evolvedName: 'パリジャン・トルネード',
       evolvedIcon: '🌪️',
-      evolvedDesc: '巨大な黄金バゲットが螺旋を描いて無限貫通しながら舞い散る！',
-      desc: '硬いバゲットを放物線状に投げ飛ばし、複数の敵を貫通する。',
+      evolvedDesc: '焼きたての黄金バゲットが螺旋を描いて敵を切り裂きながら舞う！',
+      desc: '硬いバゲットを放物線状に投げ飛ばし、数体の敵を貫通する。',
       color: '#b45309',
       type: 'arc',
-      base: { damage: 28, cooldown: 1.5, count: 2, speed: 360, area: 1.0, pierce: 4 },
+      base: { damage: 22, cooldown: 1.75, count: 1, speed: 340, area: 0.76, pierce: 3 },
       levelUp: [
-        'バゲット +1 ＆ 貫通力UP',
-        '威力大幅UP ＆ クールダウン短縮',
-        'バゲット +1 ＆ 範囲拡大',
-        '【MAX】威力・貫通力が大幅強化！'
+        '威力UP ＆ 貫通力 +1',
+        'バゲット +1 ＆ クールダウン短縮',
+        '威力大幅UP ＆ 範囲やや拡大',
+        '【MAX】バゲット +1 ＆ 威力・貫通強化！'
       ]
     },
     bratwurst: {
@@ -418,15 +478,15 @@ window.PBData = (() => {
   };
 
   const ENEMIES = {
-    slime_ball: { id: 'slime_ball', name: 'ミニ・ローグボール', hp: 24, speed: 78, damage: 7, radius: 15, xp: 3, score: 10, desc: '群れで押し寄せる基本の敵ボール。' },
-    pirate_ball: { id: 'pirate_ball', name: '海賊ソマリアボール', hp: 38, speed: 102, damage: 10, radius: 17, xp: 5, score: 18, desc: '素早く回り込んでくる眼帯の荒くれ者。' },
-    cameroon_ball: { id: 'cameroon_ball', name: 'カメルーンボール', hp: 56, speed: 112, damage: 12, radius: 18, xp: 8, score: 28, desc: '「不屈のライオン」の異名を持つ俊足＆タフな猛攻ボール！' },
-    mali_ball: { id: 'mali_ball', name: 'マリボール', hp: 46, speed: 94, damage: 10, radius: 17, xp: 7, score: 26, coinBonus: true, desc: '黄金帝国の末裔！倒すと高確率でゴールドコインを落とすお宝ボール！' },
-    viking_ball: { id: 'viking_ball', name: 'バイキングボール', hp: 72, speed: 84, damage: 13, radius: 20, xp: 8, score: 30, desc: 'ツノ付き兜がトレードマークのタフな戦士。' },
-    speed_ball: { id: 'speed_ball', name: 'ターボ・レーサーボール', hp: 34, speed: 145, damage: 11, radius: 15, xp: 7, score: 25, desc: '猛スピードで突っ込んでくる危険な弾丸ボール。' },
-    kazakh_brick: { id: 'kazakh_brick', name: 'カザフスタン・ブリック', hp: 155, speed: 62, damage: 16, radius: 24, xp: 15, score: 50, desc: 'ずっしり重い長方形の守護壁。ノックバックに強い！' },
-    turret_ball: { id: 'turret_ball', name: '砲台ボール', hp: 65, speed: 68, damage: 12, radius: 18, xp: 11, score: 40, shooter: true, desc: '距離を取りながらエネルギー弾を撃ってくる厄介者。' },
-    alien_ball: { id: 'alien_ball', name: 'エイリアン6ボール', hp: 90, speed: 110, damage: 15, radius: 18, xp: 13, score: 48, desc: '宇宙空間を漂う謎の緑エイリアン6ボール。' },
+    slime_ball: { id: 'slime_ball', name: 'ミニ・ローグボール', hp: 26, speed: 78, damage: 7, radius: 15, xp: 3, score: 10, desc: '群れで押し寄せる基本の敵ボール。' },
+    pirate_ball: { id: 'pirate_ball', name: '海賊ソマリアボール', hp: 46, speed: 102, damage: 10, radius: 17, xp: 5, score: 18, desc: '素早く回り込んでくる眼帯の荒くれ者。' },
+    cameroon_ball: { id: 'cameroon_ball', name: 'カメルーンボール', hp: 74, speed: 112, damage: 12, radius: 18, xp: 8, score: 28, desc: '「不屈のライオン」の異名を持つ俊足＆タフな猛攻ボール！' },
+    mali_ball: { id: 'mali_ball', name: 'マリボール', hp: 62, speed: 94, damage: 10, radius: 17, xp: 7, score: 26, coinBonus: true, desc: '黄金帝国の末裔！倒すと高確率でゴールドコインを落とすお宝ボール！' },
+    viking_ball: { id: 'viking_ball', name: 'バイキングボール', hp: 102, speed: 84, damage: 13, radius: 20, xp: 8, score: 30, desc: 'ツノ付き兜がトレードマークのタフな戦士。' },
+    speed_ball: { id: 'speed_ball', name: 'ターボ・レーサーボール', hp: 48, speed: 145, damage: 11, radius: 15, xp: 7, score: 25, desc: '猛スピードで突っ込んでくる危険な弾丸ボール。' },
+    kazakh_brick: { id: 'kazakh_brick', name: 'カザフスタン・ブリック', hp: 245, speed: 62, damage: 16, radius: 24, xp: 15, score: 50, desc: 'ずっしり重い長方形の守護壁。ノックバックに強い！' },
+    turret_ball: { id: 'turret_ball', name: '砲台ボール', hp: 94, speed: 68, damage: 12, radius: 18, xp: 11, score: 40, shooter: true, desc: '距離を取りながらエネルギー弾を撃ってくる厄介者。' },
+    alien_ball: { id: 'alien_ball', name: 'エイリアン6ボール', hp: 145, speed: 110, damage: 15, radius: 18, xp: 13, score: 48, desc: '宇宙空間を漂う謎の緑エイリアン6ボール。' },
     // Mid-bosses (Rebalanced for epic boss battles!)
     boss_viking: { id: 'boss_viking', name: '巨大バイキング王', hp: 4200, speed: 104, damage: 28, radius: 40, xp: 120, score: 600, isBoss: true, isMidBoss: true, dasher: true, shooter: true, desc: '1分半に出現する中ボス。猛突進と衝撃弾で襲いかかる！倒すと宝箱ドロップ！' },
     boss_prussia: { id: 'boss_prussia', name: 'プロイセン帝国', hp: 9500, speed: 114, damage: 32, radius: 44, xp: 200, score: 1100, isBoss: true, isMidBoss: true, dasher: true, shooter: true, desc: '3分に出現する誇り高き鉄十字の覇者。7連弾幕と突進で迫る！' },
@@ -461,7 +521,7 @@ window.PBData = (() => {
       bgAccent: '#0ea5e9',
       propType: 'sky',
       difficulty: 1.35,
-      coinMult: 1.4,
+      coinMult: 1.35,
       badge: '☁️ 中級〜上級'
     },
     {
@@ -475,35 +535,35 @@ window.PBData = (() => {
       bgAccent: '#1e293b',
       propType: 'space',
       difficulty: 1.75,
-      coinMult: 2.0,
+      coinMult: 1.75,
       badge: '🌌 超激戦'
     }
   ];
 
   const SHOP_UPGRADES = [
-    { id: 'might', name: '攻撃力アップ', icon: '💪', desc: '全武器のダメージ +8%/Lv', maxLevel: 5, baseCost: 60, costStep: 70 },
-    { id: 'maxHp', name: '体力強化', icon: '❤️', desc: '最大HP +18/Lv', maxLevel: 5, baseCost: 50, costStep: 60 },
-    { id: 'speed', name: '俊足ブーツ', icon: '👟', desc: '移動速度 +6%/Lv', maxLevel: 5, baseCost: 55, costStep: 65 },
-    { id: 'cooldown', name: '連射テクニック', icon: '⚡', desc: 'クールダウン -5%/Lv', maxLevel: 5, baseCost: 75, costStep: 85 },
-    { id: 'magnet', name: '超強力マグネット', icon: '🧲', desc: '回収範囲 +20%/Lv', maxLevel: 5, baseCost: 45, costStep: 55 },
-    { id: 'armor', name: '鋼鉄ボディ', icon: '🛡️', desc: 'アーマー +1/Lv', maxLevel: 5, baseCost: 65, costStep: 75 },
-    { id: 'greed', name: 'ゴールドラッシュ', icon: '🪙', desc: '獲得コイン +20%/Lv', maxLevel: 5, baseCost: 80, costStep: 90 },
-    { id: 'revive', name: '不屈の魂', icon: '✨', desc: '1プレイ中の自動復活 +1回', maxLevel: 2, baseCost: 220, costStep: 320 }
+    { id: 'might', name: '攻撃力アップ', icon: '💪', desc: '全武器のダメージ +8%/Lv', maxLevel: 5, baseCost: 80, costStep: 110 },
+    { id: 'maxHp', name: '体力強化', icon: '❤️', desc: '最大HP +18/Lv', maxLevel: 5, baseCost: 70, costStep: 95 },
+    { id: 'speed', name: '俊足ブーツ', icon: '👟', desc: '移動速度 +6%/Lv', maxLevel: 5, baseCost: 75, costStep: 100 },
+    { id: 'cooldown', name: '連射テクニック', icon: '⚡', desc: 'クールダウン -5%/Lv', maxLevel: 5, baseCost: 95, costStep: 130 },
+    { id: 'magnet', name: '超強力マグネット', icon: '🧲', desc: '回収範囲 +20%/Lv', maxLevel: 5, baseCost: 65, costStep: 85 },
+    { id: 'armor', name: '鋼鉄ボディ', icon: '🛡️', desc: 'アーマー +1/Lv', maxLevel: 5, baseCost: 85, costStep: 115 },
+    { id: 'greed', name: 'ゴールドラッシュ', icon: '🪙', desc: '獲得コイン +15%/Lv', maxLevel: 5, baseCost: 110, costStep: 140 },
+    { id: 'revive', name: '不屈の魂', icon: '✨', desc: '1プレイ中の自動復活 +1回', maxLevel: 2, baseCost: 300, costStep: 450 }
   ];
 
   const ACHIEVEMENTS = [
-    { id: 'first_play', name: '最初の一歩', desc: '初めてゲームをプレイする', reward: 50, icon: '🎮' },
-    { id: 'kills_100', name: 'ボール無双・序', desc: '累計100体の敵ボールを撃破', reward: 80, icon: '💥' },
-    { id: 'kills_1000', name: '千人斬りの英雄', desc: '累計1,000体の敵ボールを撃破', reward: 200, icon: '🏆' },
-    { id: 'level_15', name: '成長期', desc: '1回のプレイでLv.15に到達', reward: 100, icon: '⭐' },
-    { id: 'first_evolve', name: '真の力に目覚めた！', desc: '初めて武器を進化させる', reward: 150, icon: '🌟' },
-    { id: 'three_evolves', name: '兵器博覧会', desc: '1回のプレイで3つ以上の武器を進化', reward: 300, icon: '🚀' },
-    { id: 'defeat_midboss', name: '中ボス撃破！', desc: '初めて中ボスを倒して宝箱を開く', reward: 100, icon: '🎁' },
-    { id: 'defeat_reichtangle', name: 'Guten Tag 撃退！', desc: '最終ボス「ライヒタングル」を撃破', reward: 400, icon: '👑' },
-    { id: 'poland_space', name: 'Polan CAN into Space!', desc: 'ポーランドで宇宙軌道ステージをクリア', reward: 500, icon: '🪐' },
-    { id: 'coop_play', name: '同盟締結！', desc: '2人協力プレイで出撃する', reward: 120, icon: '🤝' },
-    { id: 'coop_revive', name: '友情の蘇生', desc: '協力プレイでパートナーを蘇生させる', reward: 180, icon: '💖' },
-    { id: 'unlock_char', name: '新たな仲間', desc: '隠しキャラクターを1体解放する', reward: 100, icon: '🔓' }
+    { id: 'first_play', name: '最初の一歩', desc: '初めてゲームをプレイする', reward: 20, icon: '🎮' },
+    { id: 'kills_100', name: 'ボール無双・序', desc: '累計100体の敵ボールを撃破', reward: 30, icon: '💥' },
+    { id: 'kills_1000', name: '千人斬りの英雄', desc: '累計1,000体の敵ボールを撃破', reward: 75, icon: '🏆' },
+    { id: 'level_15', name: '成長期', desc: '1回のプレイでLv.15に到達', reward: 35, icon: '⭐' },
+    { id: 'first_evolve', name: '真の力に目覚めた！', desc: '初めて武器を進化させる', reward: 50, icon: '🌟' },
+    { id: 'three_evolves', name: '兵器博覧会', desc: '1回のプレイで3つ以上の武器を進化', reward: 90, icon: '🚀' },
+    { id: 'defeat_midboss', name: '中ボス撃破！', desc: '初めて中ボスを倒して宝箱を開く', reward: 35, icon: '🎁' },
+    { id: 'defeat_reichtangle', name: 'Guten Tag 撃退！', desc: '最終ボス「ライヒタングル」を撃破', reward: 140, icon: '👑' },
+    { id: 'poland_space', name: 'Polan CAN into Space!', desc: 'ポーランドで宇宙軌道ステージをクリア', reward: 180, icon: '🪐' },
+    { id: 'coop_play', name: '同盟締結！', desc: '2人協力プレイで出撃する', reward: 40, icon: '🤝' },
+    { id: 'coop_revive', name: '友情の蘇生', desc: '協力プレイでパートナーを蘇生させる', reward: 60, icon: '💖' },
+    { id: 'unlock_char', name: '新たな仲間', desc: '隠しキャラクターを1体解放する', reward: 35, icon: '🔓' }
   ];
 
   const EMOTES = [

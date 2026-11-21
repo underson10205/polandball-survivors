@@ -291,7 +291,79 @@ window.PBRenderer = (() => {
       return;
     }
 
-    // Special Shape 5: Mother UFO Boss
+    // Special Shape 5: Tringapore (Singapore equilateral triangle!)
+    if (id === 'singapore') {
+      const s = r * 1.18;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, -s * 1.05);
+      ctx.lineTo(s * 1.02, s * 0.78);
+      ctx.lineTo(-s * 1.02, s * 0.78);
+      ctx.closePath();
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = '#ef3340';
+      ctx.fillRect(-s * 1.2, -s * 1.2, s * 2.4, s * 1.24);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-s * 1.2, s * 0.04, s * 2.4, s * 1.0);
+      // White crescent & tiny stars near top apex
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(-s * 0.14, -s * 0.42, s * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ef3340';
+      ctx.beginPath();
+      ctx.arc(-s * 0.07, -s * 0.42, s * 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      for (let k = 0; k < 5; k++) {
+        const a = (k * Math.PI * 2) / 5 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.arc(s * 0.12 + Math.cos(a) * s * 0.09, -s * 0.42 + Math.sin(a) * s * 0.09, s * 0.032, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+      ctx.lineWidth = strokeW;
+      ctx.strokeStyle = INK;
+      ctx.stroke();
+      ctx.restore();
+
+      drawEyes(ctx, r * 0.82, mood, lookX, lookY, { spacing: 0.3, yOffset: 0.22 });
+      return;
+    }
+
+    // Special Shape 6: Switzerland (Authentic square flag!)
+    if (id === 'switzerland') {
+      const s = r * 1.72;
+      const x0 = -s / 2;
+      const y0 = -s / 2;
+      ctx.save();
+      ctx.fillStyle = '#da291c';
+      ctx.beginPath();
+      ctx.roundRect(x0, y0, s, s, r * 0.16);
+      ctx.fill();
+      // Bold white Swiss cross
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-s * 0.13, -s * 0.34, s * 0.26, s * 0.68);
+      ctx.fillRect(-s * 0.34, -s * 0.13, s * 0.68, s * 0.26);
+      ctx.lineWidth = strokeW;
+      ctx.strokeStyle = INK;
+      ctx.stroke();
+      // Cute white medic/alpine cap badge on top
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(-s * 0.34, y0 - s * 0.22, s * 0.68, s * 0.24, r * 0.1);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#da291c';
+      ctx.fillRect(-s * 0.04, y0 - s * 0.18, s * 0.08, s * 0.16);
+      ctx.fillRect(-s * 0.08, y0 - s * 0.14, s * 0.16, s * 0.08);
+      ctx.restore();
+
+      drawEyes(ctx, r * 0.85, mood, lookX, lookY, { spacing: 0.38, yOffset: -0.1 });
+      return;
+    }
+
+    // Special Shape 7: Mother UFO Boss
     if (id === 'boss_ufo') {
       ctx.save();
       // Glass dome
@@ -542,6 +614,102 @@ window.PBRenderer = (() => {
         ctx.beginPath();
         ctx.arc(0, -r * 0.25, r * 0.82, Math.PI * 1.15, Math.PI * 1.85);
         ctx.stroke();
+        ctx.restore();
+        break;
+
+      case 'italy':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#009246';
+          ctx.fillRect(-r, -r, (r * 2) / 3, r * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r / 3, -r, (r * 2) / 3, r * 2);
+          ctx.fillStyle = '#ce2b37';
+          ctx.fillRect(r / 3, -r, (r * 2) / 3, r * 2);
+        });
+        drawEyes(ctx, r, mood, lookX, lookY);
+        // Puffy white Italian Chef Hat (Toque)!
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.5, r * 0.08);
+        ctx.beginPath();
+        ctx.arc(-r * 0.36, -r * 1.18, r * 0.34, 0, Math.PI * 2);
+        ctx.arc(0, -r * 1.32, r * 0.38, 0, Math.PI * 2);
+        ctx.arc(r * 0.36, -r * 1.18, r * 0.34, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(-r * 0.56, -r * 1.16, r * 1.12, r * 0.34);
+        ctx.beginPath();
+        ctx.arc(-r * 0.36, -r * 1.18, r * 0.34, Math.PI * 0.75, Math.PI * 1.9);
+        ctx.arc(0, -r * 1.32, r * 0.38, Math.PI * 1.05, Math.PI * 1.95);
+        ctx.arc(r * 0.36, -r * 1.18, r * 0.34, Math.PI * 1.1, Math.PI * 0.25);
+        ctx.lineTo(r * 0.56, -r * 0.82);
+        ctx.lineTo(-r * 0.56, -r * 0.82);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        break;
+
+      case 'russia':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r, -r, r * 2, (r * 2) / 3);
+          ctx.fillStyle = '#0039a6';
+          ctx.fillRect(-r, -r / 3, r * 2, (r * 2) / 3);
+          ctx.fillStyle = '#d52b1e';
+          ctx.fillRect(-r, r / 3, r * 2, (r * 2) / 3);
+        });
+        drawEyes(ctx, r, mood === 'normal' ? 'angry' : mood, lookX, lookY, { yOffset: 0.02 });
+        // Cozy Ushanka fur hat with earflaps & red star!
+        ctx.save();
+        ctx.fillStyle = '#57534e';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.6, r * 0.08);
+        // Earflaps
+        ctx.beginPath();
+        ctx.roundRect(-r * 1.06, -r * 0.65, r * 0.32, r * 0.9, r * 0.12);
+        ctx.roundRect(r * 0.74, -r * 0.65, r * 0.32, r * 0.9, r * 0.12);
+        ctx.fill(); ctx.stroke();
+        // Fur dome
+        ctx.fillStyle = '#78716c';
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.88, -r * 1.32, r * 1.76, r * 0.76, [r * 0.32, r * 0.32, r * 0.1, r * 0.1]);
+        ctx.fill(); ctx.stroke();
+        // Front fur brim + red star
+        ctx.fillStyle = '#a8a29e';
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.68, -r * 1.1, r * 1.36, r * 0.5, r * 0.12);
+        ctx.fill(); ctx.stroke();
+        drawStar(ctx, 0, -r * 0.85, 5, r * 0.22, r * 0.09, '#dc2626');
+        ctx.restore();
+        break;
+
+      case 'sweden':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#006aa7';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.fillStyle = '#fecc02';
+          ctx.fillRect(-r * 0.42, -r, r * 0.3, r * 2);
+          ctx.fillRect(-r, -r * 0.15, r * 2, r * 0.3);
+        });
+        drawEyes(ctx, r, mood, lookX, lookY);
+        // Sleek Nordic Viking helm
+        ctx.save();
+        ctx.fillStyle = '#cbd5e1';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.6, r * 0.08);
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.45, r * 0.84, Math.PI, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fef3c7';
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(side * r * 0.6, -r * 0.75);
+          ctx.quadraticCurveTo(side * r * 1.15, -r * 0.9, side * r * 1.05, -r * 1.34);
+          ctx.quadraticCurveTo(side * r * 0.82, -r * 1.05, side * r * 0.45, -r * 0.94);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+        }
         ctx.restore();
         break;
 

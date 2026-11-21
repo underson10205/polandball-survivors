@@ -238,6 +238,10 @@ window.PBEngine = (() => {
     let duration = (b.duration || 2.5) * (1 + (lv - 1) * 0.14) * (evo ? 1.65 : 1);
 
     if (w.id === 'katana' && lv >= 2) count = Math.max(count, 2);
+    if (w.id === 'baguette') {
+      count = Math.min(5, b.count + Math.floor((lv - 1) / 2) + (evo ? 1 : 0) + Math.min(1, pStats.amount));
+      area *= evo ? 0.78 : 0.9;
+    }
     if (w.id === 'teacup' && evo) { count = Math.max(6, count); duration = 999; cooldown = 0.1; }
     if (w.id === 'roar') count = 1;
 
@@ -784,10 +788,10 @@ window.PBEngine = (() => {
             spiralR: 20,
             originX: p.x,
             originY: p.y,
-            radius: 16 * ws.area,
+            radius: 12 * ws.area,
             damage: ws.damage,
             pierce: ws.pierce,
-            life: w.evolved ? 2.4 : 1.75,
+            life: w.evolved ? 1.55 : 1.4,
             spin: 0,
             hitSet: new Map()
           });
@@ -932,9 +936,11 @@ window.PBEngine = (() => {
   function updateSpawning(dt) {
     const t = state.time;
     const isCoop = state.players.length === 2;
-    const diff = state.stage.difficulty * (isCoop ? 1.42 : 1.0);
+    const diff = state.stage.difficulty * (isCoop ? 1.48 : 1.0);
     const bossDiff = state.stage.difficulty * (isCoop ? 1.85 : 1.0);
-    const timeMult = 1 + t / 115;
+    // Smooth early game (<60s), steep mid-to-late mob HP ramp so regular hordes stay exciting!
+    const midRamp = t > 60 ? Math.pow((t - 60) / 95, 1.85) * 1.65 : 0;
+    const timeMult = 1 + t / 100 + midRamp;
 
     // Mid-bosses at 90s, 180s, 270s
     const midSchedule = [
@@ -1321,13 +1327,13 @@ window.PBEngine = (() => {
       }
     } else {
       const r = Math.random();
-      if (e.type === 'mali_ball' && r < 0.38) {
-        state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.round(9 * state.stage.coinMult) });
-      } else if (r < 0.055) {
-        state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.round(5 * state.stage.coinMult) });
-      } else if (r < 0.068) {
+      if (e.type === 'mali_ball' && r < 0.18) {
+        state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.max(2, Math.round(4 * state.stage.coinMult)) });
+      } else if (r < 0.025) {
+        state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.max(1, Math.round(2 * state.stage.coinMult)) });
+      } else if (r < 0.042) {
         state.pickups.push({ id: state.nextEid++, kind: 'heal', x: e.x - 8, y: e.y + 6, val: 38 });
-      } else if (r < 0.072) {
+      } else if (r < 0.047) {
         state.pickups.push({ id: state.nextEid++, kind: 'magnet', x: e.x, y: e.y - 8, val: 1 });
       }
     }
@@ -1737,7 +1743,7 @@ window.PBEngine = (() => {
       picked.push(
         picked.length % 2 === 0
           ? { kind: 'heal_bonus', id: 'pierogi', title: '特盛ピエロギ', icon: '🥟', badge: '回復ボーナス', desc: 'HPを50回復＆一時無敵！' }
-          : { kind: 'coin_bonus', id: 'gold', title: 'ポーランド金貨袋', icon: '🪙', badge: 'コインボーナス', desc: 'ゴールドコイン +35 を獲得！' }
+          : { kind: 'coin_bonus', id: 'gold', title: 'ポーランド金貨袋', icon: '🪙', badge: 'コインボーナス', desc: 'ゴールドコイン +15 を獲得！' }
       );
     }
     return picked;
@@ -1806,7 +1812,7 @@ window.PBEngine = (() => {
       p.hp = Math.min(p.maxHp, p.hp + 50);
       p.invuln = 1.5;
     } else if (choice.kind === 'coin_bonus') {
-      state.coinsEarned += 35;
+      state.coinsEarned += 15;
     }
   }
 
@@ -1819,7 +1825,7 @@ window.PBEngine = (() => {
       const evo = choices.find(c => c.kind === 'evolve');
       const reward = evo || choices[0];
       applyChoiceEffect(p, reward);
-      const coinBonus = Math.round(45 * state.stage.coinMult);
+      const coinBonus = Math.round(18 * state.stage.coinMult);
       state.coinsEarned += coinBonus;
       rewardsByPid.push({ pid: p.pid, playerName: p.name, reward, coins: coinBonus });
     }
@@ -1846,10 +1852,10 @@ window.PBEngine = (() => {
     Audio.stopBgm();
     Audio.playSfx(victory ? 'victory' : 'hurt');
 
-    // Compute final coin reward
-    const timeCoins = Math.floor(state.time * 0.35 * state.stage.coinMult);
-    const killCoins = Math.floor(state.kills * 0.12 * state.stage.coinMult);
-    const clearBonus = victory ? Math.round(180 * state.stage.coinMult) : 0;
+    // Compute final coin reward (rebalanced for rewarding multi-run progression)
+    const timeCoins = Math.floor(state.time * 0.12 * state.stage.coinMult);
+    const killCoins = Math.floor(state.kills * 0.03 * state.stage.coinMult);
+    const clearBonus = victory ? Math.round(65 * state.stage.coinMult) : 0;
     const totalCoins = state.coinsEarned + timeCoins + killCoins + clearBonus;
     Storage.addCoins(totalCoins);
 
