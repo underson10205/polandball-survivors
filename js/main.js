@@ -15,13 +15,21 @@
   let activeCodexTab = 'weapons';
   let lastRunConfig = null;
 
+  const DEFAULT_SLOT_CHARS = ['poland', 'japan', 'usa'];
+
+  function makeInitialSlots() {
+    return {
+      0: { connected: true, charId: 'poland', ready: true, shop: null },
+      1: { connected: false, charId: 'japan', ready: false, shop: null },
+      2: { connected: false, charId: 'usa', ready: false, shop: null }
+    };
+  }
+
   const lobby = {
     role: null, // 'host' | 'guest'
+    myPid: 0,
     roomCode: '',
-    p1Char: 'poland',
-    p2Char: 'japan',
-    p2Shop: null,
-    p2Ready: false,
+    slots: makeInitialSlots(),
     stageId: 'meadow',
     connected: false
   };
@@ -429,33 +437,43 @@
     $('host-share-box').style.display = lobby.role === 'host' ? 'flex' : 'none';
     $('display-room-code').textContent = lobby.roomCode;
 
-    const p1Def = Data.CHARACTERS.find(c => c.id === lobby.p1Char) || Data.CHARACTERS[0];
-    const p2Def = Data.CHARACTERS.find(c => c.id === lobby.p2Char) || Data.CHARACTERS[1];
+    // Render all 3 player slots (1P Host, 2P Guest, 3P Guest)
+    for (let pid = 0; pid < 3; pid++) {
+      const sl = lobby.slots[pid];
+      const idx = pid + 1;
+      const nameEl = $(`lobby-p${idx}-name`);
+      const stateEl = $(`lobby-p${idx}-state`);
+      const cv = $(`lobby-p${idx}-canvas`);
+      if (!nameEl || !stateEl || !cv) continue;
 
-    $('lobby-p1-name').textContent = p1Def.name;
-    Renderer.renderBallToCanvas($('lobby-p1-canvas'), p1Def.id, 'normal', 0);
-
-    if (lobby.connected) {
-      $('lobby-p2-name').textContent = p2Def.name;
-      $('lobby-p2-state').textContent = lobby.p2Ready ? '✅ 準備OK！' : 'キャラ選択中…';
-      $('lobby-p2-state').style.color = lobby.p2Ready ? '#16a34a' : '#d97706';
-      Renderer.renderBallToCanvas($('lobby-p2-canvas'), p2Def.id, lobby.p2Ready ? 'happy' : 'normal', 0);
-    } else {
-      $('lobby-p2-name').textContent = '参加待ち…';
-      $('lobby-p2-state').textContent = '2Pの接続を待っています';
-      $('lobby-p2-state').style.color = '#64748b';
-      const c2 = $('lobby-p2-canvas').getContext('2d');
-      c2.clearRect(0, 0, 64, 64);
+      if (sl && sl.connected) {
+        const def = Data.CHARACTERS.find(c => c.id === sl.charId) || Data.CHARACTERS[pid];
+        const youTag = lobby.myPid === pid ? ' (あなた)' : '';
+        nameEl.textContent = def.name + youTag;
+        if (pid === 0) {
+          stateEl.textContent = '✅ 準備OK！';
+          stateEl.style.color = '#16a34a';
+        } else {
+          stateEl.textContent = sl.ready ? '✅ 準備OK！' : 'キャラ選択中…';
+          stateEl.style.color = sl.ready ? '#16a34a' : '#d97706';
+        }
+        Renderer.renderBallToCanvas(cv, def.id, sl.ready ? 'happy' : 'normal', 0);
+      } else {
+        nameEl.textContent = '参加待ち…';
+        stateEl.textContent = pid === 2 ? '任意（2人でも出撃OK）' : '未接続';
+        stateEl.style.color = '#64748b';
+        const cctx = cv.getContext('2d');
+        cctx.clearRect(0, 0, cv.width, cv.height);
+      }
     }
 
-    const myChar = lobby.role === 'host' ? lobby.p1Char : lobby.p2Char;
-    renderCharGrid($('coop-char-grid'), myChar, (id) => {
+    const mySlot = lobby.slots[lobby.myPid] || lobby.slots[0];
+    renderCharGrid($('coop-char-grid'), mySlot.charId, (id) => {
+      mySlot.charId = id;
       if (lobby.role === 'host') {
-        lobby.p1Char = id;
         sendLobbyState();
       } else {
-        lobby.p2Char = id;
-        Net.send('lobby_guest', { charId: id, ready: lobby.p2Ready, shop: Storage.getShopBonuses() });
+        Net.send('lobby_guest', { charId: id, ready: mySlot.ready, shop: Storage.getShopBonuses() });
       }
       renderCoopLobbyUI();
     });
@@ -467,70 +485,120 @@
     });
 
     if (lobby.role === 'host') {
+      const connectedGuests = [1, 2].filter(pid => lobby.slots[pid].connected);
+      const totalCount = 1 + connectedGuests.length;
+      const allReady = connectedGuests.length > 0 && connectedGuests.every(pid => lobby.slots[pid].ready);
       $('btn-start-coop').style.display = 'inline-flex';
       $('btn-guest-ready').style.display = 'none';
-      $('btn-start-coop').disabled = !lobby.connected;
-      $('btn-start-coop').textContent = lobby.connected
-        ? (lobby.p2Ready ? '🚀 2人で出撃する！' : '🚀 出撃する！(2P準備中)')
-        : '2Pの参加待ち…';
+      $('btn-start-coop').disabled = connectedGuests.length === 0;
+      $('btn-start-coop').textContent = connectedGuests.length === 0
+        ? '2P・3Pの参加待ち…'
+        : (allReady ? `🚀 ${totalCount}人で出撃する！` : `🚀 ${totalCount}人で出撃する！(準備中あり)`);
     } else {
       $('btn-start-coop').style.display = 'none';
       $('btn-guest-ready').style.display = 'inline-flex';
-      $('btn-guest-ready').textContent = lobby.p2Ready ? '✅ 準備OK！（解除する）' : '✅ 準備OKにする';
+      $('btn-guest-ready').textContent = mySlot.ready ? '✅ 準備OK！（解除する）' : '✅ 準備OKにする';
     }
   }
 
   function sendLobbyState() {
-    if (lobby.role === 'host' && lobby.connected) {
+    if (lobby.role === 'host' && Net.isConnected()) {
       Net.send('lobby_state', {
-        p1Char: lobby.p1Char,
-        p2Char: lobby.p2Char,
-        p2Ready: lobby.p2Ready,
+        slots: {
+          0: { connected: true, charId: lobby.slots[0].charId, ready: true },
+          1: { connected: lobby.slots[1].connected, charId: lobby.slots[1].charId, ready: lobby.slots[1].ready },
+          2: { connected: lobby.slots[2].connected, charId: lobby.slots[2].charId, ready: lobby.slots[2].ready }
+        },
         stageId: lobby.stageId
       });
     }
   }
 
-  // Bind Network Events
+  // Bind Network Events (2P & 3P Star Topology!)
   Net.on('status', (msg, ok) => setCoopStatus(msg, ok));
   Net.on('error', (err) => showToast(err));
 
-  Net.on('connected', () => {
+  Net.on('connected', (pid) => {
     lobby.connected = true;
     Audio.playSfx('revive');
     if (lobby.role === 'host') {
+      const slot = lobby.slots[pid];
+      if (slot) {
+        slot.connected = true;
+        slot.ready = false;
+        slot.charId = DEFAULT_SLOT_CHARS[pid] || 'japan';
+      }
       sendLobbyState();
-      showToast('🤝 2Pがルームに参加しました！');
+      showToast(`🤝 ${pid + 1}Pがルームに参加しました！`);
     } else {
-      Net.send('lobby_guest', { charId: lobby.p2Char, ready: lobby.p2Ready, shop: Storage.getShopBonuses() });
-      showToast('🤝 1Pのルームに接続しました！');
+      lobby.myPid = pid || Net.getMyPid() || 1;
+      const fallbackChar = DEFAULT_SLOT_CHARS[lobby.myPid] || 'japan';
+      const chosen = (selectedChar === 'poland' || (lobby.myPid === 2 && selectedChar === 'japan')) ? fallbackChar : selectedChar;
+      lobby.slots[0].connected = true;
+      lobby.slots[lobby.myPid].connected = true;
+      lobby.slots[lobby.myPid].charId = chosen;
+      lobby.slots[lobby.myPid].ready = false;
+      Net.send('lobby_guest', { charId: chosen, ready: false, shop: Storage.getShopBonuses() });
+      showToast(`🤝 ${lobby.myPid + 1}Pとしてルームに接続しました！`);
     }
     renderCoopLobbyUI();
   });
 
-  Net.on('disconnected', () => {
-    lobby.connected = false;
-    lobby.p2Ready = false;
-    showToast('⚠️ パートナーとの接続が切れました');
-    if (Engine.isRunning()) {
-      Engine.stop();
-      exitToTitle();
+  Net.on('disconnected', (pid) => {
+    if (lobby.role === 'host') {
+      if (lobby.slots[pid]) {
+        lobby.slots[pid].connected = false;
+        lobby.slots[pid].ready = false;
+        lobby.slots[pid].shop = null;
+      }
+      lobby.connected = Net.isConnected();
+      showToast(`⚠️ ${pid + 1}Pとの接続が切れました`);
+      if (Engine.isRunning()) {
+        Engine.handlePeerDisconnected(pid);
+        if (!Net.isConnected()) {
+          showToast('⚠️ 全ゲストとの接続が切れました');
+          Engine.stop();
+          exitToTitle();
+        }
+      } else {
+        sendLobbyState();
+        renderCoopLobbyUI();
+      }
     } else {
-      renderCoopLobbyUI();
+      lobby.connected = false;
+      showToast('⚠️ ホストとの接続が切れました');
+      if (Engine.isRunning()) {
+        Engine.stop();
+        exitToTitle();
+      } else {
+        leaveCoop();
+      }
     }
   });
 
-  Net.on('message', (type, payload) => {
+  Net.on('message', (type, payload, fromPid) => {
     if (type === 'lobby_state' && lobby.role === 'guest') {
-      lobby.p1Char = payload.p1Char;
-      lobby.stageId = payload.stageId;
+      if (payload.slots) {
+        for (let i = 0; i < 3; i++) {
+          if (payload.slots[i]) {
+            lobby.slots[i].connected = !!payload.slots[i].connected;
+            lobby.slots[i].charId = payload.slots[i].charId || DEFAULT_SLOT_CHARS[i];
+            lobby.slots[i].ready = !!payload.slots[i].ready;
+          }
+        }
+      }
+      lobby.stageId = payload.stageId || 'meadow';
       renderCoopLobbyUI();
       return;
     }
     if (type === 'lobby_guest' && lobby.role === 'host') {
-      lobby.p2Char = payload.charId;
-      lobby.p2Ready = !!payload.ready;
-      lobby.p2Shop = payload.shop || null;
+      const slot = lobby.slots[fromPid];
+      if (slot) {
+        slot.connected = true;
+        slot.charId = payload.charId || DEFAULT_SLOT_CHARS[fromPid];
+        slot.ready = !!payload.ready;
+        slot.shop = payload.shop || null;
+      }
       sendLobbyState();
       renderCoopLobbyUI();
       return;
@@ -538,14 +606,14 @@
     if (type === 'start_game' && lobby.role === 'guest') {
       launchMatch({
         mode: 'coop_guest',
+        myPid: lobby.myPid,
         stageId: payload.stageId,
-        p1Char: payload.p1Char,
-        p2Char: payload.p2Char
+        players: payload.players
       });
       return;
     }
     // Forward in-game packets to Engine
-    Engine.handleNetMessage(type, payload);
+    Engine.handleNetMessage(type, payload, fromPid);
   });
 
   // === LAUNCH MATCH & HUD ===
@@ -586,8 +654,9 @@
     if (lobby.role) {
       Net.disconnect();
       lobby.role = null;
+      lobby.myPid = 0;
       lobby.connected = false;
-      lobby.p2Ready = false;
+      lobby.slots = makeInitialSlots();
     }
     showScreen('title');
     startTitleDiorama();
@@ -610,26 +679,25 @@
       $('hud-kills').textContent = h.kills;
       $('hud-coins').textContent = h.coins;
 
-      // 1P Card
-      const p1 = h.players[0];
-      if (p1) {
-        $('hud-p1-name').textContent = `${h.players.length === 2 ? '1P ' : ''}${p1.name}${p1.synergy ? ' 🤝' : ''}${p1.downed ? ' 💀' : ''}`;
-        $('hud-p1-hp').textContent = `${p1.hp}/${p1.maxHp}`;
-        $('hud-p1-hp-fill').style.width = `${Math.max(0, (p1.hp / Math.max(1, p1.maxHp)) * 100)}%`;
-      }
-      // 2P Card
-      const p2 = h.players[1];
-      if (p2) {
-        $('hud-p2-card').style.display = 'flex';
-        $('hud-p2-name').textContent = `2P ${p2.name}${p2.synergy ? ' 🤝' : ''}${p2.downed ? ' 🆘' : ''}`;
-        $('hud-p2-hp').textContent = `${p2.hp}/${p2.maxHp}`;
-        $('hud-p2-hp-fill').style.width = `${Math.max(0, (p2.hp / Math.max(1, p2.maxHp)) * 100)}%`;
-      } else {
-        $('hud-p2-card').style.display = 'none';
+      // Up to 3 Player HP Cards (1P / 2P / 3P)
+      const isMulti = h.players.length >= 2;
+      for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
+        const card = $(`hud-p${slotIdx + 1}-card`);
+        const pl = h.players[slotIdx];
+        if (!card) continue;
+        if (pl) {
+          card.style.display = 'flex';
+          const statusIcon = pl.disconnected ? ' 📡' : (pl.downed ? ' 🆘' : (pl.synergy ? ' 🤝' : ''));
+          $(`hud-p${slotIdx + 1}-name`).textContent = `${isMulti ? `${pl.pid + 1}P ` : ''}${pl.name}${statusIcon}`;
+          $(`hud-p${slotIdx + 1}-hp`).textContent = pl.disconnected ? '切断' : `${pl.hp}/${pl.maxHp}`;
+          $(`hud-p${slotIdx + 1}-hp-fill`).style.width = `${Math.max(0, (pl.hp / Math.max(1, pl.maxHp)) * 100)}%`;
+        } else {
+          card.style.display = 'none';
+        }
       }
 
       // Local player's loadout icons (update DOM only when changed)
-      const me = h.players[h.myPid] || p1;
+      const me = h.players.find(p => p.pid === h.myPid) || h.players[0];
       if (me) {
         const lo = $('hud-loadout');
         let html = '';
@@ -668,9 +736,13 @@
       }
     },
 
-    onLevelUpOpen(choices, level, isCoop) {
+    onLevelUpOpen(choices, level, playerCount) {
       $('lvl-num').textContent = level;
-      $('lvl-subtitle').textContent = isCoop ? '2人同時に好きな強化を選んでね！' : '好きな強化を1つ選んでね！ (キー 1/2/3 でも選択可)';
+      const isCoop = typeof playerCount === 'number' ? playerCount >= 2 : !!playerCount;
+      const n = typeof playerCount === 'number' ? playerCount : 2;
+      $('lvl-subtitle').textContent = isCoop
+        ? `${n}人同時に選択中！（仲間が取った能力は重複出現しません✨）`
+        : '好きな強化を1つ選んでね！ (キー 1/2/3 でも選択可)';
       $('lvl-wait-banner').style.display = 'none';
       const grid = $('upgrade-grid');
       grid.innerHTML = '';
@@ -758,7 +830,7 @@
             <div class="item-top">
               <div class="item-icon">${w.icon}</div>
               <div>
-                <div class="item-title">${summary.players.length === 2 ? `[${pl.pid + 1}P] ` : ''}${w.name} ${w.evolved ? '★進化' : `Lv.${w.level}`}</div>
+                <div class="item-title">${summary.players.length >= 2 ? `[${pl.pid + 1}P] ` : ''}${w.name} ${w.evolved ? '★進化' : `Lv.${w.level}`}</div>
                 <div class="item-desc">総ダメージ: ${w.damage.toLocaleString()}</div>
               </div>
             </div>
@@ -937,14 +1009,14 @@
     launchMatch({ mode: 'solo', stageId: selectedStage, p1Char: selectedChar });
   });
 
-  // Co-op Room Actions
+  // Co-op Room Actions (2P & 3P!)
   $('btn-create-room').addEventListener('click', async () => {
     Audio.ensure();
     Audio.playSfx('click');
     lobby.role = 'host';
-    lobby.p1Char = selectedChar;
-    lobby.p2Char = 'japan';
-    lobby.p2Ready = false;
+    lobby.myPid = 0;
+    lobby.slots = makeInitialSlots();
+    lobby.slots[0].charId = selectedChar;
     lobby.connected = false;
     lobby.stageId = selectedStage;
     renderCoopLobbyUI();
@@ -960,15 +1032,17 @@
     const code = $('input-room-code').value.trim();
     if (!code) { showToast('4桁のルームコードを入力してね！'); return; }
     lobby.role = 'guest';
+    lobby.myPid = 1;
     lobby.roomCode = code;
-    lobby.p2Char = selectedChar === 'poland' ? 'japan' : selectedChar;
-    lobby.p2Ready = false;
+    lobby.slots = makeInitialSlots();
     lobby.connected = false;
     renderCoopLobbyUI();
     try {
       await Net.joinRoom(code);
     } catch (err) {
       lobby.role = null;
+      lobby.myPid = 0;
+      lobby.slots = makeInitialSlots();
       renderCoopLobbyUI();
       showToast(err.message || '接続できませんでした');
     }
@@ -978,7 +1052,7 @@
     const url = getInviteUrl(lobby.roomCode);
     try {
       await navigator.clipboard.writeText(url);
-      showToast('📋 招待URLをコピーしました！2Pの端末で開いてね');
+      showToast('📋 招待URLをコピーしました！2P・3Pの端末で開いてね');
     } catch {
       showToast(`ルームコード: ${lobby.roomCode}`);
     }
@@ -986,30 +1060,48 @@
 
   $('btn-guest-ready').addEventListener('click', () => {
     Audio.playSfx('click');
-    lobby.p2Ready = !lobby.p2Ready;
-    Net.send('lobby_guest', { charId: lobby.p2Char, ready: lobby.p2Ready, shop: Storage.getShopBonuses() });
+    const mySlot = lobby.slots[lobby.myPid];
+    if (!mySlot) return;
+    mySlot.ready = !mySlot.ready;
+    Net.send('lobby_guest', { charId: mySlot.charId, ready: mySlot.ready, shop: Storage.getShopBonuses() });
     renderCoopLobbyUI();
   });
 
+  function buildCoopPlayerSpecs() {
+    const specs = [];
+    for (let pid = 0; pid < 3; pid++) {
+      const sl = lobby.slots[pid];
+      if (!sl || !sl.connected) continue;
+      specs.push({
+        pid,
+        charId: sl.charId || DEFAULT_SLOT_CHARS[pid],
+        shop: pid === 0 ? Storage.getShopBonuses() : (sl.shop || null)
+      });
+    }
+    return specs;
+  }
+
   $('btn-start-coop').addEventListener('click', () => {
-    if (!lobby.connected) return;
+    if (!Net.isConnected()) return;
     Audio.playSfx('levelup');
-    Net.send('start_game', { stageId: lobby.stageId, p1Char: lobby.p1Char, p2Char: lobby.p2Char });
+    const players = buildCoopPlayerSpecs();
+    const publicPlayers = players.map(p => ({ pid: p.pid, charId: p.charId }));
+    Net.send('start_game', { stageId: lobby.stageId, players: publicPlayers });
     launchMatch({
       mode: 'coop_host',
+      myPid: 0,
       stageId: lobby.stageId,
-      p1Char: lobby.p1Char,
-      p2Char: lobby.p2Char,
-      p2Shop: lobby.p2Shop
+      players
     });
   });
 
   function leaveCoop() {
     Net.disconnect();
     lobby.role = null;
+    lobby.myPid = 0;
     lobby.connected = false;
-    lobby.p2Ready = false;
-    setCoopStatus('PCとタブレットなど、2台の端末で同じページを開いて「部屋をつくる」または「部屋に入る」を選んでね！', false);
+    lobby.slots = makeInitialSlots();
+    setCoopStatus('PC・タブレット・スマホなど最大3台で同じページを開いて「部屋をつくる」または「部屋に入る」を選んでね！（能力の重複なしルール適用✨）', false);
     renderCoopLobbyUI();
   }
 
@@ -1041,7 +1133,12 @@
   $('btn-retry').addEventListener('click', () => {
     if (!lastRunConfig) { exitToTitle(); return; }
     if (lastRunConfig.mode === 'coop_host' && Net.isConnected()) {
-      Net.send('start_game', { stageId: lastRunConfig.stageId, p1Char: lastRunConfig.p1Char, p2Char: lastRunConfig.p2Char });
+      const players = buildCoopPlayerSpecs();
+      const publicPlayers = players.map(p => ({ pid: p.pid, charId: p.charId }));
+      const nextCfg = { mode: 'coop_host', myPid: 0, stageId: lastRunConfig.stageId, players };
+      Net.send('start_game', { stageId: nextCfg.stageId, players: publicPlayers });
+      launchMatch(nextCfg);
+      return;
     }
     launchMatch(lastRunConfig);
   });

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ポーランドボール・サバイバーズ | 2人協力対応 ヴァンサバアクション</title>
-  <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット2台でのオンライン協力プレイ対応。" />
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <title>ポーランドボール・サバイバーズ | 2〜3人協力対応 ヴァンサバアクション</title>
+  <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット・スマホ最大3台でのオンライン協力プレイ対応。" />
+  <link rel="stylesheet" href="styles.css?v=8" />
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -18,7 +18,7 @@
         <canvas id="logo-ball-left" width="76" height="76"></canvas>
         <div>
           <h1 class="title-h1">ポーランドボール<br />サバイバーズ</h1>
-          <p class="title-sub">各国ネタ武器×進化×2台協力マルチ！宇宙へ進め！</p>
+          <p class="title-sub">各国ネタ武器×進化×最大3台協力マルチ！宇宙へ進め！</p>
         </div>
         <canvas id="logo-ball-right" width="76" height="76"></canvas>
       </div>
@@ -31,8 +31,8 @@
           <span class="btn-desc">ソロ出撃・ステージ選択</span>
         </button>
         <button id="btn-coop" class="btn btn-coop">
-          <span>🤝 2人で協力プレイ</span>
-          <span class="btn-desc">PC＋タブレット等2台で同時プレイ！</span>
+          <span>🤝 2〜3人で協力プレイ</span>
+          <span class="btn-desc">PC・タブレット・スマホ最大3台で同時プレイ！</span>
         </button>
       </div>
 
@@ -78,29 +78,29 @@
     </div>
   </section>
 
-  <!-- === SCREEN: 2P CO-OP === -->
+  <!-- === SCREEN: 2-3P CO-OP === -->
   <section id="screen-coop" class="screen">
     <div class="panel">
       <div class="panel-header">
-        <h2>🤝 2人同時プレイ（2台端末・P2P協力）</h2>
+        <h2>🤝 2〜3人同時協力プレイ（最大3台・P2P）</h2>
         <button id="btn-coop-back" class="btn btn-sm">← もどる</button>
       </div>
 
       <div id="coop-status" class="status-banner">
-        PCとタブレットなど、2台の端末で同じページを開いて「部屋をつくる」または「部屋に入る」を選んでね！
+        PC・タブレット・スマホなど最大3台で同じページを開いて「部屋をつくる」または「部屋に入る」を選んでね！（能力の重複なしルール適用✨）
       </div>
 
       <!-- Step 1: Choose Host or Join -->
       <div id="coop-entry" class="coop-split">
         <div class="coop-box">
           <div style="font-size:1.15rem;font-weight:900;">👑 1P（ホスト）になる</div>
-          <div style="font-size:0.84rem;color:#475569;">部屋を作成し、4桁のコードまたはQRコードを2Pの端末に共有します。</div>
+          <div style="font-size:0.84rem;color:#475569;">部屋を作成し、4桁のコードまたはQRコードを2P・3Pの端末に共有します。</div>
           <button id="btn-create-room" class="btn btn-primary" style="width:100%;">🏠 部屋をつくる</button>
         </div>
 
         <div class="coop-box">
-          <div style="font-size:1.15rem;font-weight:900;">📱 2P（ゲスト）で参加</div>
-          <div style="font-size:0.84rem;color:#475569;">1Pの画面に表示された4桁のルームコードを入力して合流します。</div>
+          <div style="font-size:1.15rem;font-weight:900;">📱 2P・3P（ゲスト）で参加</div>
+          <div style="font-size:0.84rem;color:#475569;">1Pの画面に表示された4桁のルームコードを入力して合流します（2人でも3人でもOK！）。</div>
           <input id="input-room-code" class="code-input" type="tel" maxlength="6" placeholder="1234" autocomplete="off" />
           <button id="btn-join-room" class="btn btn-coop" style="width:100%;">🔗 部屋に入る</button>
         </div>
@@ -110,12 +110,12 @@
       <div id="coop-lobby" style="display:none;flex-direction:column;gap:14px;">
         <div id="host-share-box" class="coop-box" style="flex-direction:row;flex-wrap:wrap;justify-content:space-around;">
           <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-            <div style="font-weight:900;font-size:0.9rem;">ルームコード（2Pに教えてね！）</div>
+            <div style="font-weight:900;font-size:0.9rem;">ルームコード（2P・3Pに教えてね！）</div>
             <div id="display-room-code" class="room-code-big">----</div>
             <button id="btn-copy-url" class="btn btn-gold btn-sm">📋 招待URLをコピー</button>
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-            <div style="font-weight:900;font-size:0.82rem;">タブレットのカメラでQR読取！</div>
+            <div style="font-weight:900;font-size:0.82rem;">タブレット/スマホのカメラでQR読取！</div>
             <div id="qr-box"></div>
           </div>
         </div>
@@ -135,6 +135,13 @@
               <div id="lobby-p2-state" style="font-size:0.82rem;font-weight:800;color:#64748b;">未接続</div>
             </div>
           </div>
+          <div class="lobby-slot">
+            <canvas id="lobby-p3-canvas" width="64" height="64"></canvas>
+            <div>
+              <div style="font-weight:900;">3P（ゲスト）: <span id="lobby-p3-name">参加待ち…</span></div>
+              <div id="lobby-p3-state" style="font-size:0.82rem;font-weight:800;color:#64748b;">任意（2人でも出撃OK）</div>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -151,7 +158,7 @@
           <button id="btn-leave-room" class="btn btn-sm">🚪 部屋を出る</button>
           <div style="display:flex;gap:10px;">
             <button id="btn-guest-ready" class="btn btn-emerald" style="display:none;">✅ 準備OKにする</button>
-            <button id="btn-start-coop" class="btn btn-primary" style="display:none;" disabled>🚀 2人で出撃する！</button>
+            <button id="btn-start-coop" class="btn btn-primary" style="display:none;" disabled>2P・3Pの参加待ち…</button>
           </div>
         </div>
       </div>
@@ -226,6 +233,13 @@
             <span id="hud-p2-hp">100/100</span>
           </div>
           <div class="hud-hp-track"><div id="hud-p2-hp-fill" class="hud-hp-fill"></div></div>
+        </div>
+        <div id="hud-p3-card" class="hud-player-card" style="display:none;">
+          <div class="hud-player-row">
+            <span id="hud-p3-name">3P アメリカ</span>
+            <span id="hud-p3-hp">120/120</span>
+          </div>
+          <div class="hud-hp-track"><div id="hud-p3-hp-fill" class="hud-hp-fill"></div></div>
         </div>
         <div id="hud-loadout" class="hud-loadout"></div>
       </div>
@@ -323,12 +337,12 @@
   <script src="lib/qrcode.min.js"></script>
 
   <!-- Game Modules -->
-  <script src="js/data.js?v=7"></script>
-  <script src="js/polandballRenderer.js?v=7"></script>
-  <script src="js/audio.js?v=7"></script>
-  <script src="js/storage.js?v=7"></script>
-  <script src="js/network.js?v=7"></script>
-  <script src="js/engine.js?v=7"></script>
-  <script src="js/main.js?v=7"></script>
+  <script src="js/data.js?v=8"></script>
+  <script src="js/polandballRenderer.js?v=8"></script>
+  <script src="js/audio.js?v=8"></script>
+  <script src="js/storage.js?v=8"></script>
+  <script src="js/network.js?v=8"></script>
+  <script src="js/engine.js?v=8"></script>
+  <script src="js/main.js?v=8"></script>
 </body>
 </html>

@@ -107,13 +107,20 @@ window.PBEngine = (() => {
     onToast: () => {}
   };
 
+  const PLAYER_COLORS = ['#fde047', '#38bdf8', '#4ade80'];
+
   let state = null;
   let guestInterp = { enemies: new Map(), players: new Map(), lastSnap: null };
   let localInput = { dx: 0, dy: 0, dash: false };
-  let guestRemoteInput = { dx: 0, dy: 0, dash: false };
+  let guestRemoteInputs = {}; // pid -> { dx, dy, dash }
   let snapAccum = 0;
   let inputSendAccum = 0;
   let hudAccum = 0;
+
+  function getPlayerByPid(pid) {
+    if (!state) return null;
+    return state.players.find(p => p.pid === pid) || null;
+  }
 
   function init(canvasEl, cbs) {
     canvas = canvasEl;
@@ -141,7 +148,7 @@ window.PBEngine = (() => {
     const sb = shopBonuses || { mightMult: 1, maxHpFlat: 0, speedMult: 1, cooldownMult: 1, magnetMult: 1, armorFlat: 0, greedMult: 1, revives: 0 };
     const maxHp = Math.round(def.stats.maxHp + sb.maxHpFlat);
     const p = {
-      pid, // 0 = 1P(Host), 1 = 2P(Guest)
+      pid, // 0 = 1P(Host), 1 = 2P(Guest), 2 = 3P(Guest)
       charId: def.id,
       name: def.name,
       x, y,
@@ -162,6 +169,7 @@ window.PBEngine = (() => {
       dashDirX: 1,
       dashDirY: 0,
       downed: false,
+      disconnected: false,
       reviveProgress: 0,
       emote: null,
       emoteTimer: 0,
@@ -185,6 +193,10 @@ window.PBEngine = (() => {
     let regenBonus = 0;
     let armorBonus = p.shop.armorFlat;
     let amountBonus = 0;
+    let projSpeedMult = 1.0;
+    let critChance = 0.14;
+    let knockbackMult = 1.0;
+    let durationMult = 1.0;
 
     for (const [passId, lvl] of Object.entries(p.passives)) {
       const def = Data.PASSIVES[passId];
@@ -199,6 +211,10 @@ window.PBEngine = (() => {
       if (def.stat === 'regenFlat') regenBonus += def.perLevel * lvl;
       if (def.stat === 'armorFlat') armorBonus += def.perLevel * lvl;
       if (def.stat === 'amountFlat') amountBonus += def.perLevel * lvl;
+      if (def.stat === 'projSpeedMult') projSpeedMult += def.perLevel * lvl;
+      if (def.stat === 'critChance') critChance += def.perLevel * lvl;
+      if (def.stat === 'knockbackMult') knockbackMult += def.perLevel * lvl;
+      if (def.stat === 'durationMult') durationMult += def.perLevel * lvl;
       if (def.stat === 'gearBonus') {
         amountBonus += Math.ceil(lvl / 2); // +1 at Lv.1, +2 at Lv.3, +3 at Lv.5
         cooldownMult -= 0.04 * lvl;
@@ -219,7 +235,11 @@ window.PBEngine = (() => {
       armor: p.baseStats.armor + armorBonus,
       regen: p.baseStats.regen + regenBonus,
       magnet: p.baseStats.magnet * magnetMult,
-      xpMult
+      xpMult,
+      projSpeedMult,
+      critChance: Math.min(0.75, critChance),
+      knockbackMult,
+      durationMult
     };
   }
 
@@ -228,21 +248,27 @@ window.PBEngine = (() => {
     const b = def.base;
     const lv = Math.min(def.maxLevel, w.level);
     const evo = w.evolved;
+    // Evolved Laser keeps full original satellite power; all other evolved weapons are toned down in power & range
+    const isEvoLaser = evo && w.id === 'laser';
 
-    let damage = b.damage * (1 + (lv - 1) * 0.35) * (evo ? 1.9 : 1);
-    let cooldown = b.cooldown * Math.pow(0.915, lv - 1) * (evo ? 0.66 : 1);
-    let count = b.count + Math.floor(lv / 2) + (evo ? 2 : 0) + pStats.amount;
-    let area = (b.area || 1) * (1 + (lv - 1) * 0.11) * (evo ? 1.48 : 1) * pStats.area;
-    let speed = (b.speed || 350) * (1 + (lv - 1) * 0.06) * (evo ? 1.22 : 1);
+    const evoDmgMult = evo ? (isEvoLaser ? 1.9 : 1.32) : 1;
+    const evoCdMult = evo ? (isEvoLaser ? 0.66 : 0.82) : 1;
+    const evoCountAdd = evo ? (isEvoLaser ? 2 : 1) : 0;
+    const evoAreaMult = evo ? (isEvoLaser ? 1.48 : 1.08) : 1;
+    const evoSpeedMult = evo ? (isEvoLaser ? 1.22 : 1.12) : 1;
+    const evoDurMult = evo ? (isEvoLaser ? 1.65 : 1.22) : 1;
+    const evoKbMult = evo ? (isEvoLaser ? 1.6 : 1.25) : 1;
+
+    let damage = b.damage * (1 + (lv - 1) * 0.35) * evoDmgMult;
+    let cooldown = b.cooldown * Math.pow(0.915, lv - 1) * evoCdMult;
+    let count = b.count + Math.floor(lv / 2) + evoCountAdd + pStats.amount;
+    let area = (b.area || 1) * (1 + (lv - 1) * 0.11) * evoAreaMult * pStats.area;
+    let speed = (b.speed || 350) * (1 + (lv - 1) * 0.06) * evoSpeedMult * (pStats.projSpeedMult || 1);
     let pierce = (b.pierce || 1) + Math.floor(lv / 2) + (evo ? 99 : 0);
-    let duration = (b.duration || 2.5) * (1 + (lv - 1) * 0.14) * (evo ? 1.65 : 1);
+    let duration = (b.duration || 2.5) * (1 + (lv - 1) * 0.14) * evoDurMult * (pStats.durationMult || 1);
 
     if (w.id === 'katana' && lv >= 2) count = Math.max(count, 2);
-    if (w.id === 'baguette') {
-      count = Math.min(5, b.count + Math.floor((lv - 1) / 2) + (evo ? 1 : 0) + Math.min(1, pStats.amount));
-      area *= evo ? 0.78 : 0.9;
-    }
-    if (w.id === 'teacup' && evo) { count = Math.max(6, count); duration = 999; cooldown = 0.1; }
+    if (w.id === 'teacup' && evo) { count = Math.max(5, count); duration = 999; cooldown = 0.1; }
     if (w.id === 'roar') count = 1;
 
     return {
@@ -253,26 +279,44 @@ window.PBEngine = (() => {
       speed,
       pierce,
       duration,
-      knockback: (b.knockback || 90) * (evo ? 1.6 : 1)
+      knockback: (b.knockback || 90) * evoKbMult * (pStats.knockbackMult || 1)
     };
   }
 
   function start(config) {
-    // config: { mode: 'solo'|'coop_host'|'coop_guest', stageId, p1Char, p2Char, p2Shop }
+    // config: { mode: 'solo'|'coop_host'|'coop_guest', stageId, myPid?, players?: [{ pid, charId, shop }], p1Char?, p2Char?, p2Shop? }
     const stage = Data.STAGES.find(s => s.id === config.stageId) || Data.STAGES[0];
     const shop1 = Storage.getShopBonuses();
-    const shop2 = config.p2Shop || shop1;
 
-    const players = [createPlayer(0, config.p1Char || 'poland', -40, 0, shop1)];
-    if (config.mode === 'coop_host' || config.mode === 'coop_guest') {
-      players.push(createPlayer(1, config.p2Char || 'japan', 40, 0, shop2));
-    } else {
-      players[0].x = 0;
+    let playerSpecs = config.players;
+    if (!Array.isArray(playerSpecs) || playerSpecs.length === 0) {
+      if (config.mode === 'coop_host' || config.mode === 'coop_guest') {
+        playerSpecs = [
+          { pid: 0, charId: config.p1Char || 'poland', shop: shop1 },
+          { pid: 1, charId: config.p2Char || 'japan', shop: config.p2Shop || shop1 }
+        ];
+      } else {
+        playerSpecs = [{ pid: 0, charId: config.p1Char || 'poland', shop: shop1 }];
+      }
     }
+
+    const spawnOffsets = playerSpecs.length === 1
+      ? [[0, 0]]
+      : (playerSpecs.length === 2 ? [[-45, 0], [45, 0]] : [[0, -45], [-46, 36], [46, 36]]);
+
+    const players = playerSpecs.map((spec, idx) => {
+      const [ox, oy] = spawnOffsets[idx] || [idx * 40, 0];
+      return createPlayer(spec.pid, spec.charId || 'poland', ox, oy, spec.shop || shop1);
+    });
+
+    const myPid = typeof config.myPid === 'number'
+      ? config.myPid
+      : (config.mode === 'coop_guest' ? (players[1]?.pid ?? 1) : players[0].pid);
+    const myStartP = players.find(p => p.pid === myPid) || players[0];
 
     state = {
       mode: config.mode,
-      myPid: config.mode === 'coop_guest' ? 1 : 0,
+      myPid,
       stage,
       running: true,
       paused: false,
@@ -304,7 +348,7 @@ window.PBEngine = (() => {
       midBossIndex: 0,
       finalBossSpawned: false,
       shake: 0,
-      camera: { x: players[config.mode === 'coop_guest' ? 1 : 0].x, y: 0 },
+      camera: { x: myStartP.x, y: myStartP.y },
       levelUp: {
         active: false,
         choicesByPid: {},
@@ -315,7 +359,10 @@ window.PBEngine = (() => {
 
     guestInterp = { enemies: new Map(), players: new Map(), lastSnap: null };
     localInput = { dx: 0, dy: 0, dash: false };
-    guestRemoteInput = { dx: 0, dy: 0, dash: false };
+    guestRemoteInputs = {};
+    for (const p of players) {
+      if (p.pid !== 0) guestRemoteInputs[p.pid] = { dx: 0, dy: 0, dash: false };
+    }
     snapAccum = 0;
     inputSendAccum = 0;
     hudAccum = 0;
@@ -365,17 +412,14 @@ window.PBEngine = (() => {
     const def = Data.EMOTES.find(e => e.id === emoteId);
     if (!def) return;
     const text = `${def.icon} ${def.label}`;
+    const me = getPlayerByPid(state.myPid);
+    if (me) { me.emote = text; me.emoteTimer = 2.6; }
+    Audio.playSfx('emote');
+
     if (state.mode === 'coop_guest') {
       Net.send('emote', { text });
-      // Show optimistically locally
-      const p = state.players[1];
-      if (p) { p.emote = text; p.emoteTimer = 2.6; }
-      Audio.playSfx('emote');
-    } else {
-      const p = state.players[0];
-      if (p) { p.emote = text; p.emoteTimer = 2.6; }
-      Audio.playSfx('emote');
-      if (state.mode === 'coop_host') Net.send('emote', { pid: 0, text });
+    } else if (state.mode === 'coop_host') {
+      Net.send('emote', { pid: state.myPid, text });
     }
   }
 
@@ -386,23 +430,44 @@ window.PBEngine = (() => {
     }
   }
 
+  function handlePeerDisconnected(pid) {
+    if (!state || state.mode !== 'coop_host') return;
+    const p = getPlayerByPid(pid);
+    if (p) {
+      p.disconnected = true;
+      p.downed = true;
+      p.hp = 0;
+      p.emote = '📡 切断';
+      p.emoteTimer = 4;
+    }
+    delete guestRemoteInputs[pid];
+    // If level-up modal was waiting on the disconnected peer, unblock remaining players immediately
+    if (state.levelUp.active) {
+      state.levelUp.pickedByPid[pid] = true;
+      checkAllPickedLevelUp();
+    }
+  }
+
   // === NETWORK MESSAGE HANDLERS ===
-  function handleNetMessage(type, payload) {
+  function handleNetMessage(type, payload, fromPid = 1) {
     if (!state) return;
 
     if (state.mode === 'coop_host') {
       if (type === 'inp') {
-        guestRemoteInput.dx = payload.dx || 0;
-        guestRemoteInput.dy = payload.dy || 0;
-        if (payload.dash) guestRemoteInput.dash = true;
+        if (!guestRemoteInputs[fromPid]) guestRemoteInputs[fromPid] = { dx: 0, dy: 0, dash: false };
+        guestRemoteInputs[fromPid].dx = payload.dx || 0;
+        guestRemoteInputs[fromPid].dy = payload.dy || 0;
+        if (payload.dash) guestRemoteInputs[fromPid].dash = true;
       } else if (type === 'lvl_pick') {
-        applyLevelChoice(1, payload.choice);
+        applyLevelChoice(fromPid, payload.choice);
       } else if (type === 'emote') {
-        const p2 = state.players[1];
-        if (p2) {
-          p2.emote = payload.text;
-          p2.emoteTimer = 2.6;
+        const gp = getPlayerByPid(fromPid);
+        if (gp) {
+          gp.emote = payload.text;
+          gp.emoteTimer = 2.6;
           Audio.playSfx('emote');
+          // Relay emote to all guests (so 3P sees 2P's emote and vice versa!)
+          Net.send('emote', { pid: fromPid, text: payload.text });
         }
       }
       return;
@@ -425,13 +490,13 @@ window.PBEngine = (() => {
           spawnBurst(payload.x, payload.y, payload.color || '#facc15', payload.count || 10);
         }
       } else if (type === 'emote') {
-        const p = state.players[payload.pid];
+        const p = getPlayerByPid(payload.pid);
         if (p) { p.emote = payload.text; p.emoteTimer = 2.6; }
         Audio.playSfx('emote');
       } else if (type === 'lvl_open') {
         state.levelUp.active = true;
         Audio.playSfx('levelup');
-        callbacks.onLevelUpOpen(payload.choices, payload.level, true);
+        callbacks.onLevelUpOpen(payload.choices, payload.level, state.players.length);
       } else if (type === 'lvl_wait') {
         callbacks.onLevelUpWait(payload.msg);
       } else if (type === 'lvl_close') {
@@ -483,21 +548,21 @@ window.PBEngine = (() => {
     if (state.shake > 0) state.shake = Math.max(0, state.shake - dt * 28);
     rebuildEnemyGrid();
 
-    // 1. Co-op friendship synergy check
-    if (state.players.length === 2) {
-      const p0 = state.players[0];
-      const p1 = state.players[1];
-      const d = Math.hypot(p0.x - p1.x, p0.y - p1.y);
-      const syn = !p0.downed && !p1.downed && d < 240;
-      p0.synergyActive = syn;
-      p1.synergyActive = syn;
+    // 1. Co-op friendship synergy check (supports 2P and 3P!)
+    if (state.players.length >= 2) {
+      for (const p of state.players) {
+        if (p.downed || p.disconnected) { p.synergyActive = false; continue; }
+        p.synergyActive = state.players.some(other =>
+          other.pid !== p.pid && !other.downed && !other.disconnected && Math.hypot(other.x - p.x, other.y - p.y) < 240
+        );
+      }
     }
 
     // 2. Update Players
-    const inputs = [localInput, guestRemoteInput];
     for (let i = 0; i < state.players.length; i++) {
       const p = state.players[i];
-      const inp = inputs[i] || { dx: 0, dy: 0, dash: false };
+      if (p.disconnected) { p.vx = 0; p.vy = 0; continue; }
+      const inp = p.pid === 0 ? localInput : (guestRemoteInputs[p.pid] || { dx: 0, dy: 0, dash: false });
       const stats = getComputedStats(p);
       p.maxHp = stats.maxHp;
 
@@ -511,10 +576,10 @@ window.PBEngine = (() => {
 
       if (p.downed) {
         p.vx = 0; p.vy = 0;
-        // Check if partner is reviving!
-        const partner = state.players.find(other => other.pid !== p.pid && !other.downed);
-        if (partner && Math.hypot(partner.x - p.x, partner.y - p.y) < 88) {
-          p.reviveProgress += dt / 2.4;
+        // Check if any alive teammate(s) are reviving!
+        const revivers = state.players.filter(other => other.pid !== p.pid && !other.downed && !other.disconnected && Math.hypot(other.x - p.x, other.y - p.y) < 88);
+        if (revivers.length > 0) {
+          p.reviveProgress += (dt / 2.4) * (revivers.length >= 2 ? 1.55 : 1);
           if (p.reviveProgress >= 1) {
             p.downed = false;
             p.reviveProgress = 0;
@@ -576,14 +641,14 @@ window.PBEngine = (() => {
       updatePlayerWeapons(p, stats, dt);
     }
 
-    // Check total defeat (all players downed)
-    if (state.players.every(p => p.downed)) {
+    // Check total defeat (all connected players downed)
+    if (state.players.every(p => p.downed || p.disconnected)) {
       finishRun(false);
       return;
     }
 
     // 3. Camera smoothly follows local player (1P)
-    const camTarget = state.players[state.myPid];
+    const camTarget = getPlayerByPid(state.myPid) || state.players[0];
     state.camera.x += (camTarget.x - state.camera.x) * Math.min(1, dt * 9);
     state.camera.y += (camTarget.y - state.camera.y) * Math.min(1, dt * 9);
 
@@ -603,7 +668,7 @@ window.PBEngine = (() => {
     // 7. Update Pickups (XP, Coins, Heal, Magnet, Chests)
     updatePickups(dt);
 
-    // 8. Broadcast Snapshot to Guest (20 Hz — smooth with 60fps interpolation)
+    // 8. Broadcast Snapshot to Guests (20 Hz — smooth with 60fps interpolation)
     if (state.mode === 'coop_host') {
       snapAccum += dt;
       if (snapAccum >= 0.05) {
@@ -622,7 +687,7 @@ window.PBEngine = (() => {
       if (def.type === 'orbit') {
         if (w.evolved) {
           p.orbitActiveTimer = 99;
-          p.orbitAngle += ws.speed * 1.35 * dt;
+          p.orbitAngle += ws.speed * 1.25 * dt;
           checkOrbitHits(p, w, ws);
         } else {
           if (p.orbitActiveTimer > 0) {
@@ -649,8 +714,8 @@ window.PBEngine = (() => {
   }
 
   function checkOrbitHits(p, w, ws) {
-    const orbitR = 78 * ws.area;
-    const hitR = 24 * ws.area;
+    const orbitR = (w.evolved ? 66 : 78) * ws.area;
+    const hitR = (w.evolved ? 20 : 24) * ws.area;
     for (let i = 0; i < ws.count; i++) {
       const a = p.orbitAngle + (i * Math.PI * 2) / ws.count;
       const ox = p.x + Math.cos(a) * orbitR;
@@ -662,7 +727,7 @@ window.PBEngine = (() => {
         const sumR = hitR + e.radius;
         if (dx * dx + dy * dy < sumR * sumR) {
           e.orbitHitCd = 0.28;
-          damageEnemy(e, ws.damage, p, w, ox, oy, 190);
+          damageEnemy(e, ws.damage, p, w, ox, oy, 175);
         }
       });
     }
@@ -702,10 +767,10 @@ window.PBEngine = (() => {
             vy: Math.sin(a) * ws.speed,
             ax: -Math.cos(a) * ws.speed * 1.45,
             ay: -Math.sin(a) * ws.speed * 1.45,
-            radius: 17 * ws.area,
+            radius: (w.evolved ? 15 : 17) * ws.area,
             damage: ws.damage,
             pierce: 99,
-            life: w.evolved ? 2.1 : 1.55,
+            life: w.evolved ? 1.75 : 1.55,
             spin: 0,
             hitSet: new Map()
           });
@@ -718,14 +783,14 @@ window.PBEngine = (() => {
         const dirA = Math.atan2(p.lookY, p.lookX);
         const dirs = [];
         if (w.evolved) {
-          const c = Math.min(8, Math.max(4, ws.count + 2));
+          const c = Math.min(6, Math.max(4, ws.count));
           for (let i = 0; i < c; i++) dirs.push(dirA + (i * Math.PI * 2) / c);
         } else {
           dirs.push(dirA);
           if (ws.count >= 2) dirs.push(dirA + Math.PI);
           for (let i = 2; i < ws.count; i++) dirs.push(dirA + (i % 2 === 0 ? 0.55 : -0.55) * Math.ceil(i / 2));
         }
-        const range = 108 * ws.area;
+        const range = (w.evolved ? 86 : 108) * ws.area;
         const slashHitR = range * 0.72;
         for (const a of dirs) {
           const sx = p.x + Math.cos(a) * (range * 0.52);
@@ -759,7 +824,7 @@ window.PBEngine = (() => {
             vy: Math.sin(a) * ws.speed,
             speed: ws.speed,
             radius: 13 * ws.area,
-            blastRadius: 72 * ws.area,
+            blastRadius: (w.evolved ? 56 : 72) * ws.area,
             damage: ws.damage,
             pierce: 1,
             life: 2.6,
@@ -772,6 +837,7 @@ window.PBEngine = (() => {
       }
 
       case 'arc': {
+        // Pre-evolution Baguette restored to original power & size; evolved tornado toned down in radius & spread
         for (let i = 0; i < ws.count; i++) {
           const spread = (i - (ws.count - 1) / 2) * 0.4;
           const a = -Math.PI / 2 + spread + (p.lookX >= 0 ? 0.35 : -0.35);
@@ -789,10 +855,10 @@ window.PBEngine = (() => {
             spiralR: 20,
             originX: p.x,
             originY: p.y,
-            radius: 12 * ws.area,
+            radius: (w.evolved ? 13 : 16) * ws.area,
             damage: ws.damage,
             pierce: ws.pierce,
-            life: w.evolved ? 1.55 : 1.4,
+            life: w.evolved ? 1.55 : 1.75,
             spin: 0,
             hitSet: new Map()
           });
@@ -813,7 +879,7 @@ window.PBEngine = (() => {
             y: p.y + Math.sin(a) * 18,
             vx: Math.cos(a) * ws.speed,
             vy: Math.sin(a) * ws.speed,
-            radius: 10 * ws.area,
+            radius: (w.evolved ? 9 : 10) * ws.area,
             damage: ws.damage,
             pierce: ws.pierce,
             life: 1.35,
@@ -824,7 +890,7 @@ window.PBEngine = (() => {
       }
 
       case 'fan': {
-        const total = w.evolved ? Math.min(14, Math.max(10, ws.count + 4)) : ws.count;
+        const total = w.evolved ? Math.min(10, Math.max(7, ws.count + 2)) : ws.count;
         const arcSpan = w.evolved ? Math.PI * 2 : Math.min(Math.PI * 0.85, 0.24 * total);
         for (let i = 0; i < total; i++) {
           const a = w.evolved
@@ -839,7 +905,7 @@ window.PBEngine = (() => {
             x: p.x, y: p.y,
             vx: Math.cos(a) * ws.speed,
             vy: Math.sin(a) * ws.speed,
-            radius: 11 * ws.area,
+            radius: (w.evolved ? 9.5 : 11) * ws.area,
             damage: ws.damage,
             pierce: ws.pierce,
             life: 1.4,
@@ -851,24 +917,25 @@ window.PBEngine = (() => {
 
       case 'nova': {
         Audio.playSfx('roar');
-        const maxR = 148 * ws.area;
+        const maxR = (w.evolved ? 124 : 148) * ws.area;
         if (state.novas.length < 18) {
           state.novas.push({ x: p.x, y: p.y, radius: 18, maxRadius: maxR, evolved: w.evolved, life: 0.34, maxLife: 0.34 });
         }
-        if (w.evolved) state.shake = Math.max(state.shake, 7);
+        if (w.evolved) state.shake = Math.max(state.shake, 6);
         forEachEnemyNear(p.x, p.y, maxR, (e) => {
           const dx = e.x - p.x;
           const dy = e.y - p.y;
           const sumR = maxR + e.radius;
           if (dx * dx + dy * dy < sumR * sumR) {
             damageEnemy(e, ws.damage, p, w, p.x, p.y, ws.knockback);
-            if (w.evolved) e.slowTimer = 2.4;
+            if (w.evolved) e.slowTimer = 1.8;
           }
         });
         break;
       }
 
       case 'lightning': {
+        // Evolved Laser (Satellite Orbital Cannon) stays at FULL original strength & area!
         const candidates = [];
         const maxR2 = 560 * 560;
         for (let i = 0; i < state.enemies.length; i++) {
@@ -907,7 +974,7 @@ window.PBEngine = (() => {
             id: state.nextEid++,
             x: p.x + Math.cos(a) * dist,
             y: p.y + Math.sin(a) * dist,
-            radius: 56 * ws.area,
+            radius: (w.evolved ? 46 : 56) * ws.area,
             damage: ws.damage,
             evolved: w.evolved,
             owner: p.pid,
@@ -933,7 +1000,7 @@ window.PBEngine = (() => {
             x: p.x, y: p.y,
             vx: Math.cos(a) * ws.speed,
             vy: Math.sin(a) * ws.speed,
-            radius: 17 * ws.area,
+            radius: (w.evolved ? 15 : 17) * ws.area,
             damage: ws.damage,
             pierce: 99,
             life: ws.duration,
@@ -946,8 +1013,8 @@ window.PBEngine = (() => {
 
       case 'chain': {
         // Sweden: Mjolnir Chain Lightning bouncing across nearby enemies!
-        const maxChains = (def.base.chains || 3) + w.level + (w.evolved ? 4 : 0);
-        const chainRange = (w.evolved ? 260 : 195) * ws.area;
+        const maxChains = (def.base.chains || 3) + w.level + (w.evolved ? 2 : 0);
+        const chainRange = 195 * ws.area;
         const casts = Math.min(3, ws.count);
         let anyHit = false;
         for (let c = 0; c < casts; c++) {
@@ -961,7 +1028,7 @@ window.PBEngine = (() => {
             pts.push([Math.round(cur.x), Math.round(cur.y)]);
             damageEnemy(cur, ws.damage, p, w, p.x, p.y, 75);
             if (w.evolved && state.novas.length < 18) {
-              state.novas.push({ x: cur.x, y: cur.y, radius: 10, maxRadius: 46, evolved: true, life: 0.18, maxLife: 0.18, isBlast: false });
+              state.novas.push({ x: cur.x, y: cur.y, radius: 8, maxRadius: 34, evolved: true, life: 0.16, maxLife: 0.16, isBlast: false });
             }
             // Jump to closest unvisited enemy within chainRange
             let next = null;
@@ -1003,11 +1070,11 @@ window.PBEngine = (() => {
             y: p.y + Math.sin(a) * 18,
             vx: Math.cos(a) * ws.speed,
             vy: Math.sin(a) * ws.speed,
-            radius: (w.evolved ? 28 : 20) * ws.area,
+            radius: (w.evolved ? 22 : 20) * ws.area,
             damage: ws.damage,
             pierce: ws.pierce,
             knockback: ws.knockback,
-            life: w.evolved ? 1.5 : 1.15,
+            life: w.evolved ? 1.25 : 1.15,
             hitSet: new Map()
           });
         }
@@ -1016,7 +1083,7 @@ window.PBEngine = (() => {
 
       case 'aura': {
         // Switzerland: Continuous pulsing Red Cross Garlic Aura (+ lifesteal on kill when evolved!)
-        const auraR = (w.evolved ? 128 : 92) * ws.area;
+        const auraR = (w.evolved ? 104 : 92) * ws.area;
         forEachEnemyNear(p.x, p.y, auraR, (e) => {
           const dx = e.x - p.x;
           const dy = e.y - p.y;
@@ -1025,7 +1092,7 @@ window.PBEngine = (() => {
             const wasAlive = e.hp > 0;
             damageEnemy(e, ws.damage, p, w, p.x, p.y, ws.knockback);
             if (w.evolved && wasAlive && e.hp <= 0 && !p.downed) {
-              p.hp = Math.min(p.maxHp, p.hp + 1.5);
+              p.hp = Math.min(p.maxHp, p.hp + 1.0);
             }
           }
         });
@@ -1048,12 +1115,12 @@ window.PBEngine = (() => {
   // === SPAWNING & WAVES ===
   function updateSpawning(dt) {
     const t = state.time;
-    const isCoop = state.players.length === 2;
-    const diff = state.stage.difficulty * (isCoop ? 1.48 : 1.0);
-    const bossDiff = state.stage.difficulty * (isCoop ? 1.85 : 1.0);
-    // Smooth early game (<60s), steep mid-to-late mob HP ramp so regular hordes stay exciting!
-    const midRamp = t > 60 ? Math.pow((t - 60) / 95, 1.85) * 1.65 : 0;
-    const timeMult = 1 + t / 100 + midRamp;
+    const activePlayers = state.players.filter(p => !p.disconnected).length || 1;
+    const diff = state.stage.difficulty * (1 + (activePlayers - 1) * 0.55);
+    const bossDiff = state.stage.difficulty * (1 + (activePlayers - 1) * 0.95);
+    // Smooth early game (<50s), steep mid-to-late mob HP ramp so mid/late waves stay challenging!
+    const midRamp = t > 50 ? Math.pow((t - 50) / 72, 1.95) * 2.5 : 0;
+    const timeMult = 1 + t / 80 + midRamp;
 
     // Mid-bosses at 90s, 180s, 270s
     const midSchedule = [
@@ -1064,7 +1131,7 @@ window.PBEngine = (() => {
     if (state.midBossIndex < midSchedule.length && t >= midSchedule[state.midBossIndex].at) {
       const b = midSchedule[state.midBossIndex];
       state.midBossIndex++;
-      spawnEnemy(b.id, bossDiff * (1 + t / 210));
+      spawnEnemy(b.id, bossDiff * (1 + t / 160));
       const def = Data.ENEMIES[b.id];
       syncActiveBgm();
       triggerBossAlert(`⚠️ 中ボス出現: ${def.name}！（♪ Will_you_still_cry_）`);
@@ -1073,20 +1140,20 @@ window.PBEngine = (() => {
     // Final Boss Reichtangle at stage.duration (360s = 6 min)
     if (!state.finalBossSpawned && t >= state.stage.duration) {
       state.finalBossSpawned = true;
-      spawnEnemy('reichtangle', bossDiff * 1.25);
+      spawnEnemy('reichtangle', bossDiff * 1.4);
       syncActiveBgm();
       triggerBossAlert('🚨 最終ボス襲来: ライヒタングル "Guten Tag..."（♪ Dominus_Deus）');
     }
 
     // Endless extra bosses every 90s after 6 min
     if (state.endless && Math.floor(t) > state.stage.duration + 30 && Math.floor(t) % 90 === 0 && Math.floor(t - dt) % 90 !== 0) {
-      spawnEnemy('reichtangle', bossDiff * (1.35 + (t - state.stage.duration) / 140));
+      spawnEnemy('reichtangle', bossDiff * (1.55 + (t - state.stage.duration) / 115));
       syncActiveBgm();
       triggerBossAlert('🚨 強化ライヒタングル出現！');
     }
 
     // Regular wave spawns
-    const spawnRate = Math.min(9.5, (1.55 + t / 44) * (isCoop ? 1.35 : 1.0));
+    const spawnRate = Math.min(11.5, (1.55 + t / 42) * (1 + (activePlayers - 1) * 0.35));
     state.spawnAccum += dt * spawnRate;
     while (state.spawnAccum >= 1 && state.enemies.length < ENEMY_CAP) {
       state.spawnAccum -= 1;
@@ -1362,7 +1429,7 @@ window.PBEngine = (() => {
         p.hp = 0;
         p.downed = true;
         p.reviveProgress = 0;
-        if (state.players.length === 2) {
+        if (state.players.length >= 2) {
           p.emote = '🆘 蘇生して！';
           p.emoteTimer = 999;
         }
@@ -1372,7 +1439,8 @@ window.PBEngine = (() => {
 
   function damageEnemy(e, dmg, player, weapon, srcX, srcY, kbForce = 80) {
     if (e.hp <= 0) return;
-    const isCrit = Math.random() < 0.14;
+    const critChance = player ? getComputedStats(player).critChance : 0.14;
+    const isCrit = Math.random() < critChance;
     const finalDmg = Math.round(dmg * (isCrit ? 1.55 : 1));
     e.hp -= finalDmg;
     e.hitFlash = 0.9;
@@ -1467,15 +1535,15 @@ window.PBEngine = (() => {
         pr.spin += dt * 16;
         // Evolved Galaxy Plunger pulls nearby enemies gently toward it via spatial grid!
         if (pr.evolved) {
-          forEachEnemyNear(pr.x, pr.y, 130, (e) => {
+          forEachEnemyNear(pr.x, pr.y, 95, (e) => {
             if (e.isBoss) return;
             const dx = pr.x - e.x;
             const dy = pr.y - e.y;
             const d2 = dx * dx + dy * dy;
-            if (d2 < 16900 && d2 > 100) {
+            if (d2 < 9025 && d2 > 100) {
               const d = Math.sqrt(d2);
-              e.x += (dx / d) * 95 * dt;
-              e.y += (dy / d) * 95 * dt;
+              e.x += (dx / d) * 70 * dt;
+              e.y += (dy / d) * 70 * dt;
             }
           });
         }
@@ -1500,9 +1568,9 @@ window.PBEngine = (() => {
       } else if (pr.kind === 'baguette') {
         pr.spin += dt * 13;
         if (pr.evolved) {
-          pr.spiralAngle += dt * 5.2;
-          pr.spiralR += dt * 145;
-          const owner = state.players[pr.owner] || state.players[0];
+          pr.spiralAngle += dt * 5.0;
+          pr.spiralR += dt * 110;
+          const owner = getPlayerByPid(pr.owner) || state.players[0];
           pr.x = owner.x + Math.cos(pr.spiralAngle) * pr.spiralR;
           pr.y = owner.y + Math.sin(pr.spiralAngle) * pr.spiralR;
         } else {
@@ -1510,7 +1578,7 @@ window.PBEngine = (() => {
         }
       } else if (pr.kind === 'pizza') {
         pr.spin += dt * 17;
-        const owner = state.players[pr.owner] || state.players[0];
+        const owner = getPlayerByPid(pr.owner) || state.players[0];
         const halfW = Math.min(580, window.innerWidth * 0.48);
         const halfH = Math.min(380, window.innerHeight * 0.46);
         if (pr.x < owner.x - halfW && pr.vx < 0) pr.vx = -pr.vx;
@@ -1525,7 +1593,7 @@ window.PBEngine = (() => {
       }
 
       // Fast spatial-grid hit checks!
-      const ownerP = state.players[pr.owner] || state.players[0];
+      const ownerP = getPlayerByPid(pr.owner) || state.players[0];
       forEachEnemyNear(pr.x, pr.y, pr.radius, (e) => {
         const prevHit = pr.hitSet.get(e.id) || 0;
         if (state.time - prevHit < 0.24) return;
@@ -1563,10 +1631,10 @@ window.PBEngine = (() => {
         damageEnemy(e, pr.damage, ownerP, pr.weapon, pr.x, pr.y, 150);
       }
     });
-    // Evolved cluster bombs!
+    // Evolved cluster bombs (toned down: 3 smaller sub-munitions)
     if (pr.evolved && !pr.isCluster) {
-      for (let k = 0; k < 4; k++) {
-        const a = (k * Math.PI * 2) / 4 + Math.random() * 0.4;
+      for (let k = 0; k < 3; k++) {
+        const a = (k * Math.PI * 2) / 3 + Math.random() * 0.4;
         pushProjectile({
           id: state.nextEid++,
           kind: 'missile',
@@ -1574,16 +1642,16 @@ window.PBEngine = (() => {
           isCluster: true,
           owner: pr.owner,
           weapon: pr.weapon,
-          x: pr.x + Math.cos(a) * 18,
-          y: pr.y + Math.sin(a) * 18,
-          vx: Math.cos(a) * 260,
-          vy: Math.sin(a) * 260,
-          speed: 260,
-          radius: 9,
-          blastRadius: 56,
-          damage: Math.round(pr.damage * 0.65),
+          x: pr.x + Math.cos(a) * 16,
+          y: pr.y + Math.sin(a) * 16,
+          vx: Math.cos(a) * 240,
+          vy: Math.sin(a) * 240,
+          speed: 240,
+          radius: 8,
+          blastRadius: 40,
+          damage: Math.round(pr.damage * 0.45),
           pierce: 1,
-          life: 0.45,
+          life: 0.4,
           retargetCd: 0.1,
           target: null,
           hitSet: new Map()
@@ -1593,7 +1661,7 @@ window.PBEngine = (() => {
   }
 
   function updateEnemyBullets(dt) {
-    const alive = state.players.filter(p => !p.downed);
+    const alive = state.players.filter(p => !p.downed && !p.disconnected);
     for (let i = state.enemyBullets.length - 1; i >= 0; i--) {
       const b = state.enemyBullets[i];
       b.life -= dt;
@@ -1621,7 +1689,7 @@ window.PBEngine = (() => {
       if (z.life <= 0) { state.zones.splice(i, 1); continue; }
       if (z.tick <= 0) {
         z.tick = 0.34;
-        const ownerP = state.players[z.owner] || state.players[0];
+        const ownerP = getPlayerByPid(z.owner) || state.players[0];
         forEachEnemyNear(z.x, z.y, z.radius, (e) => {
           const dx = e.x - z.x;
           const dy = e.y - z.y;
@@ -1755,20 +1823,50 @@ window.PBEngine = (() => {
     state.levelUp.choicesByPid = {};
     state.levelUp.pickedByPid = {};
 
+    // In co-op, reserve newly offered weapons/passives across players so teammates never receive duplicates simultaneously!
+    const reservedNew = state.players.length > 1 ? { weapons: new Set(), passives: new Set() } : null;
+
     for (const p of state.players) {
-      state.levelUp.choicesByPid[p.pid] = generateChoicesForPlayer(p);
+      if (p.disconnected) {
+        state.levelUp.pickedByPid[p.pid] = true;
+        continue;
+      }
+      const choices = generateChoicesForPlayer(p, reservedNew);
+      state.levelUp.choicesByPid[p.pid] = choices;
+      if (reservedNew) {
+        for (const ch of choices) {
+          if (ch.kind === 'weapon' && !p.weapons.some(w => w.id === ch.id)) reservedNew.weapons.add(ch.id);
+          if (ch.kind === 'passive' && !(p.passives[ch.id] > 0)) reservedNew.passives.add(ch.id);
+        }
+      }
     }
 
     Audio.playSfx('levelup');
-    callbacks.onLevelUpOpen(state.levelUp.choicesByPid[0], state.level, state.players.length === 2);
+    callbacks.onLevelUpOpen(state.levelUp.choicesByPid[0], state.level, state.players.length);
 
     if (state.mode === 'coop_host') {
-      Net.send('lvl_open', { choices: state.levelUp.choicesByPid[1], level: state.level });
+      for (const p of state.players) {
+        if (p.pid === 0 || p.disconnected) continue;
+        Net.send('lvl_open', { choices: state.levelUp.choicesByPid[p.pid], level: state.level }, p.pid);
+      }
     }
   }
 
-  function generateChoicesForPlayer(p) {
+  function generateChoicesForPlayer(p, reservedNew = null) {
     const pool = [];
+
+    // Co-op exclusive abilities: collect all weapons & passives already taken by OTHER players!
+    const otherWeapons = new Set();
+    const otherPassives = new Set();
+    if (state.players.length > 1) {
+      for (const other of state.players) {
+        if (other.pid === p.pid) continue;
+        for (const ow of other.weapons) otherWeapons.add(ow.id);
+        for (const [opId, opLv] of Object.entries(other.passives || {})) {
+          if (opLv > 0) otherPassives.add(opId);
+        }
+      }
+    }
 
     // 1. Strict Evolution Rule: Weapon Lv.5 + Matching Passive Lv.5 -> GUARANTEED on next Level-Up!
     for (const w of p.weapons) {
@@ -1812,10 +1910,12 @@ window.PBEngine = (() => {
       }
     }
 
-    // 3. New weapons (if slots left)
+    // 3. New weapons (if slots left; in co-op, skip weapons owned by or reserved for teammates!)
     if (p.weapons.length < MAX_WEAPONS) {
       for (const def of Object.values(Data.WEAPONS)) {
         if (p.weapons.some(w => w.id === def.id)) continue;
+        if (otherWeapons.has(def.id)) continue;
+        if (reservedNew && reservedNew.weapons.has(def.id)) continue;
         const passDef = Data.PASSIVES[def.evolvePassive];
         const passLv = p.passives[def.evolvePassive] || 0;
         pool.push({
@@ -1831,12 +1931,14 @@ window.PBEngine = (() => {
       }
     }
 
-    // 4. Passives (Lv.1 -> Lv.5)
+    // 4. Passives (Lv.1 -> Lv.5; in co-op, skip NEW passives owned by or reserved for teammates!)
     const passiveCount = Object.keys(p.passives).length;
     for (const def of Object.values(Data.PASSIVES)) {
       const cur = p.passives[def.id] || 0;
       if (cur >= def.maxLevel) continue;
       if (cur === 0 && passiveCount >= MAX_PASSIVES) continue;
+      if (cur === 0 && otherPassives.has(def.id)) continue;
+      if (cur === 0 && reservedNew && reservedNew.passives.has(def.id)) continue;
       const ownedMatches = p.weapons.filter(w => !w.evolved && Data.WEAPONS[w.id]?.evolvePassive === def.id);
       const ownedW = ownedMatches.sort((a, b) => b.level - a.level)[0] || null;
       const wDef = ownedW ? Data.WEAPONS[ownedW.id] : Data.WEAPONS[def.evolves];
@@ -1845,7 +1947,7 @@ window.PBEngine = (() => {
         ? (ownedW.level >= wDef.maxLevel
             ? `🔥 相棒 ${wDef.icon}${wDef.name} Lv.5達成！（これをLv.5で次LvUP進化）`
             : `進化相棒: ${wDef.icon} ${wDef.name} (現在 Lv.${ownedW.level}/5)`)
-        : `進化対象: ${wDef.icon} ${wDef.name} 等`;
+        : `進化対象: ${wDef.icon} ${wDef.name}`;
       pool.push({
         kind: 'passive',
         id: def.id,
@@ -1880,33 +1982,43 @@ window.PBEngine = (() => {
     if (!state || !state.levelUp.active) return;
     if (state.mode === 'coop_guest') {
       Net.send('lvl_pick', { choice });
-      callbacks.onLevelUpWait('1Pの選択を待っています…');
+      callbacks.onLevelUpWait('他のプレイヤーの選択を待っています…');
       return;
     }
     applyLevelChoice(0, choice);
   }
 
+  function checkAllPickedLevelUp() {
+    if (!state || !state.levelUp.active) return;
+    const pending = state.players.filter(pl => !pl.disconnected && !state.levelUp.pickedByPid[pl.pid]);
+    if (pending.length === 0) {
+      state.levelUp.active = false;
+      callbacks.onLevelUpClose();
+      if (state.mode === 'coop_host') Net.send('lvl_close', {});
+      return;
+    }
+    const waitNames = pending.map(pl => `${pl.pid + 1}P`).join('・');
+    const waitMsg = `${waitNames}の選択を待っています…`;
+    if (state.levelUp.pickedByPid[0]) {
+      callbacks.onLevelUpWait(waitMsg);
+    }
+    if (state.mode === 'coop_host') {
+      for (const pl of state.players) {
+        if (pl.pid !== 0 && !pl.disconnected && state.levelUp.pickedByPid[pl.pid]) {
+          Net.send('lvl_wait', { msg: waitMsg }, pl.pid);
+        }
+      }
+    }
+  }
+
   function applyLevelChoice(pid, choice) {
     if (!state || !state.levelUp.active || state.levelUp.pickedByPid[pid]) return;
-    const p = state.players[pid];
+    const p = getPlayerByPid(pid);
     if (!p) return;
 
     state.levelUp.pickedByPid[pid] = true;
     applyChoiceEffect(p, choice);
-
-    // Check if all players have picked
-    const allPicked = state.players.every(pl => state.levelUp.pickedByPid[pl.pid]);
-    if (allPicked) {
-      state.levelUp.active = false;
-      callbacks.onLevelUpClose();
-      if (state.mode === 'coop_host') Net.send('lvl_close', {});
-    } else {
-      if (pid === 0) {
-        callbacks.onLevelUpWait('2Pの選択を待っています…');
-      } else if (state.mode === 'coop_host') {
-        Net.send('lvl_wait', { msg: '1Pの選択を待っています…' });
-      }
-    }
+    checkAllPickedLevelUp();
   }
 
   function applyChoiceEffect(p, choice) {
@@ -1947,6 +2059,7 @@ window.PBEngine = (() => {
     state.chestPending = true;
     const rewardsByPid = [];
     for (const p of state.players) {
+      if (p.disconnected) continue;
       const choices = generateChoicesForPlayer(p);
       // Prefer evolution if available!
       const evo = choices.find(c => c.kind === 'evolve');
@@ -1954,10 +2067,10 @@ window.PBEngine = (() => {
       applyChoiceEffect(p, reward);
       const coinBonus = Math.round(18 * state.stage.coinMult);
       state.coinsEarned += coinBonus;
-      rewardsByPid.push({ pid: p.pid, playerName: p.name, reward, coins: coinBonus });
+      rewardsByPid.push({ pid: p.pid, playerName: `${p.pid + 1}P ${p.name}`, reward, coins: coinBonus });
     }
     Audio.playSfx('chest');
-    callbacks.onChestOpen(rewardsByPid, state.players.length === 2);
+    callbacks.onChestOpen(rewardsByPid, state.players.length >= 2);
     if (state.mode === 'coop_host') {
       Net.send('chest', { rewards: rewardsByPid });
     }
@@ -2046,6 +2159,7 @@ window.PBEngine = (() => {
         hp: Math.round(p.hp),
         mh: p.maxHp,
         dn: p.downed ? 1 : 0,
+        dc2: p.disconnected ? 1 : 0,
         rv: Math.round(p.reviveProgress * 100) / 100,
         hf: p.hitFlash > 0.1 ? 1 : 0,
         mv: Math.hypot(p.vx, p.vy) > 10 ? 1 : 0,
@@ -2085,12 +2199,12 @@ window.PBEngine = (() => {
     state.kills = snap.k;
     state.coinsEarned = snap.c;
 
-    // Update players with interpolation targets
+    // Update players with interpolation targets (supports 2P & 3P!)
     for (const sp of snap.pl) {
-      let p = state.players[sp.i];
+      let p = getPlayerByPid(sp.i);
       if (!p) {
         p = createPlayer(sp.i, sp.ch, sp.x, sp.y);
-        state.players[sp.i] = p;
+        state.players.push(p);
       }
       p.targetX = sp.x;
       p.targetY = sp.y;
@@ -2102,6 +2216,7 @@ window.PBEngine = (() => {
       p.hp = sp.hp;
       p.maxHp = sp.mh;
       p.downed = !!sp.dn;
+      p.disconnected = !!sp.dc2;
       p.reviveProgress = sp.rv;
       p.hitFlash = sp.hf ? 0.8 : 0;
       p.moving = !!sp.mv;
@@ -2181,7 +2296,7 @@ window.PBEngine = (() => {
       }
     }
 
-    const me = state.players[1] || state.players[0];
+    const me = getPlayerByPid(state.myPid) || state.players[0];
     if (me) {
       state.camera.x += (me.x - state.camera.x) * Math.min(1, dt * 10);
       state.camera.y += (me.y - state.camera.y) * Math.min(1, dt * 10);
@@ -2248,6 +2363,7 @@ window.PBEngine = (() => {
         hp: Math.ceil(p.hp),
         maxHp: p.maxHp,
         downed: p.downed,
+        disconnected: !!p.disconnected,
         dashCd: p.dashCd,
         synergy: p.synergyActive,
         weapons: p.weapons,
@@ -2404,19 +2520,27 @@ window.PBEngine = (() => {
     }
     ctx.globalAlpha = 1;
 
-    // 2. Co-op Friendship Synergy Tether!
-    if (state.players.length === 2 && state.players[0].synergyActive) {
-      const p0 = state.players[0];
-      const p1 = state.players[1];
+    // 2. Co-op Friendship Synergy Tethers (2P line or 3P golden triangle!)
+    if (state.players.length >= 2) {
       ctx.save();
       ctx.strokeStyle = 'rgba(250, 204, 21, 0.72)';
       ctx.lineWidth = 4;
       ctx.setLineDash([10, 8]);
       ctx.lineDashOffset = -state.time * 40;
-      ctx.beginPath();
-      ctx.moveTo(p0.x, p0.y);
-      ctx.lineTo(p1.x, p1.y);
-      ctx.stroke();
+      for (let i = 0; i < state.players.length; i++) {
+        const a = state.players[i];
+        if (a.downed || a.disconnected) continue;
+        for (let j = i + 1; j < state.players.length; j++) {
+          const b = state.players[j];
+          if (b.downed || b.disconnected) continue;
+          if (Math.hypot(a.x - b.x, a.y - b.y) < 240) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
       ctx.restore();
     }
 
@@ -2495,6 +2619,7 @@ window.PBEngine = (() => {
 
     // 5. Players + Orbital Teacups + Revival Rings + Emotes
     for (const p of state.players) {
+      if (p.disconnected) continue;
       // Revival ring if downed!
       if (p.downed) {
         ctx.save();
@@ -2520,7 +2645,7 @@ window.PBEngine = (() => {
       if (auraW && !p.downed) {
         const stats = getComputedStats(p);
         const ws = getWeaponStats(auraW, stats);
-        const auraR = (auraW.evolved ? 128 : 92) * ws.area;
+        const auraR = (auraW.evolved ? 104 : 92) * ws.area;
         const pulse = 0.5 + 0.5 * Math.sin(state.time * 5);
         ctx.save();
         ctx.fillStyle = auraW.evolved
@@ -2542,7 +2667,7 @@ window.PBEngine = (() => {
       if (teaW && !p.downed && (teaW.evolved || p.orbitActiveTimer > 0)) {
         const stats = getComputedStats(p);
         const ws = getWeaponStats(teaW, stats);
-        const orbitR = 78 * ws.area;
+        const orbitR = (teaW.evolved ? 66 : 78) * ws.area;
         if (teaW.evolved) {
           ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
           ctx.lineWidth = 6;
@@ -2550,7 +2675,7 @@ window.PBEngine = (() => {
           ctx.arc(p.x, p.y, orbitR, 0, Math.PI * 2);
           ctx.stroke();
         }
-        const teaSp = Renderer.getEmojiSprite(teaW.evolved ? '🫖' : '☕', teaW.evolved ? 30 : 24);
+        const teaSp = Renderer.getEmojiSprite(teaW.evolved ? '🫖' : '☕', teaW.evolved ? 28 : 24);
         const hw = teaSp.width / 2;
         const hh = teaSp.height / 2;
         for (let i = 0; i < ws.count; i++) {
@@ -2569,8 +2694,8 @@ window.PBEngine = (() => {
         moving,
         hitFlash: p.hitFlash,
         ghost: p.downed,
-        label: state.players.length === 2 ? (p.pid === 0 ? '1P' : '2P') : null,
-        labelColor: p.pid === 0 ? '#fde047' : '#38bdf8'
+        label: state.players.length >= 2 ? `${p.pid + 1}P` : null,
+        labelColor: PLAYER_COLORS[p.pid] || '#fde047'
       });
 
       // Under-ball mini HP bar
@@ -2715,7 +2840,7 @@ window.PBEngine = (() => {
         const a = typeof pr.angle === 'number' ? pr.angle : Math.atan2(pr.vy, pr.vx);
         ctx.rotate(a);
         ctx.strokeStyle = pr.evolved ? '#0284c7' : '#06b6d4';
-        ctx.lineWidth = pr.evolved ? 13 : 9;
+        ctx.lineWidth = pr.evolved ? 12 : 9;
         ctx.beginPath();
         ctx.arc(-pr.radius * 0.35, 0, pr.radius * 1.1, -1.05, 1.05);
         ctx.stroke();
@@ -2792,7 +2917,7 @@ window.PBEngine = (() => {
 
     ctx.restore();
 
-    // 11. Off-screen Indicators (Partner in Co-op + Boss Chest!)
+    // 11. Off-screen Indicators (Teammates in 2P/3P Co-op + Boss Chest!)
     renderOffscreenIndicators(w, h, cx, cy);
   }
 
@@ -2800,13 +2925,13 @@ window.PBEngine = (() => {
     const pad = 42;
     const targets = [];
 
-    if (state.players.length === 2) {
-      const partner = state.players[state.myPid === 0 ? 1 : 0];
-      if (partner) {
+    if (state.players.length >= 2) {
+      for (const partner of state.players) {
+        if (partner.pid === state.myPid || partner.disconnected) continue;
         targets.push({
           x: partner.x, y: partner.y,
-          color: partner.downed ? '#ef4444' : '#38bdf8',
-          label: partner.downed ? '🆘 蘇生!' : (partner.pid === 0 ? '1P' : '2P')
+          color: partner.downed ? '#ef4444' : (PLAYER_COLORS[partner.pid] || '#38bdf8'),
+          label: partner.downed ? '🆘 蘇生!' : `${partner.pid + 1}P`
         });
       }
     }
@@ -2853,6 +2978,7 @@ window.PBEngine = (() => {
     closeBossChest,
     continueEndless,
     handleNetMessage,
+    handlePeerDisconnected,
     isRunning: () => !!(state && state.running)
   };
 })();
