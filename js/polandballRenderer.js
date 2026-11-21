@@ -677,15 +677,15 @@ window.PBRenderer = (() => {
         drawFlagCircle(ctx, r, () => {
           ctx.fillStyle = '#16a34a';
           ctx.fillRect(-r, -r, r * 2, r * 2);
-          ctx.fillStyle = '#bbf7d0';
+          ctx.fillStyle = '#ffffff';
           ctx.beginPath();
           ctx.arc(0, r * 0.42, r * 0.32, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = '#14532d';
-          ctx.font = `900 ${Math.round(r * 0.42)}px sans-serif`;
+          ctx.font = `900 ${Math.round(r * 0.44)}px sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText('8', 0, r * 0.44);
+          ctx.fillText('6', 0, r * 0.44);
         });
         // Antennae
         ctx.save();

@@ -456,7 +456,7 @@ window.PBData = (() => {
     speed_ball: { id: 'speed_ball', name: 'ターボ・レーサーボール', hp: 34, speed: 145, damage: 11, radius: 15, xp: 7, score: 25, desc: '猛スピードで突っ込んでくる危険な弾丸ボール。' },
     kazakh_brick: { id: 'kazakh_brick', name: 'カザフスタン・ブリック', hp: 155, speed: 62, damage: 16, radius: 24, xp: 15, score: 50, desc: 'ずっしり重い長方形の守護壁。ノックバックに強い！' },
     turret_ball: { id: 'turret_ball', name: '砲台ボール', hp: 65, speed: 68, damage: 12, radius: 18, xp: 11, score: 40, shooter: true, desc: '距離を取りながらエネルギー弾を撃ってくる厄介者。' },
-    alien_ball: { id: 'alien_ball', name: 'エイリアン8ボール', hp: 90, speed: 110, damage: 15, radius: 18, xp: 13, score: 48, desc: '宇宙空間を漂う謎の緑エイリアンボール。' },
+    alien_ball: { id: 'alien_ball', name: 'エイリアン6ボール', hp: 90, speed: 110, damage: 15, radius: 18, xp: 13, score: 48, desc: '宇宙空間を漂う謎の緑エイリアン6ボール。' },
     // Mid-bosses
     boss_viking: { id: 'boss_viking', name: '巨大バイキング王', hp: 1100, speed: 92, damage: 22, radius: 38, xp: 80, score: 400, isBoss: true, isMidBoss: true, desc: '1分半に出現する中ボス。倒すと進化宝箱をドロップ！' },
     boss_prussia: { id: 'boss_prussia', name: 'プロイセン帝国', hp: 2400, speed: 104, damage: 26, radius: 42, xp: 130, score: 750, isBoss: true, isMidBoss: true, shooter: true, desc: '3分に出現する誇り高き鉄十字の覇者。弾幕を放つ！' },
