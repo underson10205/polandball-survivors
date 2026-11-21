@@ -135,18 +135,18 @@ window.PBRenderer = (() => {
       const h = r * 2.15;
       const x0 = -w / 2;
       const y0 = -h * 0.62;
-      // Menacing red pulse aura
-      ctx.save();
+      // Menacing red pulse aura (lightweight glow without slow shadowBlur)
       const pulse = 0.5 + 0.5 * Math.sin(time * 6);
-      ctx.shadowColor = 'rgba(220, 38, 38, 0.75)';
-      ctx.shadowBlur = 16 + pulse * 10;
+      const pad = 7 + pulse * 5;
+      ctx.fillStyle = `rgba(220, 38, 38, ${0.26 + pulse * 0.16})`;
+      ctx.fillRect(x0 - pad, y0 - pad, w + pad * 2, h + pad * 2);
+
       ctx.fillStyle = '#111827';
       ctx.fillRect(x0, y0, w, h / 3);
       ctx.fillStyle = '#f8fafc';
       ctx.fillRect(x0, y0 + h / 3, w, h / 3);
       ctx.fillStyle = '#dc2626';
       ctx.fillRect(x0, y0 + (h * 2) / 3, w, h / 3);
-      ctx.restore();
 
       ctx.lineWidth = Math.max(3, r * 0.1);
       ctx.strokeStyle = INK;
@@ -748,6 +748,48 @@ window.PBRenderer = (() => {
     }
   }
 
+  // High-speed Offscreen Sprite Cache for massive enemy swarms & projectiles
+  const ballSpriteCache = new Map();
+  const emojiSpriteCache = new Map();
+
+  function getCachedBallSprite(id, r, mood) {
+    const bucketR = Math.round(r);
+    const key = `${id}:${bucketR}:${mood}`;
+    let entry = ballSpriteCache.get(key);
+    if (entry) return entry;
+
+    const dpr = 2;
+    const half = Math.ceil(bucketR * 2.2);
+    const size = half * 2;
+    const off = document.createElement('canvas');
+    off.width = size * dpr;
+    off.height = size * dpr;
+    const octx = off.getContext('2d');
+    octx.scale(dpr, dpr);
+    octx.translate(half, half);
+    drawCountry(octx, id, bucketR, mood, 0, 0, 0);
+    entry = { canvas: off, half, size };
+    ballSpriteCache.set(key, entry);
+    return entry;
+  }
+
+  function getEmojiSprite(emoji, sizePx = 48) {
+    const key = `${emoji}:${sizePx}`;
+    let cv = emojiSpriteCache.get(key);
+    if (cv) return cv;
+    const dim = Math.ceil(sizePx * 1.45);
+    cv = document.createElement('canvas');
+    cv.width = dim;
+    cv.height = dim;
+    const octx = cv.getContext('2d');
+    octx.font = `${sizePx}px sans-serif`;
+    octx.textAlign = 'center';
+    octx.textBaseline = 'middle';
+    octx.fillText(emoji, dim / 2, dim / 2 + 1);
+    emojiSpriteCache.set(key, cv);
+    return cv;
+  }
+
   function drawBall(ctx, x, y, r, id, opts = {}) {
     const {
       mood = 'normal',
@@ -758,7 +800,8 @@ window.PBRenderer = (() => {
       hitFlash = 0,
       ghost = false,
       label = null,
-      labelColor = '#ffffff'
+      labelColor = '#ffffff',
+      cached = false
     } = opts;
 
     // Classic cute Polandball bounce-hop animation while moving!
@@ -772,7 +815,7 @@ window.PBRenderer = (() => {
     ctx.translate(x, y);
 
     // Ground contact shadow
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.26)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.24)';
     ctx.beginPath();
     ctx.ellipse(0, r * 0.85, r * (0.95 - hopPhase * 0.2), r * 0.32, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -782,17 +825,20 @@ window.PBRenderer = (() => {
     ctx.translate(0, -hopY);
     ctx.scale(scaleX, scaleY);
 
-    drawCountry(ctx, id, r, ghost ? 'dead' : mood, lookX, lookY, time);
+    if (cached) {
+      const sp = getCachedBallSprite(id, r, ghost ? 'dead' : mood);
+      ctx.drawImage(sp.canvas, -sp.half, -sp.half, sp.size, sp.size);
+    } else {
+      drawCountry(ctx, id, r, ghost ? 'dead' : mood, lookX, lookY, time);
+    }
 
     // Hit flash overlay
     if (hitFlash > 0) {
-      ctx.save();
       ctx.globalAlpha = Math.min(0.75, hitFlash);
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       ctx.arc(0, 0, r * 1.05, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
 
     ctx.restore();
@@ -822,5 +868,5 @@ window.PBRenderer = (() => {
     drawBall(ctx, w / 2, h * 0.58, r, id, { mood, time, moving: false });
   }
 
-  return { drawBall, renderBallToCanvas };
+  return { drawBall, renderBallToCanvas, getEmojiSprite };
 })();

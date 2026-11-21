@@ -10,6 +10,18 @@ window.PBAudio = (() => {
   let bgmMode = 'normal'; // 'normal' | 'boss'
   let xpStreak = 0;
   let lastXpTime = 0;
+  let noiseBuffer = null;
+  const lastSfxAt = {};
+  const SFX_COOLDOWN_MS = {
+    hit: 60,
+    kill: 48,
+    xp: 42,
+    coin: 55,
+    slash: 80,
+    explosion: 95,
+    laser: 85,
+    roar: 110
+  };
 
   function ensure() {
     if (!ctx) {
@@ -21,6 +33,15 @@ window.PBAudio = (() => {
       ctx.resume().catch(() => {});
     }
     return ctx;
+  }
+
+  function getNoiseBuffer(ac) {
+    if (noiseBuffer) return noiseBuffer;
+    const size = Math.floor(ac.sampleRate * 0.3);
+    noiseBuffer = ac.createBuffer(1, size, ac.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < size; i++) data[i] = Math.random() * 2 - 1;
+    return noiseBuffer;
   }
 
   function tone(freq, dur, type = 'square', vol = 0.25, slideTo = null, delay = 0) {
@@ -45,12 +66,8 @@ window.PBAudio = (() => {
     if (muted) return;
     const ac = ensure();
     if (!ac) return;
-    const bufferSize = Math.max(1, Math.floor(ac.sampleRate * dur));
-    const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
     const src = ac.createBufferSource();
-    src.buffer = buffer;
+    src.buffer = getNoiseBuffer(ac);
     const gain = ac.createGain();
     const now = ac.currentTime + delay;
     gain.gain.setValueAtTime(vol * sfxVol, now);
@@ -58,11 +75,17 @@ window.PBAudio = (() => {
     src.connect(gain);
     gain.connect(ac.destination);
     src.start(now);
+    src.stop(now + dur + 0.01);
   }
 
   function playSfx(name) {
     if (muted) return;
     const now = performance.now();
+    const minGap = SFX_COOLDOWN_MS[name];
+    if (minGap) {
+      if (now - (lastSfxAt[name] || 0) < minGap) return;
+      lastSfxAt[name] = now;
+    }
     switch (name) {
       case 'xp': {
         if (now - lastXpTime < 380) xpStreak = Math.min(14, xpStreak + 1);

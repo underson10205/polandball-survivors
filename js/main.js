@@ -627,7 +627,7 @@
         $('hud-p2-card').style.display = 'none';
       }
 
-      // Local player's loadout icons
+      // Local player's loadout icons (update DOM only when changed)
       const me = h.players[h.myPid] || p1;
       if (me) {
         const lo = $('hud-loadout');
@@ -640,15 +640,19 @@
           const pd = Data.PASSIVES[pid];
           if (pd && lv > 0) html += `<span class="slot-badge">${pd.icon}${lv}</span>`;
         }
-        lo.innerHTML = html;
+        if (lo.dataset.lastHtml !== html) {
+          lo.dataset.lastHtml = html;
+          lo.innerHTML = html;
+        }
 
         const dashBtn = $('btn-dash');
-        if (me.dashCd > 0.05) {
-          dashBtn.classList.add('cooling');
-          dashBtn.innerHTML = `<span>⏳</span><span>${me.dashCd.toFixed(1)}s</span>`;
-        } else {
-          dashBtn.classList.remove('cooling');
-          dashBtn.innerHTML = '<span>⚡</span><span>DASH</span>';
+        const dashHtml = me.dashCd > 0.05
+          ? `<span>⏳</span><span>${me.dashCd.toFixed(1)}s</span>`
+          : '<span>⚡</span><span>DASH</span>';
+        if (dashBtn.dataset.lastHtml !== dashHtml) {
+          dashBtn.dataset.lastHtml = dashHtml;
+          dashBtn.classList.toggle('cooling', me.dashCd > 0.05);
+          dashBtn.innerHTML = dashHtml;
         }
       }
 

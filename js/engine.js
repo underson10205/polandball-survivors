@@ -8,14 +8,93 @@ window.PBEngine = (() => {
 
   const MAX_WEAPONS = 6;
   const MAX_PASSIVES = 6;
-  const ENEMY_CAP = 230;
+  const ENEMY_CAP = 210;
+  const MAX_PROJECTILES = 160;
+  const MAX_ZONES = 18;
+  const MAX_PARTICLES = 90;
+  const MAX_TEXTS = 24;
   const WORLD_SPAWN_MIN = 460;
   const WORLD_SPAWN_MAX = 680;
+  const GRID_CELL = 110;
 
   let canvas = null;
   let ctx = null;
   let rafId = null;
   let lastFrameTs = 0;
+
+  // Spatial Hash Grid (numeric keys -> zero string allocation per frame!)
+  const enemyGrid = new Map();
+  let zoneSprites = null;
+
+  function gridKey(cx, cy) {
+    return ((cx + 32768) << 16) | ((cy + 32768) & 0xffff);
+  }
+
+  function rebuildEnemyGrid() {
+    enemyGrid.clear();
+    const list = state.enemies;
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      const k = gridKey(Math.floor(e.x / GRID_CELL), Math.floor(e.y / GRID_CELL));
+      let cell = enemyGrid.get(k);
+      if (!cell) {
+        cell = [];
+        enemyGrid.set(k, cell);
+      }
+      cell.push(e);
+    }
+  }
+
+  function forEachEnemyNear(x, y, range, fn) {
+    const r = range + 48; // account for largest boss radius
+    const minX = Math.floor((x - r) / GRID_CELL);
+    const maxX = Math.floor((x + r) / GRID_CELL);
+    const minY = Math.floor((y - r) / GRID_CELL);
+    const maxY = Math.floor((y + r) / GRID_CELL);
+    for (let cx = minX; cx <= maxX; cx++) {
+      for (let cy = minY; cy <= maxY; cy++) {
+        const cell = enemyGrid.get(gridKey(cx, cy));
+        if (!cell) continue;
+        for (let i = 0; i < cell.length; i++) {
+          const e = cell[i];
+          if (e.hp > 0 && fn(e) === false) return;
+        }
+      }
+    }
+  }
+
+  function getZoneSprite(evolved) {
+    if (!zoneSprites) {
+      const make = (isEvo) => {
+        const c = document.createElement('canvas');
+        c.width = 128;
+        c.height = 128;
+        const gctx = c.getContext('2d');
+        const grad = gctx.createRadialGradient(64, 64, 4, 64, 64, 62);
+        if (isEvo) {
+          grad.addColorStop(0, '#e0f2fe');
+          grad.addColorStop(0.5, '#38bdf8');
+          grad.addColorStop(1, 'rgba(37, 99, 235, 0)');
+        } else {
+          grad.addColorStop(0, '#fef08a');
+          grad.addColorStop(0.55, '#f97316');
+          grad.addColorStop(1, 'rgba(220, 38, 38, 0)');
+        }
+        gctx.fillStyle = grad;
+        gctx.fillRect(0, 0, 128, 128);
+        return c;
+      };
+      zoneSprites = { normal: make(false), evolved: make(true) };
+    }
+    return evolved ? zoneSprites.evolved : zoneSprites.normal;
+  }
+
+  function pushProjectile(pr) {
+    if (state.projectiles.length >= MAX_PROJECTILES) {
+      state.projectiles.shift();
+    }
+    state.projectiles.push(pr);
+  }
 
   let callbacks = {
     onHudUpdate: () => {},
@@ -46,7 +125,8 @@ window.PBEngine = (() => {
 
   function resize() {
     if (!canvas) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Cap DPR at 1.5 for crisp visuals without 4x Retina fill-rate stalls
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const w = window.innerWidth;
     const h = window.innerHeight;
     canvas.width = Math.floor(w * dpr);
@@ -393,6 +473,7 @@ window.PBEngine = (() => {
   function updateAuthoritative(dt) {
     state.time += dt;
     if (state.shake > 0) state.shake = Math.max(0, state.shake - dt * 28);
+    rebuildEnemyGrid();
 
     // 1. Co-op friendship synergy check
     if (state.players.length === 2) {
@@ -501,8 +582,9 @@ window.PBEngine = (() => {
     // 4. Spawn Enemies & Bosses
     updateSpawning(dt);
 
-    // 5. Update Enemies
+    // 5. Update Enemies & Rebuild Spatial Grid for Projectile/Zone Collisions
     updateEnemies(dt);
+    rebuildEnemyGrid();
 
     // 6. Update Projectiles, Enemy Bullets, Zones, Slashes, Beams, Novas
     updateProjectiles(dt);
@@ -513,10 +595,10 @@ window.PBEngine = (() => {
     // 7. Update Pickups (XP, Coins, Heal, Magnet, Chests)
     updatePickups(dt);
 
-    // 8. Broadcast Snapshot to Guest (25 Hz)
+    // 8. Broadcast Snapshot to Guest (20 Hz — smooth with 60fps interpolation)
     if (state.mode === 'coop_host') {
       snapAccum += dt;
-      if (snapAccum >= 0.04) {
+      if (snapAccum >= 0.05) {
         snapAccum = 0;
         broadcastSnapshot();
       }
@@ -565,23 +647,29 @@ window.PBEngine = (() => {
       const a = p.orbitAngle + (i * Math.PI * 2) / ws.count;
       const ox = p.x + Math.cos(a) * orbitR;
       const oy = p.y + Math.sin(a) * orbitR;
-      for (const e of state.enemies) {
-        if (e.orbitHitCd > 0) continue;
-        const d = Math.hypot(e.x - ox, e.y - oy);
-        if (d < hitR + e.radius) {
+      forEachEnemyNear(ox, oy, hitR, (e) => {
+        if (e.orbitHitCd > 0) return;
+        const dx = e.x - ox;
+        const dy = e.y - oy;
+        const sumR = hitR + e.radius;
+        if (dx * dx + dy * dy < sumR * sumR) {
           e.orbitHitCd = 0.28;
           damageEnemy(e, ws.damage, p, w, ox, oy, 190);
         }
-      }
+      });
     }
   }
 
   function findNearestEnemy(x, y, maxDist = 750) {
     let best = null;
-    let bestD = maxDist;
-    for (const e of state.enemies) {
-      const d = Math.hypot(e.x - x, e.y - y);
-      if (d < bestD) { bestD = d; best = e; }
+    let bestD2 = maxDist * maxDist;
+    const list = state.enemies;
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      const dx = e.x - x;
+      const dy = e.y - y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestD2) { bestD2 = d2; best = e; }
     }
     return best;
   }
@@ -595,7 +683,7 @@ window.PBEngine = (() => {
         for (let i = 0; i < ws.count; i++) {
           const spread = (i - (ws.count - 1) / 2) * 0.32;
           const a = baseAngle + spread;
-          state.projectiles.push({
+          pushProjectile({
             id: state.nextEid++,
             kind: 'plunger',
             evolved: w.evolved,
@@ -622,22 +710,29 @@ window.PBEngine = (() => {
         const dirA = Math.atan2(p.lookY, p.lookX);
         const dirs = [];
         if (w.evolved) {
-          for (let i = 0; i < Math.max(4, ws.count + 2); i++) dirs.push(dirA + (i * Math.PI * 2) / Math.max(4, ws.count + 2));
+          const c = Math.min(8, Math.max(4, ws.count + 2));
+          for (let i = 0; i < c; i++) dirs.push(dirA + (i * Math.PI * 2) / c);
         } else {
           dirs.push(dirA);
           if (ws.count >= 2) dirs.push(dirA + Math.PI);
           for (let i = 2; i < ws.count; i++) dirs.push(dirA + (i % 2 === 0 ? 0.55 : -0.55) * Math.ceil(i / 2));
         }
         const range = 108 * ws.area;
+        const slashHitR = range * 0.72;
         for (const a of dirs) {
           const sx = p.x + Math.cos(a) * (range * 0.52);
           const sy = p.y + Math.sin(a) * (range * 0.52);
-          state.slashes.push({ x: sx, y: sy, angle: a, radius: range * 0.68, evolved: w.evolved, life: 0.24, maxLife: 0.24 });
-          for (const e of state.enemies) {
-            if (Math.hypot(e.x - sx, e.y - sy) < range * 0.72 + e.radius) {
+          if (state.slashes.length < 28) {
+            state.slashes.push({ x: sx, y: sy, angle: a, radius: range * 0.68, evolved: w.evolved, life: 0.24, maxLife: 0.24 });
+          }
+          forEachEnemyNear(sx, sy, slashHitR, (e) => {
+            const dx = e.x - sx;
+            const dy = e.y - sy;
+            const sumR = slashHitR + e.radius;
+            if (dx * dx + dy * dy < sumR * sumR) {
               damageEnemy(e, ws.damage, p, w, p.x, p.y, 130);
             }
-          }
+          });
         }
         break;
       }
@@ -645,7 +740,7 @@ window.PBEngine = (() => {
       case 'homing': {
         for (let i = 0; i < ws.count; i++) {
           const a = baseAngle + (i - (ws.count - 1) / 2) * 0.45;
-          state.projectiles.push({
+          pushProjectile({
             id: state.nextEid++,
             kind: 'missile',
             evolved: w.evolved,
@@ -660,6 +755,8 @@ window.PBEngine = (() => {
             damage: ws.damage,
             pierce: 1,
             life: 2.6,
+            retargetCd: 0,
+            target: null,
             hitSet: new Map()
           });
         }
@@ -670,7 +767,7 @@ window.PBEngine = (() => {
         for (let i = 0; i < ws.count; i++) {
           const spread = (i - (ws.count - 1) / 2) * 0.4;
           const a = -Math.PI / 2 + spread + (p.lookX >= 0 ? 0.35 : -0.35);
-          state.projectiles.push({
+          pushProjectile({
             id: state.nextEid++,
             kind: 'baguette',
             evolved: w.evolved,
@@ -698,7 +795,7 @@ window.PBEngine = (() => {
       case 'rapid': {
         for (let i = 0; i < ws.count; i++) {
           const a = baseAngle + (i - (ws.count - 1) / 2) * 0.14;
-          state.projectiles.push({
+          pushProjectile({
             id: state.nextEid++,
             kind: 'bratwurst',
             evolved: w.evolved,
@@ -719,13 +816,13 @@ window.PBEngine = (() => {
       }
 
       case 'fan': {
-        const total = w.evolved ? Math.max(10, ws.count + 5) : ws.count;
+        const total = w.evolved ? Math.min(14, Math.max(10, ws.count + 4)) : ws.count;
         const arcSpan = w.evolved ? Math.PI * 2 : Math.min(Math.PI * 0.85, 0.24 * total);
         for (let i = 0; i < total; i++) {
           const a = w.evolved
             ? (i * Math.PI * 2) / total + state.time
             : baseAngle - arcSpan / 2 + (total > 1 ? (i * arcSpan) / (total - 1) : 0);
-          state.projectiles.push({
+          pushProjectile({
             id: state.nextEid++,
             kind: 'pilum',
             evolved: w.evolved,
@@ -747,32 +844,48 @@ window.PBEngine = (() => {
       case 'nova': {
         Audio.playSfx('roar');
         const maxR = 148 * ws.area;
-        state.novas.push({ x: p.x, y: p.y, radius: 18, maxRadius: maxR, evolved: w.evolved, life: 0.34, maxLife: 0.34 });
+        if (state.novas.length < 18) {
+          state.novas.push({ x: p.x, y: p.y, radius: 18, maxRadius: maxR, evolved: w.evolved, life: 0.34, maxLife: 0.34 });
+        }
         if (w.evolved) state.shake = Math.max(state.shake, 7);
-        for (const e of state.enemies) {
-          const d = Math.hypot(e.x - p.x, e.y - p.y);
-          if (d < maxR + e.radius) {
+        forEachEnemyNear(p.x, p.y, maxR, (e) => {
+          const dx = e.x - p.x;
+          const dy = e.y - p.y;
+          const sumR = maxR + e.radius;
+          if (dx * dx + dy * dy < sumR * sumR) {
             damageEnemy(e, ws.damage, p, w, p.x, p.y, ws.knockback);
             if (w.evolved) e.slowTimer = 2.4;
           }
-        }
+        });
         break;
       }
 
       case 'lightning': {
-        const candidates = state.enemies.filter(e => Math.hypot(e.x - p.x, e.y - p.y) < 560);
+        const candidates = [];
+        const maxR2 = 560 * 560;
+        for (let i = 0; i < state.enemies.length; i++) {
+          const e = state.enemies[i];
+          const dx = e.x - p.x;
+          const dy = e.y - p.y;
+          if (dx * dx + dy * dy < maxR2) candidates.push(e);
+        }
         if (candidates.length === 0) break;
         Audio.playSfx('laser');
         for (let i = 0; i < ws.count; i++) {
           const t = candidates[Math.floor(Math.random() * candidates.length)];
           if (!t) continue;
           const hitR = (w.evolved ? 68 : 42) * ws.area;
-          state.beams.push({ x: t.x, y: t.y, radius: hitR, evolved: w.evolved, life: 0.28, maxLife: 0.28 });
-          for (const e of state.enemies) {
-            if (Math.hypot(e.x - t.x, e.y - t.y) < hitR + e.radius) {
+          if (state.beams.length < 18) {
+            state.beams.push({ x: t.x, y: t.y, radius: hitR, evolved: w.evolved, life: 0.28, maxLife: 0.28 });
+          }
+          forEachEnemyNear(t.x, t.y, hitR, (e) => {
+            const dx = e.x - t.x;
+            const dy = e.y - t.y;
+            const sumR = hitR + e.radius;
+            if (dx * dx + dy * dy < sumR * sumR) {
               damageEnemy(e, ws.damage, p, w, t.x, t.y, 40);
             }
-          }
+          });
         }
         break;
       }
@@ -781,6 +894,7 @@ window.PBEngine = (() => {
         for (let i = 0; i < ws.count; i++) {
           const a = Math.random() * Math.PI * 2;
           const dist = 70 + Math.random() * 140;
+          if (state.zones.length >= MAX_ZONES) state.zones.shift();
           state.zones.push({
             id: state.nextEid++,
             x: p.x + Math.cos(a) * dist,
@@ -1159,21 +1273,28 @@ window.PBEngine = (() => {
         pr.vx += pr.ax * dt;
         pr.vy += pr.ay * dt;
         pr.spin += dt * 16;
-        // Evolved Galaxy Plunger pulls enemies gently toward it!
+        // Evolved Galaxy Plunger pulls nearby enemies gently toward it via spatial grid!
         if (pr.evolved) {
-          for (const e of state.enemies) {
-            if (e.isBoss) continue;
+          forEachEnemyNear(pr.x, pr.y, 130, (e) => {
+            if (e.isBoss) return;
             const dx = pr.x - e.x;
             const dy = pr.y - e.y;
-            const d = Math.hypot(dx, dy);
-            if (d < 130 && d > 10) {
+            const d2 = dx * dx + dy * dy;
+            if (d2 < 16900 && d2 > 100) {
+              const d = Math.sqrt(d2);
               e.x += (dx / d) * 95 * dt;
               e.y += (dy / d) * 95 * dt;
             }
-          }
+          });
         }
       } else if (pr.kind === 'missile') {
-        const target = findNearestEnemy(pr.x, pr.y, 520);
+        // Throttle target re-acquisition so 30 missiles don't scan all enemies every frame
+        pr.retargetCd = (pr.retargetCd || 0) - dt;
+        if (!pr.target || pr.target.hp <= 0 || pr.retargetCd <= 0) {
+          pr.target = findNearestEnemy(pr.x, pr.y, 520);
+          pr.retargetCd = 0.16;
+        }
+        const target = pr.target;
         if (target) {
           const desired = Math.atan2(target.y - pr.y, target.x - pr.x);
           const cur = Math.atan2(pr.vy, pr.vx);
@@ -1202,42 +1323,50 @@ window.PBEngine = (() => {
         pr.y += pr.vy * dt;
       }
 
-      // Hit checks
+      // Fast spatial-grid hit checks!
       const ownerP = state.players[pr.owner] || state.players[0];
-      for (const e of state.enemies) {
+      forEachEnemyNear(pr.x, pr.y, pr.radius, (e) => {
         const prevHit = pr.hitSet.get(e.id) || 0;
-        if (state.time - prevHit < 0.24) continue;
-        if (Math.hypot(e.x - pr.x, e.y - pr.y) < pr.radius + e.radius) {
+        if (state.time - prevHit < 0.24) return;
+        const dx = e.x - pr.x;
+        const dy = e.y - pr.y;
+        const sumR = pr.radius + e.radius;
+        if (dx * dx + dy * dy < sumR * sumR) {
           pr.hitSet.set(e.id, state.time);
           if (pr.kind === 'missile') {
             explodeMissile(pr, ownerP);
             pr.pierce = 0;
-            break;
+            return false;
           } else {
             damageEnemy(e, pr.damage, ownerP, pr.weapon, pr.x, pr.y, 100);
             pr.pierce--;
-            if (pr.pierce <= 0) break;
+            if (pr.pierce <= 0) return false;
           }
         }
-      }
+      });
       if (pr.pierce <= 0) state.projectiles.splice(i, 1);
     }
   }
 
   function explodeMissile(pr, ownerP) {
     Audio.playSfx('explosion');
-    state.novas.push({ x: pr.x, y: pr.y, radius: 12, maxRadius: pr.blastRadius, evolved: pr.evolved, life: 0.24, maxLife: 0.24, isBlast: true });
-    spawnBurst(pr.x, pr.y, pr.evolved ? '#fb923c' : '#facc15', 14);
-    for (const e of state.enemies) {
-      if (Math.hypot(e.x - pr.x, e.y - pr.y) < pr.blastRadius + e.radius) {
+    if (state.novas.length < 18) {
+      state.novas.push({ x: pr.x, y: pr.y, radius: 12, maxRadius: pr.blastRadius, evolved: pr.evolved, life: 0.24, maxLife: 0.24, isBlast: true });
+    }
+    spawnBurst(pr.x, pr.y, pr.evolved ? '#fb923c' : '#facc15', 8);
+    forEachEnemyNear(pr.x, pr.y, pr.blastRadius, (e) => {
+      const dx = e.x - pr.x;
+      const dy = e.y - pr.y;
+      const sumR = pr.blastRadius + e.radius;
+      if (dx * dx + dy * dy < sumR * sumR) {
         damageEnemy(e, pr.damage, ownerP, pr.weapon, pr.x, pr.y, 150);
       }
-    }
+    });
     // Evolved cluster bombs!
     if (pr.evolved && !pr.isCluster) {
       for (let k = 0; k < 4; k++) {
         const a = (k * Math.PI * 2) / 4 + Math.random() * 0.4;
-        state.projectiles.push({
+        pushProjectile({
           id: state.nextEid++,
           kind: 'missile',
           evolved: false,
@@ -1254,6 +1383,8 @@ window.PBEngine = (() => {
           damage: Math.round(pr.damage * 0.65),
           pierce: 1,
           life: 0.45,
+          retargetCd: 0.1,
+          target: null,
           hitSet: new Map()
         });
       }
@@ -1269,7 +1400,10 @@ window.PBEngine = (() => {
       b.y += b.vy * dt;
       if (b.life <= 0) { state.enemyBullets.splice(i, 1); continue; }
       for (const p of alive) {
-        if (Math.hypot(p.x - b.x, p.y - b.y) < p.radius + b.r - 2) {
+        const dx = p.x - b.x;
+        const dy = p.y - b.y;
+        const sumR = p.radius + b.r - 2;
+        if (dx * dx + dy * dy < sumR * sumR) {
           damagePlayer(p, b.damage);
           state.enemyBullets.splice(i, 1);
           break;
@@ -1287,11 +1421,14 @@ window.PBEngine = (() => {
       if (z.tick <= 0) {
         z.tick = 0.34;
         const ownerP = state.players[z.owner] || state.players[0];
-        for (const e of state.enemies) {
-          if (Math.hypot(e.x - z.x, e.y - z.y) < z.radius + e.radius) {
+        forEachEnemyNear(z.x, z.y, z.radius, (e) => {
+          const dx = e.x - z.x;
+          const dy = e.y - z.y;
+          const sumR = z.radius + e.radius;
+          if (dx * dx + dy * dy < sumR * sumR) {
             damageEnemy(e, z.damage, ownerP, z.weapon, z.x, z.y, 18);
           }
-        }
+        });
       }
     }
   }
@@ -1840,8 +1977,10 @@ window.PBEngine = (() => {
 
   // === HELPERS ===
   function spawnBurst(x, y, color, count = 8) {
-    if (state.particles.length > 180) return;
-    for (let i = 0; i < count; i++) {
+    const room = MAX_PARTICLES - state.particles.length;
+    if (room <= 0) return;
+    const n = Math.min(count, room);
+    for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
       const spd = 60 + Math.random() * 170;
       state.particles.push({
@@ -1857,7 +1996,9 @@ window.PBEngine = (() => {
   }
 
   function addFloatingText(x, y, text, color = '#ffffff', big = false) {
-    state.texts.push({ x, y, text, color, life: big ? 1.05 : 0.68, maxLife: big ? 1.05 : 0.68, big });
+    if (!big && state.texts.length >= MAX_TEXTS) return;
+    if (state.texts.length >= MAX_TEXTS + 8) state.texts.shift();
+    state.texts.push({ x, y, text, color, life: big ? 1.05 : 0.62, maxLife: big ? 1.05 : 0.62, big });
   }
 
   function emitHud() {
@@ -2022,27 +2163,18 @@ window.PBEngine = (() => {
     ctx.save();
     ctx.translate(w / 2 - cx, h / 2 - cy);
 
-    // 1. Ground burning zones
+    const cullX = w * 0.62;
+    const cullY = h * 0.62;
+
+    // 1. Ground burning zones (pre-rendered radial sprite -> ZERO createRadialGradient per frame!)
     for (const z of state.zones) {
+      if (Math.abs(z.x - cx) > cullX + z.radius || Math.abs(z.y - cy) > cullY + z.radius) continue;
       const alpha = typeof z.alpha === 'number' ? z.alpha : Math.min(1, z.life / 0.8);
-      ctx.save();
-      ctx.globalAlpha = Math.max(0.15, alpha * 0.65);
-      const grad = ctx.createRadialGradient(z.x, z.y, 4, z.x, z.y, z.radius);
-      if (z.evolved) {
-        grad.addColorStop(0, '#e0f2fe');
-        grad.addColorStop(0.5, '#38bdf8');
-        grad.addColorStop(1, 'rgba(37, 99, 235, 0)');
-      } else {
-        grad.addColorStop(0, '#fef08a');
-        grad.addColorStop(0.55, '#f97316');
-        grad.addColorStop(1, 'rgba(220, 38, 38, 0)');
-      }
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(z.x, z.y, z.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      ctx.globalAlpha = Math.max(0.15, alpha * 0.68);
+      const sp = getZoneSprite(z.evolved);
+      ctx.drawImage(sp, z.x - z.radius, z.y - z.radius, z.radius * 2, z.radius * 2);
     }
+    ctx.globalAlpha = 1;
 
     // 2. Co-op Friendship Synergy Tether!
     if (state.players.length === 2 && state.players[0].synergyActive) {
@@ -2061,50 +2193,50 @@ window.PBEngine = (() => {
     }
 
     // 3. Pickups (XP gems, coins, pierogi, magnet, chest)
+    ctx.strokeStyle = '#1a1d26';
+    ctx.lineWidth = 1.6;
     for (const pk of state.pickups) {
-      if (Math.abs(pk.x - cx) > w * 0.65 || Math.abs(pk.y - cy) > h * 0.65) continue;
+      if (Math.abs(pk.x - cx) > cullX || Math.abs(pk.y - cy) > cullY) continue;
       if (pk.kind === 'xp') {
         const col = pk.tier === 2 ? '#f43f5e' : (pk.tier === 1 ? '#22c55e' : '#38bdf8');
         const sz = pk.tier === 2 ? 9 : (pk.tier === 1 ? 7.5 : 6);
-        ctx.save();
-        ctx.translate(pk.x, pk.y + Math.sin(state.time * 5 + pk.x) * 2);
+        const px = pk.x;
+        const py = pk.y + Math.sin(state.time * 5 + px) * 2;
         ctx.fillStyle = col;
-        ctx.strokeStyle = '#1a1d26';
-        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.moveTo(0, -sz); ctx.lineTo(sz * 0.78, 0); ctx.lineTo(0, sz); ctx.lineTo(-sz * 0.78, 0);
+        ctx.moveTo(px, py - sz);
+        ctx.lineTo(px + sz * 0.78, py);
+        ctx.lineTo(px, py + sz);
+        ctx.lineTo(px - sz * 0.78, py);
         ctx.closePath();
-        ctx.fill(); ctx.stroke();
-        ctx.restore();
+        ctx.fill();
+        ctx.stroke();
       } else if (pk.kind === 'coin') {
-        ctx.save();
         ctx.fillStyle = '#facc15';
         ctx.strokeStyle = '#854d0e';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(pk.x, pk.y, 8, 0, Math.PI * 2);
         ctx.fill(); ctx.stroke();
-        ctx.restore();
+        ctx.strokeStyle = '#1a1d26';
+        ctx.lineWidth = 1.6;
       } else if (pk.kind === 'heal' || pk.kind === 'magnet' || pk.kind === 'chest') {
         const bob = Math.sin(state.time * 5) * 4;
         if (pk.kind === 'chest') {
-          ctx.save();
           ctx.fillStyle = 'rgba(250, 204, 21, 0.32)';
           ctx.beginPath();
           ctx.arc(pk.x, pk.y, 28 + Math.sin(state.time * 7) * 4, 0, Math.PI * 2);
           ctx.fill();
-          ctx.restore();
         }
-        ctx.font = pk.kind === 'chest' ? '30px sans-serif' : '22px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(pk.kind === 'chest' ? '🎁' : (pk.kind === 'heal' ? '🥟' : '🧲'), pk.x, pk.y + bob);
+        const emoji = pk.kind === 'chest' ? '🎁' : (pk.kind === 'heal' ? '🥟' : '🧲');
+        const sp = Renderer.getEmojiSprite(emoji, pk.kind === 'chest' ? 32 : 24);
+        ctx.drawImage(sp, pk.x - sp.width / 2, pk.y + bob - sp.height / 2);
       }
     }
 
-    // 4. Enemies (sorted by Y for clean overlap)
+    // 4. Enemies (cached offscreen sprites for regular swarm -> 10x faster!)
     for (const e of state.enemies) {
-      if (Math.abs(e.x - cx) > w * 0.7 || Math.abs(e.y - cy) > h * 0.7) continue;
+      if (Math.abs(e.x - cx) > cullX + e.radius || Math.abs(e.y - cy) > cullY + e.radius) continue;
       Renderer.drawBall(ctx, e.x, e.y, e.radius, e.type, {
         mood: 'angry',
         lookX: e.lookX || 0,
@@ -2112,16 +2244,15 @@ window.PBEngine = (() => {
         time: state.time + e.id * 0.3,
         moving: true,
         hitFlash: e.hitFlash,
-        hopFreq: e.isBoss ? 6 : 10
+        hopFreq: e.isBoss ? 6 : 10,
+        cached: !e.isBoss
       });
       // Frozen tint
       if (e.slowTimer > 0) {
-        ctx.save();
         ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.radius * 1.05, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
       }
       // Boss HP mini-bar above head
       if (e.isBoss) {
@@ -2156,29 +2287,25 @@ window.PBEngine = (() => {
         ctx.restore();
       }
 
-      // Draw Orbital Teacups
+      // Draw Orbital Teacups (cached emoji sprites!)
       const teaW = p.weapons.find(w => w.id === 'teacup');
       if (teaW && !p.downed && (teaW.evolved || p.orbitActiveTimer > 0)) {
         const stats = getComputedStats(p);
         const ws = getWeaponStats(teaW, stats);
         const orbitR = 78 * ws.area;
         if (teaW.evolved) {
-          ctx.save();
           ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
           ctx.lineWidth = 6;
           ctx.beginPath();
           ctx.arc(p.x, p.y, orbitR, 0, Math.PI * 2);
           ctx.stroke();
-          ctx.restore();
         }
+        const teaSp = Renderer.getEmojiSprite(teaW.evolved ? '🫖' : '☕', teaW.evolved ? 30 : 24);
+        const hw = teaSp.width / 2;
+        const hh = teaSp.height / 2;
         for (let i = 0; i < ws.count; i++) {
           const a = p.orbitAngle + (i * Math.PI * 2) / ws.count;
-          const ox = p.x + Math.cos(a) * orbitR;
-          const oy = p.y + Math.sin(a) * orbitR;
-          ctx.font = teaW.evolved ? '28px sans-serif' : '22px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(teaW.evolved ? '🫖' : '☕', ox, oy);
+          ctx.drawImage(teaSp, p.x + Math.cos(a) * orbitR - hw, p.y + Math.sin(a) * orbitR - hh);
         }
       }
 
@@ -2229,6 +2356,7 @@ window.PBEngine = (() => {
 
     // 6. Slashes, Novas, Beams
     for (const sl of state.slashes) {
+      if (Math.abs(sl.x - cx) > cullX + sl.radius || Math.abs(sl.y - cy) > cullY + sl.radius) continue;
       const a = Math.max(0, sl.life / sl.maxLife);
       ctx.save();
       ctx.translate(sl.x, sl.y);
@@ -2246,8 +2374,8 @@ window.PBEngine = (() => {
     }
 
     for (const n of state.novas) {
+      if (Math.abs(n.x - cx) > cullX + n.radius || Math.abs(n.y - cy) > cullY + n.radius) continue;
       const a = Math.max(0, n.life / n.maxLife);
-      ctx.save();
       ctx.globalAlpha = a * 0.85;
       ctx.strokeStyle = n.isBlast ? (n.evolved ? '#fb923c' : '#facc15') : (n.evolved ? '#38bdf8' : '#e0f2fe');
       ctx.lineWidth = n.evolved ? 10 : 6;
@@ -2258,12 +2386,12 @@ window.PBEngine = (() => {
         ctx.fillStyle = 'rgba(251, 146, 60, 0.28)';
         ctx.fill();
       }
-      ctx.restore();
     }
+    ctx.globalAlpha = 1;
 
     for (const b of state.beams) {
+      if (Math.abs(b.x - cx) > cullX + b.radius || Math.abs(b.y - cy) > cullY + 200) continue;
       const a = Math.max(0, b.life / b.maxLife);
-      ctx.save();
       ctx.globalAlpha = a;
       const bw = b.evolved ? 38 : 18;
       ctx.fillStyle = b.evolved ? '#38bdf8' : '#67e8f9';
@@ -2274,11 +2402,12 @@ window.PBEngine = (() => {
       ctx.arc(b.x, b.y, b.radius * a, 0, Math.PI * 2);
       ctx.fillStyle = b.evolved ? 'rgba(56,189,248,0.4)' : 'rgba(165,243,252,0.45)';
       ctx.fill();
-      ctx.restore();
     }
+    ctx.globalAlpha = 1;
 
-    // 7. Player Projectiles
+    // 7. Player Projectiles (cached emoji drawImage -> ZERO text rasterization per frame!)
     for (const pr of state.projectiles) {
+      if (Math.abs(pr.x - cx) > cullX + 40 || Math.abs(pr.y - cy) > cullY + 40) continue;
       ctx.save();
       ctx.translate(pr.x, pr.y);
       if (pr.kind === 'plunger') {
@@ -2290,23 +2419,20 @@ window.PBEngine = (() => {
           ctx.stroke();
         }
         ctx.rotate(pr.spin || 0);
-        ctx.font = `${Math.round(pr.radius * 1.65)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(pr.evolved ? '🌌' : '🪠', 0, 0);
+        const sp = Renderer.getEmojiSprite(pr.evolved ? '🌌' : '🪠', 36);
+        const d = pr.radius * 2.25;
+        ctx.drawImage(sp, -d / 2, -d / 2, d, d);
       } else if (pr.kind === 'baguette') {
         ctx.rotate(pr.spin || 0);
-        ctx.font = `${Math.round(pr.radius * 1.7)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('🥖', 0, 0);
+        const sp = Renderer.getEmojiSprite('🥖', 36);
+        const d = pr.radius * 2.3;
+        ctx.drawImage(sp, -d / 2, -d / 2, d, d);
       } else if (pr.kind === 'missile') {
         const a = typeof pr.angle === 'number' ? pr.angle : Math.atan2(pr.vy, pr.vx);
         ctx.rotate(a + Math.PI / 4);
-        ctx.font = `${Math.round(pr.radius * 1.9)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(pr.evolved ? '🔥' : '🚀', 0, 0);
+        const sp = Renderer.getEmojiSprite(pr.evolved ? '🔥' : '🚀', 34);
+        const d = pr.radius * 2.5;
+        ctx.drawImage(sp, -d / 2, -d / 2, d, d);
       } else if (pr.kind === 'bratwurst') {
         const a = typeof pr.angle === 'number' ? pr.angle : Math.atan2(pr.vy, pr.vx);
         ctx.rotate(a);
@@ -2334,41 +2460,40 @@ window.PBEngine = (() => {
     }
 
     // 8. Enemy Bullets
+    ctx.strokeStyle = '#1a1d26';
+    ctx.lineWidth = 2;
     for (const b of state.enemyBullets) {
-      ctx.save();
+      if (Math.abs(b.x - cx) > cullX || Math.abs(b.y - cy) > cullY) continue;
       ctx.fillStyle = b.color || '#ef4444';
-      ctx.strokeStyle = '#1a1d26';
-      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
       ctx.fill(); ctx.stroke();
-      ctx.restore();
     }
 
-    // 9. Particles
+    // 9. Particles (no per-particle save/restore!)
     for (const pt of state.particles) {
-      ctx.save();
+      if (Math.abs(pt.x - cx) > cullX || Math.abs(pt.y - cy) > cullY) continue;
       ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
       ctx.fillStyle = pt.color;
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
+    ctx.globalAlpha = 1;
 
     // 10. Floating Damage / Status Texts
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#1a1d26';
+    ctx.lineWidth = 3;
     for (const t of state.texts) {
-      ctx.save();
+      if (Math.abs(t.x - cx) > cullX || Math.abs(t.y - cy) > cullY) continue;
       ctx.globalAlpha = Math.max(0, Math.min(1, t.life / (t.maxLife * 0.6)));
       ctx.font = t.big ? '900 18px "M PLUS Rounded 1c", sans-serif' : '800 14px "M PLUS Rounded 1c", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = '#1a1d26';
       ctx.strokeText(t.text, t.x, t.y);
       ctx.fillStyle = t.color;
       ctx.fillText(t.text, t.x, t.y);
-      ctx.restore();
     }
+    ctx.globalAlpha = 1;
 
     ctx.restore();
 
