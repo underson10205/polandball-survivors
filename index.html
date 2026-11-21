@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ポーランドボール・サバイバーズ | 2〜3人協力対応 ヴァンサバアクション</title>
   <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット・スマホ最大3台でのオンライン協力プレイ対応。" />
-  <link rel="stylesheet" href="styles.css?v=11" />
+  <link rel="stylesheet" href="styles.css?v=12" />
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -70,6 +70,11 @@
       <div>
         <div style="font-weight:900;margin-bottom:8px;">② ステージを選ぶ</div>
         <div id="solo-stage-grid" class="stage-grid"></div>
+      </div>
+
+      <div>
+        <div style="font-weight:900;margin-bottom:8px;">③ 難易度を選ぶ</div>
+        <div id="solo-diff-grid" class="diff-grid"></div>
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
@@ -152,6 +157,11 @@
         <div id="coop-stage-section">
           <div style="font-weight:900;margin-bottom:8px;">ステージ選択（ホストが選択）</div>
           <div id="coop-stage-grid" class="stage-grid"></div>
+        </div>
+
+        <div>
+          <div style="font-weight:900;margin-bottom:8px;">難易度選択（ホストが選択）</div>
+          <div id="coop-diff-grid" class="diff-grid"></div>
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
@@ -247,6 +257,7 @@
       <div class="hud-center">
         <div id="hud-timer" class="hud-timer">00:00</div>
         <div class="hud-stats-row">
+          <span id="hud-diff" class="hud-chip" style="display:none;background:#dcfce7;color:#15803d;">🌱 イージー</span>
           <span class="hud-chip">Lv.<span id="hud-level">1</span></span>
           <span class="hud-chip">💥 <span id="hud-kills">0</span></span>
           <span class="hud-chip">🪙 <span id="hud-coins">0</span></span>
@@ -337,12 +348,12 @@
   <script src="lib/qrcode.min.js"></script>
 
   <!-- Game Modules -->
-  <script src="js/data.js?v=11"></script>
-  <script src="js/polandballRenderer.js?v=11"></script>
-  <script src="js/audio.js?v=11"></script>
-  <script src="js/storage.js?v=11"></script>
-  <script src="js/network.js?v=11"></script>
-  <script src="js/engine.js?v=11"></script>
-  <script src="js/main.js?v=11"></script>
+  <script src="js/data.js?v=12"></script>
+  <script src="js/polandballRenderer.js?v=12"></script>
+  <script src="js/audio.js?v=12"></script>
+  <script src="js/storage.js?v=12"></script>
+  <script src="js/network.js?v=12"></script>
+  <script src="js/engine.js?v=12"></script>
+  <script src="js/main.js?v=12"></script>
 </body>
 </html>

@@ -284,8 +284,11 @@ window.PBEngine = (() => {
   }
 
   function start(config) {
-    // config: { mode: 'solo'|'coop_host'|'coop_guest', stageId, myPid?, players?: [{ pid, charId, shop }], p1Char?, p2Char?, p2Shop? }
+    // config: { mode: 'solo'|'coop_host'|'coop_guest', stageId, difficultyId?, myPid?, players?: [{ pid, charId, shop }], p1Char?, p2Char?, p2Shop? }
     const stage = Data.STAGES.find(s => s.id === config.stageId) || Data.STAGES[0];
+    const difficulty = (Data.DIFFICULTIES || []).find(d => d.id === config.difficultyId) || (Data.DIFFICULTIES || [])[1] || {
+      id: 'normal', name: 'ノーマル', icon: '⚔️', enemyHpMult: 1, bossHpMult: 1, enemyDmgMult: 1, spawnMult: 1, healBonus: 0, coinMult: 1
+    };
     const shop1 = Storage.getShopBonuses();
 
     let playerSpecs = config.players;
@@ -318,6 +321,7 @@ window.PBEngine = (() => {
       mode: config.mode,
       myPid,
       stage,
+      difficulty,
       running: true,
       paused: false,
       endless: false,
@@ -1115,12 +1119,13 @@ window.PBEngine = (() => {
   // === SPAWNING & WAVES ===
   function updateSpawning(dt) {
     const t = state.time;
+    const dCfg = state.difficulty;
     const activePlayers = state.players.filter(p => !p.disconnected).length || 1;
-    const diff = state.stage.difficulty * (1 + (activePlayers - 1) * 0.55);
-    const bossDiff = state.stage.difficulty * (1 + (activePlayers - 1) * 0.95);
-    // Smooth early game (<50s), steep mid-to-late mob HP ramp so mid/late waves stay challenging!
-    const midRamp = t > 50 ? Math.pow((t - 50) / 72, 1.95) * 2.5 : 0;
-    const timeMult = 1 + t / 80 + midRamp;
+    const diff = state.stage.difficulty * (1 + (activePlayers - 1) * 0.55) * dCfg.enemyHpMult;
+    const bossDiff = state.stage.difficulty * (1 + (activePlayers - 1) * 0.95) * dCfg.bossHpMult;
+    // Gentler mid-to-late mob HP ramp so Normal feels rewarding and Easy feels breezy!
+    const midRamp = t > 55 ? Math.pow((t - 55) / 80, 1.88) * 2.05 : 0;
+    const timeMult = 1 + t / 88 + midRamp;
 
     // Stage-specific Mid-bosses at 90s, 180s, 270s!
     const stageMidIds = state.stage.midBosses || ['boss_viking', 'boss_prussia', 'boss_ufo'];
@@ -1132,7 +1137,7 @@ window.PBEngine = (() => {
     if (state.midBossIndex < midSchedule.length && t >= midSchedule[state.midBossIndex].at) {
       const b = midSchedule[state.midBossIndex];
       state.midBossIndex++;
-      spawnEnemy(b.id, bossDiff * (1 + t / 160));
+      spawnEnemy(b.id, bossDiff * (1 + t / 175));
       const def = Data.ENEMIES[b.id];
       syncActiveBgm();
       triggerBossAlert(`⚠️ 中ボス出現: ${def.name}！（♪ Will_you_still_cry_）`);
@@ -1142,7 +1147,7 @@ window.PBEngine = (() => {
     const stageFinalId = state.stage.finalBoss || 'reichtangle';
     if (!state.finalBossSpawned && t >= state.stage.duration) {
       state.finalBossSpawned = true;
-      spawnEnemy(stageFinalId, bossDiff * 1.4);
+      spawnEnemy(stageFinalId, bossDiff * 1.32);
       const fDef = Data.ENEMIES[stageFinalId];
       const cryPart = fDef?.alertCry ? ` "${fDef.alertCry}"` : '';
       syncActiveBgm();
@@ -1151,14 +1156,14 @@ window.PBEngine = (() => {
 
     // Endless extra stage final bosses every 90s after 6 min
     if (state.endless && Math.floor(t) > state.stage.duration + 30 && Math.floor(t) % 90 === 0 && Math.floor(t - dt) % 90 !== 0) {
-      spawnEnemy(stageFinalId, bossDiff * (1.55 + (t - state.stage.duration) / 115));
+      spawnEnemy(stageFinalId, bossDiff * (1.45 + (t - state.stage.duration) / 125));
       const fDef = Data.ENEMIES[stageFinalId];
       syncActiveBgm();
       triggerBossAlert(`🚨 強化${fDef?.name || '最終ボス'}出現！`);
     }
 
     // Regular wave spawns
-    const spawnRate = Math.min(11.5, (1.55 + t / 42) * (1 + (activePlayers - 1) * 0.35));
+    const spawnRate = Math.min(11.5, (1.55 + t / 42) * (1 + (activePlayers - 1) * 0.35) * dCfg.spawnMult);
     state.spawnAccum += dt * spawnRate;
     while (state.spawnAccum >= 1 && state.enemies.length < ENEMY_CAP) {
       state.spawnAccum -= 1;
@@ -1193,7 +1198,8 @@ window.PBEngine = (() => {
     const anchor = alivePlayers[Math.floor(Math.random() * alivePlayers.length)] || state.players[0];
     const angle = Math.random() * Math.PI * 2;
     const dist = WORLD_SPAWN_MIN + Math.random() * (WORLD_SPAWN_MAX - WORLD_SPAWN_MIN);
-    const hp = Math.round(def.hp * scale);
+    const hp = Math.max(1, Math.round(def.hp * scale));
+    const dmgMult = state.difficulty?.enemyDmgMult || 1.0;
 
     state.enemies.push({
       id: state.nextEid++,
@@ -1206,7 +1212,7 @@ window.PBEngine = (() => {
       hp,
       maxHp: hp,
       speed: def.speed * (1 + Math.min(0.45, state.time / 900)),
-      damage: Math.round(def.damage * (0.92 + scale * 0.14)),
+      damage: Math.max(1, Math.round(def.damage * (0.92 + scale * 0.14) * dmgMult)),
       radius: def.radius,
       xp: def.xp,
       isBoss: !!def.isBoss,
@@ -1536,7 +1542,7 @@ window.PBEngine = (() => {
     } else {
       const r = Math.random();
       const anyLowHp = state.players.some(p => !p.downed && !p.disconnected && p.hp < p.maxHp * 0.55);
-      const healChance = anyLowHp ? 0.048 : 0.034;
+      const healChance = (anyLowHp ? 0.048 : 0.034) + (state.difficulty?.healBonus || 0);
       if (e.type === 'mali_ball' && r < 0.18) {
         state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.max(2, Math.round(4 * state.stage.coinMult)) });
       } else if (r < 0.025) {
@@ -2124,9 +2130,10 @@ window.PBEngine = (() => {
     Audio.playSfx(victory ? 'victory' : 'hurt');
 
     // Compute final coin reward (rebalanced for rewarding multi-run progression)
-    const timeCoins = Math.floor(state.time * 0.12 * state.stage.coinMult);
-    const killCoins = Math.floor(state.kills * 0.03 * state.stage.coinMult);
-    const clearBonus = victory ? Math.round(65 * state.stage.coinMult) : 0;
+    const coinMult = state.stage.coinMult * (state.difficulty?.coinMult || 1.0);
+    const timeCoins = Math.floor(state.time * 0.12 * coinMult);
+    const killCoins = Math.floor(state.kills * 0.03 * coinMult);
+    const clearBonus = victory ? Math.round(65 * coinMult) : 0;
     const totalCoins = state.coinsEarned + timeCoins + killCoins + clearBonus;
     Storage.addCoins(totalCoins);
 
@@ -2143,6 +2150,7 @@ window.PBEngine = (() => {
       victory,
       finalBossName: defeatedBossName || stageFinalDef?.name || '最終ボス',
       stageName: state.stage.name,
+      difficultyLabel: `${state.difficulty?.icon || '⚔️'} ${state.difficulty?.name || 'ノーマル'}`,
       time: state.time,
       level: state.level,
       kills: state.kills,

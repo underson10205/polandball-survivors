@@ -12,6 +12,7 @@
   // Selection & Lobby State
   let selectedChar = 'poland';
   let selectedStage = 'meadow';
+  let selectedDifficulty = 'normal';
   let activeCodexTab = 'weapons';
   let lastRunConfig = null;
 
@@ -31,6 +32,7 @@
     roomCode: '',
     slots: makeInitialSlots(),
     stageId: 'meadow',
+    difficultyId: 'normal',
     connected: false
   };
 
@@ -217,6 +219,28 @@
     }
   }
 
+  function renderDifficultyGrid(container, currentId, editable, onPick) {
+    if (!container) return;
+    container.innerHTML = '';
+    for (const d of (Data.DIFFICULTIES || [])) {
+      const card = document.createElement('div');
+      card.className = 'diff-card' + (currentId === d.id ? ' selected' : '') + (d.id === 'normal' ? ' normal-diff' : '');
+      card.innerHTML = `
+        <div style="font-weight:900;font-size:1rem;">${d.icon} ${d.name}${currentId === d.id ? ' ✓' : ''}</div>
+        <div style="font-size:0.78rem;color:#475569;line-height:1.35;">${d.desc}</div>
+      `;
+      if (editable) {
+        card.addEventListener('click', () => {
+          Audio.playSfx('click');
+          onPick(d.id);
+        });
+      } else {
+        card.style.cursor = 'default';
+      }
+      container.appendChild(card);
+    }
+  }
+
   function renderSoloSelect() {
     renderCharGrid($('solo-char-grid'), selectedChar, (id) => {
       selectedChar = id;
@@ -224,6 +248,10 @@
     });
     renderStageGrid($('solo-stage-grid'), selectedStage, true, (id) => {
       selectedStage = id;
+      renderSoloSelect();
+    });
+    renderDifficultyGrid($('solo-diff-grid'), selectedDifficulty, true, (id) => {
+      selectedDifficulty = id;
       renderSoloSelect();
     });
   }
@@ -487,6 +515,12 @@
       renderCoopLobbyUI();
     });
 
+    renderDifficultyGrid($('coop-diff-grid'), lobby.difficultyId, lobby.role === 'host', (id) => {
+      lobby.difficultyId = id;
+      sendLobbyState();
+      renderCoopLobbyUI();
+    });
+
     if (lobby.role === 'host') {
       const connectedGuests = [1, 2].filter(pid => lobby.slots[pid].connected);
       const totalCount = 1 + connectedGuests.length;
@@ -512,7 +546,8 @@
           1: { connected: lobby.slots[1].connected, charId: lobby.slots[1].charId, ready: lobby.slots[1].ready },
           2: { connected: lobby.slots[2].connected, charId: lobby.slots[2].charId, ready: lobby.slots[2].ready }
         },
-        stageId: lobby.stageId
+        stageId: lobby.stageId,
+        difficultyId: lobby.difficultyId
       });
     }
   }
@@ -591,6 +626,7 @@
         }
       }
       lobby.stageId = payload.stageId || 'meadow';
+      lobby.difficultyId = payload.difficultyId || 'normal';
       renderCoopLobbyUI();
       return;
     }
@@ -611,6 +647,7 @@
         mode: 'coop_guest',
         myPid: lobby.myPid,
         stageId: payload.stageId,
+        difficultyId: payload.difficultyId || 'normal',
         players: payload.players
       });
       return;
@@ -645,6 +682,9 @@
     } else {
       emoteEl.classList.remove('active');
     }
+
+    const hudDiff = $('hud-diff');
+    if (hudDiff) hudDiff.style.display = (cfg.difficultyId === 'easy') ? 'inline-block' : 'none';
 
     Engine.start(cfg);
   }
@@ -818,6 +858,7 @@
       $('go-title').style.color = summary.victory ? '#15803d' : '#dc143c';
       $('go-stats').innerHTML = `
         <span class="coin-pill">🗺️ ${summary.stageName}</span>
+        ${summary.difficultyLabel ? `<span class="coin-pill">${summary.difficultyLabel}</span>` : ''}
         <span class="coin-pill">⏱️ ${formatTime(summary.time)}</span>
         <span class="coin-pill">⭐ Lv.${summary.level}</span>
         <span class="coin-pill">💥 撃破 ${summary.kills}</span>
@@ -1009,7 +1050,7 @@
 
   $('btn-start-solo').addEventListener('click', () => {
     Audio.playSfx('levelup');
-    launchMatch({ mode: 'solo', stageId: selectedStage, p1Char: selectedChar });
+    launchMatch({ mode: 'solo', stageId: selectedStage, difficultyId: selectedDifficulty, p1Char: selectedChar });
   });
 
   // Co-op Room Actions (2P & 3P!)
@@ -1022,6 +1063,7 @@
     lobby.slots[0].charId = selectedChar;
     lobby.connected = false;
     lobby.stageId = selectedStage;
+    lobby.difficultyId = selectedDifficulty;
     renderCoopLobbyUI();
     const code = await Net.hostRoom();
     lobby.roomCode = code;
@@ -1089,11 +1131,12 @@
     Audio.playSfx('levelup');
     const players = buildCoopPlayerSpecs();
     const publicPlayers = players.map(p => ({ pid: p.pid, charId: p.charId }));
-    Net.send('start_game', { stageId: lobby.stageId, players: publicPlayers });
+    Net.send('start_game', { stageId: lobby.stageId, difficultyId: lobby.difficultyId, players: publicPlayers });
     launchMatch({
       mode: 'coop_host',
       myPid: 0,
       stageId: lobby.stageId,
+      difficultyId: lobby.difficultyId,
       players
     });
   });
@@ -1138,8 +1181,8 @@
     if (lastRunConfig.mode === 'coop_host' && Net.isConnected()) {
       const players = buildCoopPlayerSpecs();
       const publicPlayers = players.map(p => ({ pid: p.pid, charId: p.charId }));
-      const nextCfg = { mode: 'coop_host', myPid: 0, stageId: lastRunConfig.stageId, players };
-      Net.send('start_game', { stageId: nextCfg.stageId, players: publicPlayers });
+      const nextCfg = { mode: 'coop_host', myPid: 0, stageId: lastRunConfig.stageId, difficultyId: lastRunConfig.difficultyId || 'normal', players };
+      Net.send('start_game', { stageId: nextCfg.stageId, difficultyId: nextCfg.difficultyId, players: publicPlayers });
       launchMatch(nextCfg);
       return;
     }

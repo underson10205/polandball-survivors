@@ -598,40 +598,40 @@ window.PBData = (() => {
   };
 
   const ENEMIES = {
-    slime_ball: { id: 'slime_ball', name: 'ミニ・ローグボール', hp: 28, speed: 78, damage: 7, radius: 15, xp: 3, score: 10, desc: '群れで押し寄せる基本の敵ボール。' },
-    pirate_ball: { id: 'pirate_ball', name: '海賊ソマリアボール', hp: 56, speed: 102, damage: 10, radius: 17, xp: 5, score: 18, desc: '素早く回り込んでくる眼帯の荒くれ者。' },
-    cameroon_ball: { id: 'cameroon_ball', name: 'カメルーンボール', hp: 96, speed: 112, damage: 12, radius: 18, xp: 8, score: 28, desc: '「不屈のライオン」の異名を持つ俊足＆タフな猛攻ボール！' },
-    mali_ball: { id: 'mali_ball', name: 'マリボール', hp: 80, speed: 94, damage: 10, radius: 17, xp: 7, score: 26, coinBonus: true, desc: '黄金帝国の末裔！倒すと高確率でゴールドコインを落とすお宝ボール！' },
-    viking_ball: { id: 'viking_ball', name: 'バイキングボール', hp: 138, speed: 84, damage: 13, radius: 20, xp: 8, score: 30, desc: 'ツノ付き兜がトレードマークのタフな戦士。' },
-    speed_ball: { id: 'speed_ball', name: 'ターボ・レーサーボール', hp: 64, speed: 145, damage: 11, radius: 15, xp: 7, score: 25, desc: '猛スピードで突っ込んでくる危険な弾丸ボール。' },
-    kazakh_brick: { id: 'kazakh_brick', name: 'カザフスタン・ブリック', hp: 340, speed: 62, damage: 16, radius: 24, xp: 15, score: 50, desc: 'ずっしり重い長方形の守護壁。ノックバックに強い！' },
-    turret_ball: { id: 'turret_ball', name: '砲台ボール', hp: 125, speed: 68, damage: 12, radius: 18, xp: 11, score: 40, shooter: true, desc: '距離を取りながらエネルギー弾を撃ってくる厄介者。' },
-    alien_ball: { id: 'alien_ball', name: 'エイリアン6ボール', hp: 205, speed: 110, damage: 15, radius: 18, xp: 13, score: 48, desc: '宇宙空間を漂う謎の緑エイリアン6ボール。' },
+    slime_ball: { id: 'slime_ball', name: 'ミニ・ローグボール', hp: 24, speed: 78, damage: 7, radius: 15, xp: 3, score: 10, desc: '群れで押し寄せる基本の敵ボール。' },
+    pirate_ball: { id: 'pirate_ball', name: '海賊ソマリアボール', hp: 48, speed: 102, damage: 10, radius: 17, xp: 5, score: 18, desc: '素早く回り込んでくる眼帯の荒くれ者。' },
+    cameroon_ball: { id: 'cameroon_ball', name: 'カメルーンボール', hp: 80, speed: 112, damage: 12, radius: 18, xp: 8, score: 28, desc: '「不屈のライオン」の異名を持つ俊足＆タフな猛攻ボール！' },
+    mali_ball: { id: 'mali_ball', name: 'マリボール', hp: 66, speed: 94, damage: 10, radius: 17, xp: 7, score: 26, coinBonus: true, desc: '黄金帝国の末裔！倒すと高確率でゴールドコインを落とすお宝ボール！' },
+    viking_ball: { id: 'viking_ball', name: 'バイキングボール', hp: 114, speed: 84, damage: 13, radius: 20, xp: 8, score: 30, desc: 'ツノ付き兜がトレードマークのタフな戦士。' },
+    speed_ball: { id: 'speed_ball', name: 'ターボ・レーサーボール', hp: 52, speed: 145, damage: 11, radius: 15, xp: 7, score: 25, desc: '猛スピードで突っ込んでくる危険な弾丸ボール。' },
+    kazakh_brick: { id: 'kazakh_brick', name: 'カザフスタン・ブリック', hp: 275, speed: 62, damage: 16, radius: 24, xp: 15, score: 50, desc: 'ずっしり重い長方形の守護壁。ノックバックに強い！' },
+    turret_ball: { id: 'turret_ball', name: '砲台ボール', hp: 102, speed: 68, damage: 12, radius: 18, xp: 11, score: 40, shooter: true, desc: '距離を取りながらエネルギー弾を撃ってくる厄介者。' },
+    alien_ball: { id: 'alien_ball', name: 'エイリアン6ボール', hp: 165, speed: 110, damage: 15, radius: 18, xp: 13, score: 48, desc: '宇宙空間を漂う謎の緑エイリアン6ボール。' },
     // === Stage 1 (ヨーロッパ大草原) Bosses ===
     boss_viking: {
       id: 'boss_viking', name: '巨大バイキング王', stageTag: '🌿 Stage 1 中ボス(1:30)',
-      hp: 7800, speed: 104, damage: 28, radius: 40, xp: 120, score: 600,
+      hp: 6200, speed: 104, damage: 28, radius: 40, xp: 120, score: 600,
       isBoss: true, isMidBoss: true, dasher: true, shooter: true,
       bulletPattern: 'fan5', bulletColor: '#f59e0b', dashCry: '⚔️ 猛突撃！',
       desc: 'Stage 1（1分半）に出現する中ボス。猛突進と5連衝撃弾で襲いかかる！'
     },
     boss_ottoman: {
       id: 'boss_ottoman', name: 'オスマン帝国', stageTag: '🌿 Stage 1 中ボス(3:00)',
-      hp: 16500, speed: 108, damage: 31, radius: 43, xp: 190, score: 1050,
+      hp: 13200, speed: 108, damage: 31, radius: 43, xp: 190, score: 1050,
       isBoss: true, isMidBoss: true, dasher: true, shooter: true,
       bulletPattern: 'fan7', bulletColor: '#ef4444', dashCry: '🌙 三日月突撃！',
       desc: 'Stage 1（3分）に出現する巨大ターバンの大帝国。7連砲弾と突進で迫る！'
     },
     boss_prussia: {
       id: 'boss_prussia', name: 'プロイセン帝国', stageTag: '🌿 Stage 1 中ボス(4:30)',
-      hp: 29000, speed: 116, damage: 35, radius: 45, xp: 270, score: 1550,
+      hp: 23000, speed: 116, damage: 35, radius: 45, xp: 270, score: 1550,
       isBoss: true, isMidBoss: true, dasher: true, shooter: true,
       bulletPattern: 'ring10', bulletColor: '#f97316', dashCry: '⚡ 電撃突進！',
       desc: 'Stage 1（4分半）に出現する鉄十字の覇者。全方位弾幕と超高速突進！'
     },
     boss_napoleon: {
       id: 'boss_napoleon', name: 'ナポレオン帝国', stageTag: '🌿 Stage 1 最終ボス(6:00)',
-      hp: 68000, speed: 116, damage: 40, radius: 50, xp: 800, score: 5000,
+      hp: 54000, speed: 116, damage: 40, radius: 50, xp: 800, score: 5000,
       isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true,
       bulletColor: '#3b82f6', bulletColorP2: '#ef4444',
       alertCry: 'Vive la France!!', dashCry: '🇫🇷 皇帝突撃！', rageCry: "🔥 VIVE L'EMPEREUR!!",
@@ -642,28 +642,28 @@ window.PBData = (() => {
     // === Stage 2 (成層圏スカイウェイ) Bosses ===
     boss_hussar: {
       id: 'boss_hussar', name: '翼騎兵コモンウェルス', stageTag: '☁️ Stage 2 中ボス(1:30)',
-      hp: 8200, speed: 124, damage: 29, radius: 41, xp: 130, score: 680,
+      hp: 6600, speed: 124, damage: 29, radius: 41, xp: 130, score: 680,
       isBoss: true, isMidBoss: true, dasher: true, shooter: true,
       bulletPattern: 'fan5', bulletColor: '#f43f5e', dashCry: '🪽 翼騎兵突撃！',
       desc: 'Stage 2（1分半）に出現する白翼の騎士団。超スピードの天空突進を仕掛ける！'
     },
     boss_british_empire: {
       id: 'boss_british_empire', name: '大英帝国', stageTag: '☁️ Stage 2 中ボス(3:00)',
-      hp: 17800, speed: 102, damage: 33, radius: 44, xp: 210, score: 1150,
+      hp: 14200, speed: 102, damage: 33, radius: 44, xp: 210, score: 1150,
       isBoss: true, isMidBoss: true, shooter: true, summoner: true,
       bulletPattern: 'ring10', bulletColor: '#facc15', summonId: 'pirate_ball',
       desc: 'Stage 2（3分）に出現する太陽の沈まぬ帝国。黄金全方位弾＆海賊護衛を召喚！'
     },
     boss_zepp: {
       id: 'boss_zepp', name: 'ツェッペリン帝国飛行船', stageTag: '☁️ Stage 2 中ボス(4:30)',
-      hp: 31500, speed: 106, damage: 36, radius: 46, xp: 290, score: 1650,
+      hp: 25000, speed: 106, damage: 36, radius: 46, xp: 290, score: 1650,
       isBoss: true, isMidBoss: true, shooter: true, summoner: true,
       bulletPattern: 'ring12', bulletColor: '#fb923c', summonId: 'speed_ball',
       desc: 'Stage 2（4分半）に出現する巨大硬式飛行船。12方向爆撃＆ターボ護衛を展開！'
     },
     boss_ussr: {
       id: 'boss_ussr', name: 'ソビエト連邦 (USSR)', stageTag: '☁️ Stage 2 最終ボス(6:00)',
-      hp: 72000, speed: 114, damage: 42, radius: 52, xp: 850, score: 5400,
+      hp: 58000, speed: 114, damage: 42, radius: 52, xp: 850, score: 5400,
       isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true,
       bulletColor: '#dc2626', bulletColorP2: '#facc15',
       alertCry: 'Вперёд!!', dashCry: '⭐ 紅軍突撃！', rageCry: '🔥 FOR THE MOTHERLAND!!',
@@ -674,28 +674,28 @@ window.PBData = (() => {
     // === Stage 3 (宇宙軌道) Bosses ===
     boss_nasa: {
       id: 'boss_nasa', name: '暴走ロケットUSA', stageTag: '🌌 Stage 3 中ボス(1:30)',
-      hp: 8600, speed: 118, damage: 30, radius: 41, xp: 140, score: 750,
+      hp: 7000, speed: 118, damage: 30, radius: 41, xp: 140, score: 750,
       isBoss: true, isMidBoss: true, dasher: true, shooter: true,
       bulletPattern: 'fan7', bulletColor: '#38bdf8', dashCry: '🚀 FREEDOM BOOST!!',
       desc: 'Stage 3（1分半）に出現する宇宙服USA。両翼ロケット噴射と7連プラズマ弾！'
     },
     boss_ufo: {
       id: 'boss_ufo', name: 'マザーUFOボール', stageTag: '🌌 Stage 3 中ボス(3:00)',
-      hp: 19000, speed: 108, damage: 35, radius: 45, xp: 230, score: 1300,
+      hp: 15200, speed: 108, damage: 35, radius: 45, xp: 230, score: 1300,
       isBoss: true, isMidBoss: true, shooter: true, summoner: true,
       bulletPattern: 'ring12', bulletColor: '#38bdf8', summonId: 'alien_ball',
       desc: 'Stage 3（3分）に出現する宇宙円盤。全方位プラズマ弾＆エイリアン6ボール召喚！'
     },
     boss_alien_king: {
       id: 'boss_alien_king', name: 'エイリアン6キング', stageTag: '🌌 Stage 3 中ボス(4:30)',
-      hp: 34000, speed: 116, damage: 38, radius: 47, xp: 310, score: 1850,
+      hp: 27000, speed: 116, damage: 38, radius: 47, xp: 310, score: 1850,
       isBoss: true, isMidBoss: true, dasher: true, shooter: true, summoner: true,
       bulletPattern: 'ring14', bulletColor: '#4ade80', dashCry: '👽 6次元ワープ!!', summonId: 'alien_ball',
       desc: 'Stage 3（4分半）に出現する王冠を戴く6ボール皇帝。14連緑プラズマ＆エイリアン召喚！'
     },
     reichtangle: {
       id: 'reichtangle', name: 'ライヒタングル (REICHTANGLE)', stageTag: '🌌 Stage 3 最終ボス(6:00)',
-      hp: 75000, speed: 120, damage: 44, radius: 50, xp: 900, score: 6000,
+      hp: 60000, speed: 120, damage: 44, radius: 50, xp: 900, score: 6000,
       isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true,
       bulletColor: '#ef4444', bulletColorP2: '#dc2626',
       alertCry: 'Guten Tag...', dashCry: 'GUTEN TAG!', rageCry: '🔥 ANSCHLUSS MODE!!',
@@ -703,6 +703,33 @@ window.PBData = (() => {
       desc: 'Stage 3最恐の最終ボス！HP半分以下で本気モード（螺旋弾幕＆連続突進）へ！'
     }
   };
+
+  const DIFFICULTIES = [
+    {
+      id: 'easy',
+      name: 'イージー',
+      icon: '🌱',
+      desc: '敵HP -40% / 被ダメ -30% / 回復ドロップ増！気軽に爽快プレイ向け',
+      enemyHpMult: 0.60,
+      bossHpMult: 0.58,
+      enemyDmgMult: 0.70,
+      spawnMult: 0.85,
+      healBonus: 0.022,
+      coinMult: 0.85
+    },
+    {
+      id: 'normal',
+      name: 'ノーマル',
+      icon: '⚔️',
+      desc: '標準バランス！手応えのあるボス戦＆コイン獲得 ×1.0',
+      enemyHpMult: 1.0,
+      bossHpMult: 1.0,
+      enemyDmgMult: 1.0,
+      spawnMult: 1.0,
+      healBonus: 0,
+      coinMult: 1.0
+    }
+  ];
 
   const STAGES = [
     {
@@ -795,6 +822,7 @@ window.PBData = (() => {
     PASSIVES,
     WEAPONS,
     ENEMIES,
+    DIFFICULTIES,
     STAGES,
     SHOP_UPGRADES,
     ACHIEVEMENTS,
