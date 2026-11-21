@@ -1122,11 +1122,12 @@ window.PBEngine = (() => {
     const midRamp = t > 50 ? Math.pow((t - 50) / 72, 1.95) * 2.5 : 0;
     const timeMult = 1 + t / 80 + midRamp;
 
-    // Mid-bosses at 90s, 180s, 270s
+    // Stage-specific Mid-bosses at 90s, 180s, 270s!
+    const stageMidIds = state.stage.midBosses || ['boss_viking', 'boss_prussia', 'boss_ufo'];
     const midSchedule = [
-      { at: 90, id: 'boss_viking' },
-      { at: 180, id: 'boss_prussia' },
-      { at: 270, id: 'boss_ufo' }
+      { at: 90, id: stageMidIds[0] },
+      { at: 180, id: stageMidIds[1] },
+      { at: 270, id: stageMidIds[2] }
     ];
     if (state.midBossIndex < midSchedule.length && t >= midSchedule[state.midBossIndex].at) {
       const b = midSchedule[state.midBossIndex];
@@ -1137,19 +1138,23 @@ window.PBEngine = (() => {
       triggerBossAlert(`⚠️ 中ボス出現: ${def.name}！（♪ Will_you_still_cry_）`);
     }
 
-    // Final Boss Reichtangle at stage.duration (360s = 6 min)
+    // Stage-specific Final Boss at stage.duration (360s = 6 min)!
+    const stageFinalId = state.stage.finalBoss || 'reichtangle';
     if (!state.finalBossSpawned && t >= state.stage.duration) {
       state.finalBossSpawned = true;
-      spawnEnemy('reichtangle', bossDiff * 1.4);
+      spawnEnemy(stageFinalId, bossDiff * 1.4);
+      const fDef = Data.ENEMIES[stageFinalId];
+      const cryPart = fDef?.alertCry ? ` "${fDef.alertCry}"` : '';
       syncActiveBgm();
-      triggerBossAlert('🚨 最終ボス襲来: ライヒタングル "Guten Tag..."（♪ Dominus_Deus）');
+      triggerBossAlert(`🚨 最終ボス襲来: ${fDef?.name || stageFinalId}${cryPart}（♪ Dominus_Deus）`);
     }
 
-    // Endless extra bosses every 90s after 6 min
+    // Endless extra stage final bosses every 90s after 6 min
     if (state.endless && Math.floor(t) > state.stage.duration + 30 && Math.floor(t) % 90 === 0 && Math.floor(t - dt) % 90 !== 0) {
-      spawnEnemy('reichtangle', bossDiff * (1.55 + (t - state.stage.duration) / 115));
+      spawnEnemy(stageFinalId, bossDiff * (1.55 + (t - state.stage.duration) / 115));
+      const fDef = Data.ENEMIES[stageFinalId];
       syncActiveBgm();
-      triggerBossAlert('🚨 強化ライヒタングル出現！');
+      triggerBossAlert(`🚨 強化${fDef?.name || '最終ボス'}出現！`);
     }
 
     // Regular wave spawns
@@ -1240,6 +1245,7 @@ window.PBEngine = (() => {
     const enemies = state.enemies;
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i];
+      const def = Data.ENEMIES[e.type] || {};
       if (e.hitFlash > 0) e.hitFlash = Math.max(0, e.hitFlash - dt * 5);
       if (e.orbitHitCd > 0) e.orbitHitCd -= dt;
       if (e.slowTimer > 0) e.slowTimer -= dt;
@@ -1271,13 +1277,14 @@ window.PBEngine = (() => {
         e.speed *= 1.24;
         state.shake = Math.max(state.shake, 14);
         Audio.playSfx('boss');
-        addFloatingText(e.x, e.y - 72, '🔥 ANSCHLUSS MODE!!', '#ef4444', true);
+        const rageText = def.rageCry || '🔥 RAGE MODE!!';
+        addFloatingText(e.x, e.y - 72, rageText, '#ef4444', true);
         if (state.mode === 'coop_host') {
-          broadcastFx({ sfx: 'boss', shake: 14, text: '🔥 ANSCHLUSS MODE!!', x: e.x, y: e.y - 72, color: '#ef4444', big: true });
+          broadcastFx({ sfx: 'boss', shake: 14, text: rageText, x: e.x, y: e.y - 72, color: '#ef4444', big: true });
         }
       }
 
-      // Boss Dash-Charge AI (Reichtangle + Mid-boss dashers!)
+      // Boss Dash-Charge AI (Final Bosses + Mid-boss dashers!)
       if (e.dasher) {
         if (e.chargeTime > 0) {
           e.chargeTime -= dt;
@@ -1293,7 +1300,9 @@ window.PBEngine = (() => {
             e.chargeTime = e.isFinalBoss ? 0.72 : 0.55;
             e.chargeDx = nx;
             e.chargeDy = ny;
-            const cry = e.isFinalBoss ? (e.phase2 ? 'ANSCHLUSS!!' : 'GUTEN TAG!') : (e.type === 'boss_prussia' ? '⚡ 電撃突進！' : '⚔️ 猛突撃！');
+            const cry = e.isFinalBoss
+              ? (e.phase2 ? (def.rageCry || 'RAGE!!') : (def.dashCry || '突撃!!'))
+              : (def.dashCry || '⚔️ 猛突撃！');
             addFloatingText(e.x, e.y - e.radius - 16, cry, '#ef4444', true);
             if (state.mode === 'coop_host') broadcastFx({ text: cry, x: e.x, y: e.y - e.radius - 16, color: '#ef4444', big: true });
           }
@@ -1306,13 +1315,13 @@ window.PBEngine = (() => {
         e.vy = ny * e.speed * slowFactor;
       }
 
-      // Boss Summoner AI (Mother UFO & Final Boss Phase 2!)
+      // Boss Summoner AI (Stage Mid-Boss Summoners & Final Boss Phase 2!)
       if (e.summoner && (!e.isFinalBoss || e.phase2) && state.enemies.length < ENEMY_CAP - 6) {
         e.summonCd -= dt;
         if (e.summonCd <= 0) {
           e.summonCd = e.isFinalBoss ? 7.5 : 8.5;
           const count = e.isFinalBoss ? 4 : 3;
-          const mobId = e.type === 'boss_ufo' ? 'alien_ball' : 'cameroon_ball';
+          const mobId = def.summonId || 'cameroon_ball';
           for (let s = 0; s < count; s++) {
             const a = (s * Math.PI * 2) / count + state.time;
             spawnEnemy(mobId, state.stage.difficulty * (1 + state.time / 180), {
@@ -1323,11 +1332,12 @@ window.PBEngine = (() => {
         }
       }
 
-      // Shooting logic
+      // Shooting logic (data-driven patterns for all 12 stage bosses!)
       if (e.shooter && minDist < 600) {
         e.shootCd -= dt;
         if (e.shootCd <= 0) {
           const baseA = Math.atan2(target.y - e.y, target.x - e.x);
+          const bCol = (e.phase2 && def.bulletColorP2) ? def.bulletColorP2 : (def.bulletColor || '#ef4444');
           if (e.isFinalBoss) {
             e.shootCd = e.phase2 ? 1.55 : 2.15;
             e.spiralAngle += 0.42;
@@ -1335,26 +1345,40 @@ window.PBEngine = (() => {
             const spd = e.phase2 ? 275 : 245;
             for (let k = 0; k < bullets; k++) {
               const a = baseA + e.spiralAngle + (k * Math.PI * 2) / bullets;
-              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 9.5, damage: Math.round(e.damage * 0.72), life: 3.6, color: e.phase2 ? '#dc2626' : '#ef4444' });
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 9.5, damage: Math.round(e.damage * 0.72), life: 3.6, color: bCol });
             }
-          } else if (e.type === 'boss_ufo') {
+          } else if (e.isBoss && def.bulletPattern === 'ring14') {
+            e.shootCd = 1.85;
+            e.spiralAngle += 0.38;
+            for (let k = 0; k < 14; k++) {
+              const a = e.spiralAngle + (k * Math.PI * 2) / 14;
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 240, vy: Math.sin(a) * 240, r: 8.5, damage: Math.round(e.damage * 0.66), life: 3.5, color: bCol });
+            }
+          } else if (e.isBoss && def.bulletPattern === 'ring12') {
             e.shootCd = 2.0;
             e.spiralAngle += 0.35;
             for (let k = 0; k < 12; k++) {
               const a = e.spiralAngle + (k * Math.PI * 2) / 12;
-              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 230, vy: Math.sin(a) * 230, r: 8.5, damage: Math.round(e.damage * 0.65), life: 3.5, color: '#38bdf8' });
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 230, vy: Math.sin(a) * 230, r: 8.5, damage: Math.round(e.damage * 0.65), life: 3.5, color: bCol });
             }
-          } else if (e.type === 'boss_prussia') {
+          } else if (e.isBoss && def.bulletPattern === 'ring10') {
+            e.shootCd = 2.05;
+            e.spiralAngle += 0.3;
+            for (let k = 0; k < 10; k++) {
+              const a = e.spiralAngle + (k * Math.PI * 2) / 10;
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 235, vy: Math.sin(a) * 235, r: 8.5, damage: Math.round(e.damage * 0.66), life: 3.4, color: bCol });
+            }
+          } else if (e.isBoss && def.bulletPattern === 'fan7') {
             e.shootCd = 1.95;
             for (let k = -3; k <= 3; k++) {
               const a = baseA + k * 0.22;
-              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 245, vy: Math.sin(a) * 245, r: 8.5, damage: Math.round(e.damage * 0.68), life: 3.2, color: '#f97316' });
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 245, vy: Math.sin(a) * 245, r: 8.5, damage: Math.round(e.damage * 0.68), life: 3.2, color: bCol });
             }
           } else if (e.isBoss) {
             e.shootCd = 2.3;
             for (let k = -2; k <= 2; k++) {
               const a = baseA + k * 0.3;
-              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 220, vy: Math.sin(a) * 220, r: 8, damage: Math.round(e.damage * 0.65), life: 3.0, color: '#f59e0b' });
+              state.enemyBullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 220, vy: Math.sin(a) * 220, r: 8, damage: Math.round(e.damage * 0.65), life: 3.0, color: bCol });
             }
           } else {
             e.shootCd = 2.9;
@@ -1496,13 +1520,15 @@ window.PBEngine = (() => {
       syncActiveBgm();
     } else if (e.isFinalBoss) {
       state.pickups.push({ id: state.nextEid++, kind: 'chest', x: e.x, y: e.y, val: 1 });
-      tryUnlockAch('defeat_reichtangle');
+      if (e.type === 'boss_napoleon') tryUnlockAch('defeat_napoleon');
+      else if (e.type === 'boss_ussr') tryUnlockAch('defeat_ussr');
+      else if (e.type === 'reichtangle') tryUnlockAch('defeat_reichtangle');
       if (state.stage.id === 'space' && state.players.some(p => p.charId === 'poland')) {
         tryUnlockAch('poland_space');
       }
       if (!state.victoryTriggered) {
         state.victoryTriggered = true;
-        finishRun(true);
+        finishRun(true, e.name);
       } else {
         syncActiveBgm();
       }
@@ -2087,7 +2113,7 @@ window.PBEngine = (() => {
     Audio.startBgm(state.stage.id);
   }
 
-  function finishRun(victory) {
+  function finishRun(victory, defeatedBossName = null) {
     state.ended = true;
     Audio.stopBgm();
     Audio.playSfx(victory ? 'victory' : 'hurt');
@@ -2107,8 +2133,10 @@ window.PBEngine = (() => {
       Storage.save();
     }
 
+    const stageFinalDef = Data.ENEMIES[state.stage.finalBoss];
     const summary = {
       victory,
+      finalBossName: defeatedBossName || stageFinalDef?.name || '最終ボス',
       stageName: state.stage.name,
       time: state.time,
       level: state.level,

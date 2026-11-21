@@ -607,12 +607,101 @@ window.PBData = (() => {
     kazakh_brick: { id: 'kazakh_brick', name: 'カザフスタン・ブリック', hp: 340, speed: 62, damage: 16, radius: 24, xp: 15, score: 50, desc: 'ずっしり重い長方形の守護壁。ノックバックに強い！' },
     turret_ball: { id: 'turret_ball', name: '砲台ボール', hp: 125, speed: 68, damage: 12, radius: 18, xp: 11, score: 40, shooter: true, desc: '距離を取りながらエネルギー弾を撃ってくる厄介者。' },
     alien_ball: { id: 'alien_ball', name: 'エイリアン6ボール', hp: 205, speed: 110, damage: 15, radius: 18, xp: 13, score: 48, desc: '宇宙空間を漂う謎の緑エイリアン6ボール。' },
-    // Mid-bosses (Rebalanced for epic boss battles!)
-    boss_viking: { id: 'boss_viking', name: '巨大バイキング王', hp: 7800, speed: 104, damage: 28, radius: 40, xp: 120, score: 600, isBoss: true, isMidBoss: true, dasher: true, shooter: true, desc: '1分半に出現する中ボス。猛突進と衝撃弾で襲いかかる！倒すと宝箱ドロップ！' },
-    boss_prussia: { id: 'boss_prussia', name: 'プロイセン帝国', hp: 17500, speed: 114, damage: 32, radius: 44, xp: 200, score: 1100, isBoss: true, isMidBoss: true, dasher: true, shooter: true, desc: '3分に出現する誇り高き鉄十字の覇者。7連弾幕と突進で迫る！' },
-    boss_ufo: { id: 'boss_ufo', name: 'マザーUFOボール', hp: 31000, speed: 108, damage: 36, radius: 46, xp: 280, score: 1600, isBoss: true, isMidBoss: true, shooter: true, summoner: true, desc: '4分半に出現する宇宙円盤。全方位プラズマ弾＆エイリアン6ボール召喚！' },
-    // Final Boss (2-Phase Raid Boss!)
-    reichtangle: { id: 'reichtangle', name: 'ライヒタングル (REICHTANGLE)', hp: 70000, speed: 118, damage: 42, radius: 50, xp: 800, score: 5000, isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true, desc: '「Guten Tag...」6分に出現する最恐の最終ボス！HP半分以下で本気モード（螺旋弾幕＆連続突進）へ！' }
+    // === Stage 1 (ヨーロッパ大草原) Bosses ===
+    boss_viking: {
+      id: 'boss_viking', name: '巨大バイキング王', stageTag: '🌿 Stage 1 中ボス(1:30)',
+      hp: 7800, speed: 104, damage: 28, radius: 40, xp: 120, score: 600,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true,
+      bulletPattern: 'fan5', bulletColor: '#f59e0b', dashCry: '⚔️ 猛突撃！',
+      desc: 'Stage 1（1分半）に出現する中ボス。猛突進と5連衝撃弾で襲いかかる！'
+    },
+    boss_ottoman: {
+      id: 'boss_ottoman', name: 'オスマン帝国', stageTag: '🌿 Stage 1 中ボス(3:00)',
+      hp: 16500, speed: 108, damage: 31, radius: 43, xp: 190, score: 1050,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true,
+      bulletPattern: 'fan7', bulletColor: '#ef4444', dashCry: '🌙 三日月突撃！',
+      desc: 'Stage 1（3分）に出現する巨大ターバンの大帝国。7連砲弾と突進で迫る！'
+    },
+    boss_prussia: {
+      id: 'boss_prussia', name: 'プロイセン帝国', stageTag: '🌿 Stage 1 中ボス(4:30)',
+      hp: 29000, speed: 116, damage: 35, radius: 45, xp: 270, score: 1550,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true,
+      bulletPattern: 'ring10', bulletColor: '#f97316', dashCry: '⚡ 電撃突進！',
+      desc: 'Stage 1（4分半）に出現する鉄十字の覇者。全方位弾幕と超高速突進！'
+    },
+    boss_napoleon: {
+      id: 'boss_napoleon', name: 'ナポレオン帝国', stageTag: '🌿 Stage 1 最終ボス(6:00)',
+      hp: 68000, speed: 116, damage: 40, radius: 50, xp: 800, score: 5000,
+      isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletColor: '#3b82f6', bulletColorP2: '#ef4444',
+      alertCry: 'Vive la France!!', dashCry: '🇫🇷 皇帝突撃！', rageCry: "🔥 VIVE L'EMPEREUR!!",
+      summonId: 'viking_ball',
+      desc: 'Stage 1最終ボス！二角帽を戴く欧州の覇者。HP半分以下で大陸軍総攻撃モードへ！'
+    },
+
+    // === Stage 2 (成層圏スカイウェイ) Bosses ===
+    boss_hussar: {
+      id: 'boss_hussar', name: '翼騎兵コモンウェルス', stageTag: '☁️ Stage 2 中ボス(1:30)',
+      hp: 8200, speed: 124, damage: 29, radius: 41, xp: 130, score: 680,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true,
+      bulletPattern: 'fan5', bulletColor: '#f43f5e', dashCry: '🪽 翼騎兵突撃！',
+      desc: 'Stage 2（1分半）に出現する白翼の騎士団。超スピードの天空突進を仕掛ける！'
+    },
+    boss_british_empire: {
+      id: 'boss_british_empire', name: '大英帝国', stageTag: '☁️ Stage 2 中ボス(3:00)',
+      hp: 17800, speed: 102, damage: 33, radius: 44, xp: 210, score: 1150,
+      isBoss: true, isMidBoss: true, shooter: true, summoner: true,
+      bulletPattern: 'ring10', bulletColor: '#facc15', summonId: 'pirate_ball',
+      desc: 'Stage 2（3分）に出現する太陽の沈まぬ帝国。黄金全方位弾＆海賊護衛を召喚！'
+    },
+    boss_zepp: {
+      id: 'boss_zepp', name: 'ツェッペリン帝国飛行船', stageTag: '☁️ Stage 2 中ボス(4:30)',
+      hp: 31500, speed: 106, damage: 36, radius: 46, xp: 290, score: 1650,
+      isBoss: true, isMidBoss: true, shooter: true, summoner: true,
+      bulletPattern: 'ring12', bulletColor: '#fb923c', summonId: 'speed_ball',
+      desc: 'Stage 2（4分半）に出現する巨大硬式飛行船。12方向爆撃＆ターボ護衛を展開！'
+    },
+    boss_ussr: {
+      id: 'boss_ussr', name: 'ソビエト連邦 (USSR)', stageTag: '☁️ Stage 2 最終ボス(6:00)',
+      hp: 72000, speed: 114, damage: 42, radius: 52, xp: 850, score: 5400,
+      isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletColor: '#dc2626', bulletColorP2: '#facc15',
+      alertCry: 'Вперёд!!', dashCry: '⭐ 紅軍突撃！', rageCry: '🔥 FOR THE MOTHERLAND!!',
+      summonId: 'kazakh_brick',
+      desc: 'Stage 2最終ボス！巨大なウシャンカ帽の超大国。HP半分以下でカチューシャ螺旋弾幕＆カザフスタン召喚！'
+    },
+
+    // === Stage 3 (宇宙軌道) Bosses ===
+    boss_nasa: {
+      id: 'boss_nasa', name: '暴走ロケットUSA', stageTag: '🌌 Stage 3 中ボス(1:30)',
+      hp: 8600, speed: 118, damage: 30, radius: 41, xp: 140, score: 750,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true,
+      bulletPattern: 'fan7', bulletColor: '#38bdf8', dashCry: '🚀 FREEDOM BOOST!!',
+      desc: 'Stage 3（1分半）に出現する宇宙服USA。両翼ロケット噴射と7連プラズマ弾！'
+    },
+    boss_ufo: {
+      id: 'boss_ufo', name: 'マザーUFOボール', stageTag: '🌌 Stage 3 中ボス(3:00)',
+      hp: 19000, speed: 108, damage: 35, radius: 45, xp: 230, score: 1300,
+      isBoss: true, isMidBoss: true, shooter: true, summoner: true,
+      bulletPattern: 'ring12', bulletColor: '#38bdf8', summonId: 'alien_ball',
+      desc: 'Stage 3（3分）に出現する宇宙円盤。全方位プラズマ弾＆エイリアン6ボール召喚！'
+    },
+    boss_alien_king: {
+      id: 'boss_alien_king', name: 'エイリアン6キング', stageTag: '🌌 Stage 3 中ボス(4:30)',
+      hp: 34000, speed: 116, damage: 38, radius: 47, xp: 310, score: 1850,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletPattern: 'ring14', bulletColor: '#4ade80', dashCry: '👽 6次元ワープ!!', summonId: 'alien_ball',
+      desc: 'Stage 3（4分半）に出現する王冠を戴く6ボール皇帝。14連緑プラズマ＆エイリアン召喚！'
+    },
+    reichtangle: {
+      id: 'reichtangle', name: 'ライヒタングル (REICHTANGLE)', stageTag: '🌌 Stage 3 最終ボス(6:00)',
+      hp: 75000, speed: 120, damage: 44, radius: 50, xp: 900, score: 6000,
+      isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletColor: '#ef4444', bulletColorP2: '#dc2626',
+      alertCry: 'Guten Tag...', dashCry: 'GUTEN TAG!', rageCry: '🔥 ANSCHLUSS MODE!!',
+      summonId: 'cameroon_ball',
+      desc: 'Stage 3最恐の最終ボス！HP半分以下で本気モード（螺旋弾幕＆連続突進）へ！'
+    }
   };
 
   const STAGES = [
@@ -620,8 +709,10 @@ window.PBData = (() => {
       id: 'meadow',
       name: 'ヨーロッパ大草原',
       subtitle: 'Stage 1 — はじまりの地',
-      desc: 'のどかな草原と石畳。まずはここでポーランドボール軍団をなぎ倒そう！',
+      desc: 'のどかな草原と石畳。欧州の歴史的帝国ボスたちに挑もう！',
       bgmName: '♪ かけっこ競争',
+      midBosses: ['boss_viking', 'boss_ottoman', 'boss_prussia'],
+      finalBoss: 'boss_napoleon',
       duration: 360, // 6 minutes to Final Boss
       bg: '#6ab04c',
       bgAccent: '#5ea142',
@@ -634,8 +725,10 @@ window.PBData = (() => {
       id: 'sky',
       name: '成層圏スカイウェイ',
       subtitle: 'Stage 2 — 雲の上へ！',
-      desc: '見渡す限りの青空と雲海！速い敵と砲台ボールが増えてスリル満点！',
+      desc: '青空と雲海の大決戦！翼騎兵・大英帝国・飛行船、そしてソ連が待つ！',
       bgmName: '♪ 楽しく軽快に',
+      midBosses: ['boss_hussar', 'boss_british_empire', 'boss_zepp'],
+      finalBoss: 'boss_ussr',
       duration: 360,
       bg: '#38bdf8',
       bgAccent: '#0ea5e9',
@@ -648,8 +741,10 @@ window.PBData = (() => {
       id: 'space',
       name: '宇宙軌道 — INTO SPACE!',
       subtitle: 'Stage 3 — ポーランドの夢',
-      desc: 'ついに宇宙へ到達！エイリアン軍団と強化ライヒタングルが待つ最終決戦！',
+      desc: 'ついに宇宙へ到達！ロケットUSA・UFO・エイリアン王、最奥にライヒタングル！',
       bgmName: '♪ Warp_Area',
+      midBosses: ['boss_nasa', 'boss_ufo', 'boss_alien_king'],
+      finalBoss: 'reichtangle',
       duration: 360,
       bg: '#0f172a',
       bgAccent: '#1e293b',
@@ -679,7 +774,9 @@ window.PBData = (() => {
     { id: 'first_evolve', name: '真の力に目覚めた！', desc: '初めて武器を進化させる', reward: 50, icon: '🌟' },
     { id: 'three_evolves', name: '兵器博覧会', desc: '1回のプレイで3つ以上の武器を進化', reward: 90, icon: '🚀' },
     { id: 'defeat_midboss', name: '中ボス撃破！', desc: '初めて中ボスを倒して宝箱を開く', reward: 35, icon: '🎁' },
-    { id: 'defeat_reichtangle', name: 'Guten Tag 撃退！', desc: '最終ボス「ライヒタングル」を撃破', reward: 140, icon: '👑' },
+    { id: 'defeat_napoleon', name: 'ワーテルローの勝者', desc: 'Stage 1 最終ボス「ナポレオン帝国」を撃破', reward: 90, icon: '🎖️' },
+    { id: 'defeat_ussr', name: '成層圏の覇者', desc: 'Stage 2 最終ボス「ソビエト連邦」を撃破', reward: 115, icon: '☁️' },
+    { id: 'defeat_reichtangle', name: 'Guten Tag 撃退！', desc: 'Stage 3 最終ボス「ライヒタングル」を撃破', reward: 140, icon: '👑' },
     { id: 'poland_space', name: 'Polan CAN into Space!', desc: 'ポーランドで宇宙軌道ステージをクリア', reward: 180, icon: '🪐' },
     { id: 'coop_play', name: '同盟締結！', desc: '2〜3人協力プレイで出撃する', reward: 40, icon: '🤝' },
     { id: 'coop_revive', name: '友情の蘇生', desc: '協力プレイでパートナーを蘇生させる', reward: 60, icon: '💖' },

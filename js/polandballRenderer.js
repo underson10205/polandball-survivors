@@ -404,6 +404,60 @@ window.PBRenderer = (() => {
       return;
     }
 
+    // Special Shape 8: Imperial Zeppelin Airship Boss (Stage 2!)
+    if (id === 'boss_zepp') {
+      ctx.save();
+      // Tail stabilizer fins (black-white-red imperial stripes!)
+      ctx.lineWidth = strokeW;
+      ctx.strokeStyle = INK;
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.85, -r * 0.45);
+      ctx.lineTo(-r * 1.42, -r * 0.88);
+      ctx.lineTo(-r * 1.28, -r * 0.12);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#111827';
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.85, r * 0.45);
+      ctx.lineTo(-r * 1.42, r * 0.85);
+      ctx.lineTo(-r * 1.28, r * 0.12);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+
+      // Gondola pod underneath
+      ctx.fillStyle = '#334155';
+      ctx.beginPath();
+      ctx.roundRect(-r * 0.42, r * 0.52, r * 0.84, r * 0.34, r * 0.1);
+      ctx.fill(); ctx.stroke();
+
+      // Rigid metallic airship hull
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(0, -r * 0.02, r * 1.32, r * 0.68, 0, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(-r * 1.4, -r, r * 2.8, r * 2);
+      // Imperial tri-band stripe along the middle
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(-r * 1.4, -r * 0.72, r * 2.8, r * 0.24);
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(-r * 1.4, r * 0.38, r * 2.8, r * 0.34);
+      // Iron cross badge
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(-r * 0.65, -r * 0.22, r * 0.16, r * 0.42);
+      ctx.fillRect(-r * 0.78, -r * 0.09, r * 0.42, r * 0.16);
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.ellipse(0, -r * 0.02, r * 1.32, r * 0.68, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      drawEyes(ctx, r * 0.82, 'angry', lookX, lookY, { spacing: 0.28, yOffset: -0.05 });
+      ctx.restore();
+      return;
+    }
+
     // Spherical Countryballs
     switch (id) {
       case 'poland':
@@ -906,6 +960,353 @@ window.PBRenderer = (() => {
         ctx.fill(); ctx.stroke();
         ctx.restore();
         break;
+
+      case 'boss_ottoman':
+        // Stage 1 Mid-Boss 2: Ottoman Empire with iconic white onion turban & crescent!
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#c8102e';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // White crescent & star on lower half
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(-r * 0.14, r * 0.38, r * 0.32, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#c8102e';
+          ctx.beginPath();
+          ctx.arc(-r * 0.04, r * 0.38, r * 0.25, 0, Math.PI * 2);
+          ctx.fill();
+          drawStar(ctx, r * 0.26, r * 0.38, 5, r * 0.16, r * 0.07, '#ffffff');
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.1 });
+        // Giant Ottoman Onion Turban + Ruby Jewel!
+        ctx.save();
+        ctx.fillStyle = '#f8fafc';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.08);
+        ctx.beginPath();
+        ctx.ellipse(0, -r * 1.06, r * 0.92, r * 0.56, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Turban wrap folds
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = Math.max(1.8, r * 0.06);
+        ctx.beginPath();
+        ctx.arc(0, -r * 1.04, r * 0.65, Math.PI * 1.12, Math.PI * 1.88);
+        ctx.stroke();
+        // Gold band & ruby crest
+        ctx.fillStyle = '#facc15';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.5, r * 0.06);
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.78, -r * 0.88, r * 1.56, r * 0.2, r * 0.08);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.78, r * 0.14, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        break;
+
+      case 'boss_napoleon': {
+        // Stage 1 Final Boss: First French Empire (Napoleonball with giant Bicorn Hat!)
+        const pulse = 0.5 + 0.5 * Math.sin(time * 6);
+        ctx.fillStyle = `rgba(250, 204, 21, ${0.22 + pulse * 0.14})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * (1.22 + pulse * 0.08), 0, Math.PI * 2);
+        ctx.fill();
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#002395';
+          ctx.fillRect(-r, -r, (r * 2) / 3, r * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r / 3, -r, (r * 2) / 3, r * 2);
+          ctx.fillStyle = '#ed2939';
+          ctx.fillRect(r / 3, -r, (r * 2) / 3, r * 2);
+          // Golden Imperial N crest on center white stripe
+          drawStar(ctx, 0, r * 0.44, 5, r * 0.24, r * 0.11, '#eab308');
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.06 });
+        // Massive iconic Napoleon Bicorn Hat with Tricolore Cockade!
+        ctx.save();
+        ctx.fillStyle = '#111827';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.28, -r * 0.62);
+        ctx.quadraticCurveTo(0, -r * 1.78, r * 1.28, -r * 0.62);
+        ctx.quadraticCurveTo(0, -r * 0.92, -r * 1.28, -r * 0.62);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Gold trim along hat edge
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = Math.max(2, r * 0.07);
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.1, -r * 0.7);
+        ctx.quadraticCurveTo(0, -r * 1.56, r * 1.1, -r * 0.7);
+        ctx.stroke();
+        // Classic French Cockade on front of Bicorn!
+        ctx.fillStyle = '#ed2939';
+        ctx.beginPath(); ctx.arc(0, -r * 1.06, r * 0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(0, -r * 1.06, r * 0.13, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#002395';
+        ctx.beginPath(); ctx.arc(0, -r * 1.06, r * 0.07, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        break;
+      }
+
+      case 'boss_hussar':
+        // Stage 2 Mid-Boss 1: Winged Hussar Polish-Lithuanian Commonwealth!
+        // Dramatic feathered Hussar wings behind the ball
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.8, r * 0.07);
+        for (const side of [-1, 1]) {
+          ctx.fillStyle = '#f8fafc';
+          ctx.beginPath();
+          ctx.moveTo(side * r * 0.55, r * 0.15);
+          ctx.quadraticCurveTo(side * r * 1.52, -r * 0.55, side * r * 1.18, -r * 1.55);
+          ctx.quadraticCurveTo(side * r * 0.92, -r * 0.95, side * r * 0.38, -r * 0.55);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          // Feather lines
+          ctx.strokeStyle = '#94a3b8';
+          for (let f = 0; f < 4; f++) {
+            const fy = -r * (0.35 + f * 0.26);
+            ctx.beginPath();
+            ctx.moveTo(side * r * (0.65 + f * 0.12), fy);
+            ctx.lineTo(side * r * (1.28 - f * 0.03), fy - r * 0.14);
+            ctx.stroke();
+          }
+          ctx.strokeStyle = INK;
+        }
+        ctx.restore();
+
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#dc143c';
+          ctx.fillRect(-r, -r, r * 2, r * 0.65);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r, -r * 0.35, r * 2, r * 0.7);
+          ctx.fillStyle = '#dc143c';
+          ctx.fillRect(-r, r * 0.35, r * 2, r * 0.65);
+          drawStar(ctx, 0, r * 0.36, 5, r * 0.24, r * 0.1, '#facc15');
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.06 });
+        // Silver Hussar helmet
+        ctx.save();
+        ctx.fillStyle = '#cbd5e1';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.8, r * 0.08);
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.42, r * 0.85, Math.PI, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        break;
+
+      case 'boss_british_empire':
+        // Stage 2 Mid-Boss 2: British Empire (Extra-tall Imperial Top Hat + Royal Plume + Monocle!)
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#012169';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = r * 0.34;
+          ctx.beginPath();
+          ctx.moveTo(-r, -r); ctx.lineTo(r, r);
+          ctx.moveTo(r, -r); ctx.lineTo(-r, r);
+          ctx.stroke();
+          ctx.strokeStyle = '#c8102e';
+          ctx.lineWidth = r * 0.15;
+          ctx.beginPath();
+          ctx.moveTo(-r, -r); ctx.lineTo(r, r);
+          ctx.moveTo(r, -r); ctx.lineTo(-r, r);
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r * 0.26, -r, r * 0.52, r * 2);
+          ctx.fillRect(-r, -r * 0.26, r * 2, r * 0.52);
+          ctx.fillStyle = '#c8102e';
+          ctx.fillRect(-r * 0.15, -r, r * 0.3, r * 2);
+          ctx.fillRect(-r, -r * 0.15, r * 2, r * 0.3);
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY);
+        ctx.save();
+        // Gleaming Imperial golden monocle
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = Math.max(2, r * 0.08);
+        ctx.beginPath();
+        ctx.arc(r * 0.33, -r * 0.06, r * 0.28, 0, Math.PI * 2);
+        ctx.stroke();
+        // Extra-tall Imperial Top Hat with gold crown ribbon!
+        ctx.fillStyle = '#18181b';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.08);
+        ctx.beginPath();
+        ctx.ellipse(0, -r * 0.88, r * 0.92, r * 0.22, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.fillRect(-r * 0.56, -r * 1.88, r * 1.12, r * 1.02);
+        ctx.strokeRect(-r * 0.56, -r * 1.88, r * 1.12, r * 1.02);
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(-r * 0.56, -r * 1.12, r * 1.12, r * 0.2);
+        ctx.restore();
+        break;
+
+      case 'boss_ussr': {
+        // Stage 2 Final Boss: Soviet Union (USSR) with Hammer & Sickle + Giant Fur Ushanka!
+        const pulse = 0.5 + 0.5 * Math.sin(time * 6);
+        ctx.fillStyle = `rgba(220, 38, 38, ${0.24 + pulse * 0.16})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * (1.22 + pulse * 0.08), 0, Math.PI * 2);
+        ctx.fill();
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#cc0000';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Golden star & crossed emblem on lower-left
+          drawStar(ctx, -r * 0.34, r * 0.34, 5, r * 0.24, r * 0.1, '#facc15');
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = Math.max(2.5, r * 0.09);
+          ctx.beginPath();
+          ctx.arc(r * 0.22, r * 0.38, r * 0.24, Math.PI * 0.25, Math.PI * 1.45);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(r * 0.06, r * 0.54);
+          ctx.lineTo(r * 0.42, r * 0.18);
+          ctx.stroke();
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.02 });
+        // Huge Soviet Fur Ushanka!
+        ctx.save();
+        ctx.fillStyle = '#44403c';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.08);
+        ctx.beginPath();
+        ctx.roundRect(-r * 1.12, -r * 0.62, r * 0.34, r * 0.96, r * 0.12);
+        ctx.roundRect(r * 0.78, -r * 0.62, r * 0.34, r * 0.96, r * 0.12);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#57534e';
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.94, -r * 1.42, r * 1.88, r * 0.84, [r * 0.34, r * 0.34, r * 0.1, r * 0.1]);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#78716c';
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.72, -r * 1.18, r * 1.44, r * 0.54, r * 0.12);
+        ctx.fill(); ctx.stroke();
+        drawStar(ctx, 0, -r * 0.9, 5, r * 0.26, r * 0.11, '#ef4444');
+        ctx.restore();
+        break;
+      }
+
+      case 'boss_nasa':
+        // Stage 3 Mid-Boss 1: Space-Crazed Rocket USA with Astronaut Glass Helmet & Twin Thrusters!
+        ctx.save();
+        // Twin side rocket boosters + animated flame!
+        const flame = 0.85 + 0.3 * Math.sin(time * 24);
+        for (const side of [-1, 1]) {
+          ctx.fillStyle = '#f97316';
+          ctx.beginPath();
+          ctx.moveTo(side * r * 1.08, r * 0.38);
+          ctx.lineTo(side * r * 0.94, r * (0.38 + 0.55 * flame));
+          ctx.lineTo(side * r * 1.22, r * 0.38);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#e2e8f0';
+          ctx.strokeStyle = INK;
+          ctx.lineWidth = Math.max(1.8, r * 0.07);
+          ctx.beginPath();
+          ctx.roundRect(side < 0 ? -r * 1.24 : r * 0.92, -r * 0.4, r * 0.32, r * 0.82, r * 0.12);
+          ctx.fill(); ctx.stroke();
+        }
+        ctx.restore();
+        // USA Flag ball + shades
+        drawFlagCircle(ctx, r, () => {
+          for (let i = 0; i < 9; i++) {
+            ctx.fillStyle = i % 2 === 0 ? '#b22234' : '#ffffff';
+            ctx.fillRect(-r, -r + (i * r * 2) / 9, r * 2, (r * 2) / 9 + 0.5);
+          }
+          ctx.fillStyle = '#3c3b6e';
+          ctx.fillRect(-r, -r, r * 1.05, r * 1.05);
+          ctx.fillStyle = '#ffffff';
+          for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+              ctx.beginPath();
+              ctx.arc(-r * 0.78 + col * r * 0.34, -r * 0.72 + row * r * 0.3, r * 0.07, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        });
+        // Sunglasses
+        ctx.save();
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.6, r * 0.08);
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.74, -r * 0.28, r * 0.64, r * 0.4, [4, 4, 10, 10]);
+        ctx.roundRect(r * 0.1, -r * 0.28, r * 0.64, r * 0.4, [4, 4, 10, 10]);
+        ctx.fill(); ctx.stroke();
+        // Translucent Glass Space Helmet Dome!
+        ctx.strokeStyle = '#38bdf8';
+        ctx.fillStyle = 'rgba(186, 230, 253, 0.22)';
+        ctx.lineWidth = Math.max(2.5, r * 0.08);
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.04, r * 1.16, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Helmet glare
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx.lineWidth = Math.max(2, r * 0.07);
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.04, r * 0.96, Math.PI * 1.15, Math.PI * 1.48);
+        ctx.stroke();
+        ctx.restore();
+        break;
+
+      case 'boss_alien_king': {
+        // Stage 3 Mid-Boss 3: Giant Crowned Alien 6-Ball Emperor!
+        const pulse = 0.5 + 0.5 * Math.sin(time * 7);
+        ctx.fillStyle = `rgba(74, 222, 128, ${0.24 + pulse * 0.14})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * (1.22 + pulse * 0.08), 0, Math.PI * 2);
+        ctx.fill();
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#15803d';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(0, r * 0.42, r * 0.34, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#14532d';
+          ctx.font = `900 ${Math.round(r * 0.48)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('6', 0, r * 0.44);
+        });
+        // Glowing antennae + Golden Cosmic Crown!
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.08);
+        const wob2 = Math.sin(time * 9) * r * 0.14;
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(side * r * 0.48, -r * 0.85);
+          ctx.lineTo(side * r * 0.82 + wob2, -r * 1.42);
+          ctx.stroke();
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(side * r * 0.82 + wob2, -r * 1.42, r * 0.16, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        }
+        // Golden King Crown in center
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.52, -r * 0.92);
+        ctx.lineTo(-r * 0.62, -r * 1.46);
+        ctx.lineTo(-r * 0.22, -r * 1.18);
+        ctx.lineTo(0, -r * 1.56);
+        ctx.lineTo(r * 0.22, -r * 1.18);
+        ctx.lineTo(r * 0.62, -r * 1.46);
+        ctx.lineTo(r * 0.52, -r * 0.92);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.1 });
+        break;
+      }
 
       default:
         drawFlagCircle(ctx, r, () => {

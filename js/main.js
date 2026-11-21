@@ -196,10 +196,12 @@
       const card = document.createElement('div');
       card.className = 'stage-card' + (currentId === st.id ? ' selected' : '');
       const best = bestTimes[st.id] ? `最長生存: ${formatTime(bestTimes[st.id])}` : '未挑戦';
+      const finalBossDef = Data.ENEMIES[st.finalBoss];
       card.innerHTML = `
         <div class="stage-badge">${st.badge} ・ コイン ×${st.coinMult}</div>
         <div style="font-weight:900;font-size:1rem;">${st.name}</div>
         <div style="font-size:0.78rem;color:#475569;line-height:1.35;">${st.desc}</div>
+        <div style="font-size:0.74rem;font-weight:900;color:#dc143c;">👑 最終ボス: ${finalBossDef?.name || ''}</div>
         <div style="font-size:0.74rem;font-weight:800;color:#b45309;">${st.bgmName || ''}</div>
         <div style="font-size:0.74rem;font-weight:800;color:#1d4ed8;margin-top:auto;">${best}</div>
       `;
@@ -360,6 +362,7 @@
         Renderer.renderBallToCanvas(cv, en.id, 'angry', 0);
         const info = document.createElement('div');
         info.innerHTML = `
+          ${en.stageTag ? `<div style="font-size:0.7rem;font-weight:900;color:#b45309;">${en.stageTag}</div>` : ''}
           <div class="item-title">${en.isBoss ? '👑 ' : ''}${en.name}</div>
           <div class="item-desc">${en.desc}</div>
           <div style="font-size:0.76rem;font-weight:900;color:#dc143c;margin-top:4px;">撃破数: ${kills.toLocaleString()}体</div>
@@ -811,7 +814,7 @@
     onGameOver(summary) {
       $('modal-levelup').classList.remove('active');
       $('modal-chest').classList.remove('active');
-      $('go-title').textContent = summary.victory ? '🏆 VICTORY! ライヒタングル撃破！' : '💀 GAME OVER… また挑戦しよう！';
+      $('go-title').textContent = summary.victory ? `🏆 VICTORY! ${summary.finalBossName || '最終ボス'} 撃破！` : '💀 GAME OVER… また挑戦しよう！';
       $('go-title').style.color = summary.victory ? '#15803d' : '#dc143c';
       $('go-stats').innerHTML = `
         <span class="coin-pill">🗺️ ${summary.stageName}</span>
