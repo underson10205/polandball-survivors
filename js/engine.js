@@ -289,6 +289,7 @@ window.PBEngine = (() => {
       beams: [],
       slashes: [],
       novas: [],
+      chains: [],
       pickups: [],
       particles: [],
       texts: [],
@@ -918,6 +919,118 @@ window.PBEngine = (() => {
         }
         break;
       }
+
+      case 'bounce': {
+        // Italy: Screen-bouncing Pizza Cutter (Runetracer style!)
+        for (let i = 0; i < ws.count; i++) {
+          const a = baseAngle + (i - (ws.count - 1) / 2) * 0.55 + (Math.random() - 0.5) * 0.25;
+          pushProjectile({
+            id: state.nextEid++,
+            kind: 'pizza',
+            evolved: w.evolved,
+            owner: p.pid,
+            weapon: w,
+            x: p.x, y: p.y,
+            vx: Math.cos(a) * ws.speed,
+            vy: Math.sin(a) * ws.speed,
+            radius: 17 * ws.area,
+            damage: ws.damage,
+            pierce: 99,
+            life: ws.duration,
+            spin: 0,
+            hitSet: new Map()
+          });
+        }
+        break;
+      }
+
+      case 'chain': {
+        // Sweden: Mjolnir Chain Lightning bouncing across nearby enemies!
+        const maxChains = (def.base.chains || 3) + w.level + (w.evolved ? 4 : 0);
+        const chainRange = (w.evolved ? 260 : 195) * ws.area;
+        const casts = Math.min(3, ws.count);
+        let anyHit = false;
+        for (let c = 0; c < casts; c++) {
+          let cur = findNearestEnemy(p.x + (c * 45 - 20), p.y, 520);
+          if (!cur) break;
+          anyHit = true;
+          const visited = new Set();
+          const pts = [[Math.round(p.x), Math.round(p.y)]];
+          for (let hop = 0; hop < maxChains && cur; hop++) {
+            visited.add(cur.id);
+            pts.push([Math.round(cur.x), Math.round(cur.y)]);
+            damageEnemy(cur, ws.damage, p, w, p.x, p.y, 75);
+            if (w.evolved && state.novas.length < 18) {
+              state.novas.push({ x: cur.x, y: cur.y, radius: 10, maxRadius: 46, evolved: true, life: 0.18, maxLife: 0.18, isBlast: false });
+            }
+            // Jump to closest unvisited enemy within chainRange
+            let next = null;
+            let bestD2 = chainRange * chainRange;
+            const cx0 = cur.x;
+            const cy0 = cur.y;
+            forEachEnemyNear(cx0, cy0, chainRange, (cand) => {
+              if (visited.has(cand.id)) return;
+              const dx = cand.x - cx0;
+              const dy = cand.y - cy0;
+              const d2 = dx * dx + dy * dy;
+              if (d2 < bestD2) { bestD2 = d2; next = cand; }
+            });
+            cur = next;
+          }
+          if (state.chains.length < 16) {
+            state.chains.push({ pts, evolved: w.evolved, life: 0.24, maxLife: 0.24 });
+          }
+        }
+        if (anyHit) Audio.playSfx('laser');
+        break;
+      }
+
+      case 'wave': {
+        // Singapore: Merlion high-pressure piercing hydro wave!
+        Audio.playSfx('slash');
+        const dirA = target ? baseAngle : Math.atan2(p.lookY, p.lookX);
+        const waveCount = Math.min(4, ws.count);
+        for (let i = 0; i < waveCount; i++) {
+          const spread = (i - (waveCount - 1) / 2) * 0.28;
+          const a = dirA + spread;
+          pushProjectile({
+            id: state.nextEid++,
+            kind: 'merlion',
+            evolved: w.evolved,
+            owner: p.pid,
+            weapon: w,
+            x: p.x + Math.cos(a) * 18,
+            y: p.y + Math.sin(a) * 18,
+            vx: Math.cos(a) * ws.speed,
+            vy: Math.sin(a) * ws.speed,
+            radius: (w.evolved ? 28 : 20) * ws.area,
+            damage: ws.damage,
+            pierce: ws.pierce,
+            knockback: ws.knockback,
+            life: w.evolved ? 1.5 : 1.15,
+            hitSet: new Map()
+          });
+        }
+        break;
+      }
+
+      case 'aura': {
+        // Switzerland: Continuous pulsing Red Cross Garlic Aura (+ lifesteal on kill when evolved!)
+        const auraR = (w.evolved ? 128 : 92) * ws.area;
+        forEachEnemyNear(p.x, p.y, auraR, (e) => {
+          const dx = e.x - p.x;
+          const dy = e.y - p.y;
+          const sumR = auraR + e.radius;
+          if (dx * dx + dy * dy < sumR * sumR) {
+            const wasAlive = e.hp > 0;
+            damageEnemy(e, ws.damage, p, w, p.x, p.y, ws.knockback);
+            if (w.evolved && wasAlive && e.hp <= 0 && !p.downed) {
+              p.hp = Math.min(p.maxHp, p.hp + 1.5);
+            }
+          }
+        });
+        break;
+      }
     }
   }
 
@@ -1395,6 +1508,15 @@ window.PBEngine = (() => {
         } else {
           pr.vy += pr.gravity * dt;
         }
+      } else if (pr.kind === 'pizza') {
+        pr.spin += dt * 17;
+        const owner = state.players[pr.owner] || state.players[0];
+        const halfW = Math.min(580, window.innerWidth * 0.48);
+        const halfH = Math.min(380, window.innerHeight * 0.46);
+        if (pr.x < owner.x - halfW && pr.vx < 0) pr.vx = -pr.vx;
+        else if (pr.x > owner.x + halfW && pr.vx > 0) pr.vx = -pr.vx;
+        if (pr.y < owner.y - halfH && pr.vy < 0) pr.vy = -pr.vy;
+        else if (pr.y > owner.y + halfH && pr.vy > 0) pr.vy = -pr.vy;
       }
 
       if (!(pr.kind === 'baguette' && pr.evolved)) {
@@ -1417,7 +1539,7 @@ window.PBEngine = (() => {
             pr.pierce = 0;
             return false;
           } else {
-            damageEnemy(e, pr.damage, ownerP, pr.weapon, pr.x, pr.y, 100);
+            damageEnemy(e, pr.damage, ownerP, pr.weapon, pr.x, pr.y, pr.knockback || 100);
             pr.pierce--;
             if (pr.pierce <= 0) return false;
           }
@@ -1526,6 +1648,10 @@ window.PBEngine = (() => {
       n.life -= dt;
       n.radius = n.maxRadius * (1 - n.life / n.maxLife);
       if (n.life <= 0) state.novas.splice(i, 1);
+    }
+    for (let i = state.chains.length - 1; i >= 0; i--) {
+      state.chains[i].life -= dt;
+      if (state.chains[i].life <= 0) state.chains.splice(i, 1);
     }
     for (let i = state.particles.length - 1; i >= 0; i--) {
       const pt = state.particles[i];
@@ -1711,14 +1837,15 @@ window.PBEngine = (() => {
       const cur = p.passives[def.id] || 0;
       if (cur >= def.maxLevel) continue;
       if (cur === 0 && passiveCount >= MAX_PASSIVES) continue;
-      const ownedW = p.weapons.find(w => w.id === def.evolves && !w.evolved);
-      const wDef = Data.WEAPONS[def.evolves];
+      const ownedMatches = p.weapons.filter(w => !w.evolved && Data.WEAPONS[w.id]?.evolvePassive === def.id);
+      const ownedW = ownedMatches.sort((a, b) => b.level - a.level)[0] || null;
+      const wDef = ownedW ? Data.WEAPONS[ownedW.id] : Data.WEAPONS[def.evolves];
       const nextLv = cur + 1;
       const hint = ownedW
         ? (ownedW.level >= wDef.maxLevel
             ? `🔥 相棒 ${wDef.icon}${wDef.name} Lv.5達成！（これをLv.5で次LvUP進化）`
             : `進化相棒: ${wDef.icon} ${wDef.name} (現在 Lv.${ownedW.level}/5)`)
-        : `進化対象: ${wDef.icon} ${wDef.name}`;
+        : `進化対象: ${wDef.icon} ${wDef.name} 等`;
       pool.push({
         kind: 'passive',
         id: def.id,
@@ -1944,6 +2071,7 @@ window.PBEngine = (() => {
       sl: state.slashes.map(s => [Math.round(s.x), Math.round(s.y), Math.round(s.angle * 100) / 100, Math.round(s.radius), s.evolved ? 1 : 0, Math.round((s.life / s.maxLife) * 10) / 10]),
       bm: state.beams.map(b => [Math.round(b.x), Math.round(b.y), Math.round(b.radius), b.evolved ? 1 : 0, Math.round((b.life / b.maxLife) * 10) / 10]),
       nv: state.novas.map(n => [Math.round(n.x), Math.round(n.y), Math.round(n.radius), n.evolved ? 1 : 0, n.isBlast ? 1 : 0, Math.round((n.life / n.maxLife) * 10) / 10]),
+      ch: state.chains.map(c => [c.pts, c.evolved ? 1 : 0, Math.round((c.life / c.maxLife) * 10) / 10]),
       pk: state.pickups.slice(0, 140).map(pk => [pk.kind, Math.round(pk.x), Math.round(pk.y), pk.tier || 0])
     };
     Net.send('snap', snap);
@@ -2018,6 +2146,7 @@ window.PBEngine = (() => {
     state.slashes = snap.sl.map(a => ({ x: a[0], y: a[1], angle: a[2], radius: a[3], evolved: !!a[4], life: a[5], maxLife: 1 }));
     state.beams = snap.bm.map(a => ({ x: a[0], y: a[1], radius: a[2], evolved: !!a[3], life: a[4], maxLife: 1 }));
     state.novas = snap.nv.map(a => ({ x: a[0], y: a[1], radius: a[2], evolved: !!a[3], isBlast: !!a[4], life: a[5], maxLife: 1 }));
+    state.chains = (snap.ch || []).map(a => ({ pts: a[0], evolved: !!a[1], life: a[2], maxLife: 1 }));
     state.pickups = snap.pk.map(a => ({ kind: a[0], x: a[1], y: a[2], tier: a[3] }));
   }
 
@@ -2386,6 +2515,28 @@ window.PBEngine = (() => {
         ctx.restore();
       }
 
+      // Draw Swiss Cross Holy Aura (med_cross)
+      const auraW = p.weapons.find(w => w.id === 'med_cross');
+      if (auraW && !p.downed) {
+        const stats = getComputedStats(p);
+        const ws = getWeaponStats(auraW, stats);
+        const auraR = (auraW.evolved ? 128 : 92) * ws.area;
+        const pulse = 0.5 + 0.5 * Math.sin(state.time * 5);
+        ctx.save();
+        ctx.fillStyle = auraW.evolved
+          ? `rgba(250, 204, 21, ${0.14 + pulse * 0.08})`
+          : `rgba(220, 38, 38, ${0.12 + pulse * 0.07})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, auraR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = auraW.evolved ? 'rgba(250, 204, 21, 0.78)' : 'rgba(239, 68, 68, 0.65)';
+        ctx.lineWidth = auraW.evolved ? 4.5 : 3;
+        ctx.setLineDash([12, 8]);
+        ctx.lineDashOffset = -state.time * 28;
+        ctx.stroke();
+        ctx.restore();
+      }
+
       // Draw Orbital Teacups (cached emoji sprites!)
       const teaW = p.weapons.find(w => w.id === 'teacup');
       if (teaW && !p.downed && (teaW.evolved || p.orbitActiveTimer > 0)) {
@@ -2453,7 +2604,7 @@ window.PBEngine = (() => {
       }
     }
 
-    // 6. Slashes, Novas, Beams
+    // 6. Slashes, Novas, Beams, Chain Lightning
     for (const sl of state.slashes) {
       if (Math.abs(sl.x - cx) > cullX + sl.radius || Math.abs(sl.y - cy) > cullY + sl.radius) continue;
       const a = Math.max(0, sl.life / sl.maxLife);
@@ -2504,6 +2655,28 @@ window.PBEngine = (() => {
     }
     ctx.globalAlpha = 1;
 
+    // Mjolnir Chain Lightning Arcs!
+    for (const ch of state.chains) {
+      if (!ch.pts || ch.pts.length < 2) continue;
+      const a = Math.max(0, ch.life / ch.maxLife);
+      ctx.globalAlpha = a;
+      ctx.strokeStyle = ch.evolved ? '#facc15' : '#38bdf8';
+      ctx.lineWidth = ch.evolved ? 7 : 5;
+      ctx.beginPath();
+      ctx.moveTo(ch.pts[0][0], ch.pts[0][1]);
+      for (let i = 1; i < ch.pts.length; i++) {
+        const mx = (ch.pts[i - 1][0] + ch.pts[i][0]) * 0.5 + (Math.random() - 0.5) * 18;
+        const my = (ch.pts[i - 1][1] + ch.pts[i][1]) * 0.5 + (Math.random() - 0.5) * 18;
+        ctx.lineTo(mx, my);
+        ctx.lineTo(ch.pts[i][0], ch.pts[i][1]);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
     // 7. Player Projectiles (cached emoji drawImage -> ZERO text rasterization per frame!)
     for (const pr of state.projectiles) {
       if (Math.abs(pr.x - cx) > cullX + 40 || Math.abs(pr.y - cy) > cullY + 40) continue;
@@ -2526,6 +2699,29 @@ window.PBEngine = (() => {
         const sp = Renderer.getEmojiSprite('🥖', 36);
         const d = pr.radius * 2.3;
         ctx.drawImage(sp, -d / 2, -d / 2, d, d);
+      } else if (pr.kind === 'pizza') {
+        if (pr.evolved) {
+          ctx.strokeStyle = 'rgba(249, 115, 22, 0.8)';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(0, 0, pr.radius * 1.25, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.rotate(pr.spin || 0);
+        const sp = Renderer.getEmojiSprite('🍕', 38);
+        const d = pr.radius * 2.3;
+        ctx.drawImage(sp, -d / 2, -d / 2, d, d);
+      } else if (pr.kind === 'merlion') {
+        const a = typeof pr.angle === 'number' ? pr.angle : Math.atan2(pr.vy, pr.vx);
+        ctx.rotate(a);
+        ctx.strokeStyle = pr.evolved ? '#0284c7' : '#06b6d4';
+        ctx.lineWidth = pr.evolved ? 13 : 9;
+        ctx.beginPath();
+        ctx.arc(-pr.radius * 0.35, 0, pr.radius * 1.1, -1.05, 1.05);
+        ctx.stroke();
+        ctx.strokeStyle = '#e0f2fe';
+        ctx.lineWidth = 4;
+        ctx.stroke();
       } else if (pr.kind === 'missile') {
         const a = typeof pr.angle === 'number' ? pr.angle : Math.atan2(pr.vy, pr.vx);
         ctx.rotate(a + Math.PI / 4);
