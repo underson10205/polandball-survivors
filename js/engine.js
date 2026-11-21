@@ -1515,8 +1515,9 @@ window.PBEngine = (() => {
     // Drop random goodies & restore stage BGM when bosses are cleared!
     if (e.isMidBoss) {
       state.pickups.push({ id: state.nextEid++, kind: 'chest', x: e.x + 12, y: e.y, val: 1 });
-      addFloatingText(e.x, e.y - 30, '🎁 ボス宝箱ドロップ！', '#fde047', true);
-      if (state.mode === 'coop_host') broadcastFx({ sfx: 'explosion', burst: true, x: e.x, y: e.y, color: '#facc15', count: 28, text: '🎁 ボス宝箱ドロップ！', big: true });
+      state.pickups.push({ id: state.nextEid++, kind: 'heal', x: e.x - 18, y: e.y + 8, val: 48 });
+      addFloatingText(e.x, e.y - 30, '🎁 ボス宝箱＆🥟ドロップ！', '#fde047', true);
+      if (state.mode === 'coop_host') broadcastFx({ sfx: 'explosion', burst: true, x: e.x, y: e.y, color: '#facc15', count: 28, text: '🎁 ボス宝箱＆🥟ドロップ！', big: true });
       syncActiveBgm();
     } else if (e.isFinalBoss) {
       state.pickups.push({ id: state.nextEid++, kind: 'chest', x: e.x, y: e.y, val: 1 });
@@ -1534,14 +1535,18 @@ window.PBEngine = (() => {
       }
     } else {
       const r = Math.random();
+      const anyLowHp = state.players.some(p => !p.downed && !p.disconnected && p.hp < p.maxHp * 0.55);
+      const healChance = anyLowHp ? 0.048 : 0.034;
       if (e.type === 'mali_ball' && r < 0.18) {
         state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.max(2, Math.round(4 * state.stage.coinMult)) });
       } else if (r < 0.025) {
         state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.max(1, Math.round(2 * state.stage.coinMult)) });
-      } else if (r < 0.042) {
-        state.pickups.push({ id: state.nextEid++, kind: 'heal', x: e.x - 8, y: e.y + 6, val: 38 });
-      } else if (r < 0.047) {
+      } else if (r < 0.030) {
         state.pickups.push({ id: state.nextEid++, kind: 'magnet', x: e.x, y: e.y - 8, val: 1 });
+      }
+      // Independent heal (Pierogi) drop roll so Mali coins never block heals!
+      if (Math.random() < healChance) {
+        state.pickups.push({ id: state.nextEid++, kind: 'heal', x: e.x - 8, y: e.y + 6, val: 42 });
       }
     }
   }
