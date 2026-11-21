@@ -251,13 +251,13 @@ window.PBEngine = (() => {
     // Evolved Laser keeps full original satellite power; all other evolved weapons are toned down in power & range
     const isEvoLaser = evo && w.id === 'laser';
 
-    const evoDmgMult = evo ? (isEvoLaser ? 1.9 : 1.32) : 1;
-    const evoCdMult = evo ? (isEvoLaser ? 0.66 : 0.82) : 1;
+    const evoDmgMult = evo ? (isEvoLaser ? 1.9 : 1.58) : 1;
+    const evoCdMult = evo ? (isEvoLaser ? 0.66 : 0.75) : 1;
     const evoCountAdd = evo ? (isEvoLaser ? 2 : 1) : 0;
-    const evoAreaMult = evo ? (isEvoLaser ? 1.48 : 1.08) : 1;
-    const evoSpeedMult = evo ? (isEvoLaser ? 1.22 : 1.12) : 1;
-    const evoDurMult = evo ? (isEvoLaser ? 1.65 : 1.22) : 1;
-    const evoKbMult = evo ? (isEvoLaser ? 1.6 : 1.25) : 1;
+    const evoAreaMult = evo ? (isEvoLaser ? 1.48 : 1.24) : 1;
+    const evoSpeedMult = evo ? (isEvoLaser ? 1.22 : 1.18) : 1;
+    const evoDurMult = evo ? (isEvoLaser ? 1.65 : 1.40) : 1;
+    const evoKbMult = evo ? (isEvoLaser ? 1.6 : 1.40) : 1;
 
     let damage = b.damage * (1 + (lv - 1) * 0.35) * evoDmgMult;
     let cooldown = b.cooldown * Math.pow(0.915, lv - 1) * evoCdMult;
@@ -268,7 +268,7 @@ window.PBEngine = (() => {
     let duration = (b.duration || 2.5) * (1 + (lv - 1) * 0.14) * evoDurMult * (pStats.durationMult || 1);
 
     if (w.id === 'katana' && lv >= 2) count = Math.max(count, 2);
-    if (w.id === 'teacup' && evo) { count = Math.max(5, count); duration = 999; cooldown = 0.1; }
+    if (w.id === 'teacup' && evo) { count = Math.max(6, count); duration = 999; cooldown = 0.1; }
     if (w.id === 'roar') count = 1;
 
     return {
@@ -714,8 +714,8 @@ window.PBEngine = (() => {
   }
 
   function checkOrbitHits(p, w, ws) {
-    const orbitR = (w.evolved ? 66 : 78) * ws.area;
-    const hitR = (w.evolved ? 20 : 24) * ws.area;
+    const orbitR = (w.evolved ? 72 : 78) * ws.area;
+    const hitR = (w.evolved ? 22 : 24) * ws.area;
     for (let i = 0; i < ws.count; i++) {
       const a = p.orbitAngle + (i * Math.PI * 2) / ws.count;
       const ox = p.x + Math.cos(a) * orbitR;
@@ -727,7 +727,7 @@ window.PBEngine = (() => {
         const sumR = hitR + e.radius;
         if (dx * dx + dy * dy < sumR * sumR) {
           e.orbitHitCd = 0.28;
-          damageEnemy(e, ws.damage, p, w, ox, oy, 175);
+          damageEnemy(e, ws.damage, p, w, ox, oy, 185);
         }
       });
     }
@@ -767,10 +767,10 @@ window.PBEngine = (() => {
             vy: Math.sin(a) * ws.speed,
             ax: -Math.cos(a) * ws.speed * 1.45,
             ay: -Math.sin(a) * ws.speed * 1.45,
-            radius: (w.evolved ? 15 : 17) * ws.area,
+            radius: (w.evolved ? 16.5 : 17) * ws.area,
             damage: ws.damage,
             pierce: 99,
-            life: w.evolved ? 1.75 : 1.55,
+            life: w.evolved ? 1.92 : 1.55,
             spin: 0,
             hitSet: new Map()
           });
@@ -783,14 +783,14 @@ window.PBEngine = (() => {
         const dirA = Math.atan2(p.lookY, p.lookX);
         const dirs = [];
         if (w.evolved) {
-          const c = Math.min(6, Math.max(4, ws.count));
+          const c = Math.min(7, Math.max(5, ws.count + 1));
           for (let i = 0; i < c; i++) dirs.push(dirA + (i * Math.PI * 2) / c);
         } else {
           dirs.push(dirA);
           if (ws.count >= 2) dirs.push(dirA + Math.PI);
           for (let i = 2; i < ws.count; i++) dirs.push(dirA + (i % 2 === 0 ? 0.55 : -0.55) * Math.ceil(i / 2));
         }
-        const range = (w.evolved ? 86 : 108) * ws.area;
+        const range = (w.evolved ? 96 : 108) * ws.area;
         const slashHitR = range * 0.72;
         for (const a of dirs) {
           const sx = p.x + Math.cos(a) * (range * 0.52);
@@ -824,7 +824,7 @@ window.PBEngine = (() => {
             vy: Math.sin(a) * ws.speed,
             speed: ws.speed,
             radius: 13 * ws.area,
-            blastRadius: (w.evolved ? 56 : 72) * ws.area,
+            blastRadius: (w.evolved ? 64 : 72) * ws.area,
             damage: ws.damage,
             pierce: 1,
             life: 2.6,
@@ -837,7 +837,7 @@ window.PBEngine = (() => {
       }
 
       case 'arc': {
-        // Pre-evolution Baguette restored to original power & size; evolved tornado toned down in radius & spread
+        // Pre-evolution Baguette at full original power; evolved tornado tuned to sweet spot
         for (let i = 0; i < ws.count; i++) {
           const spread = (i - (ws.count - 1) / 2) * 0.4;
           const a = -Math.PI / 2 + spread + (p.lookX >= 0 ? 0.35 : -0.35);
@@ -855,10 +855,10 @@ window.PBEngine = (() => {
             spiralR: 20,
             originX: p.x,
             originY: p.y,
-            radius: (w.evolved ? 13 : 16) * ws.area,
+            radius: (w.evolved ? 14.5 : 16) * ws.area,
             damage: ws.damage,
             pierce: ws.pierce,
-            life: w.evolved ? 1.55 : 1.75,
+            life: w.evolved ? 1.85 : 1.75,
             spin: 0,
             hitSet: new Map()
           });
@@ -879,7 +879,7 @@ window.PBEngine = (() => {
             y: p.y + Math.sin(a) * 18,
             vx: Math.cos(a) * ws.speed,
             vy: Math.sin(a) * ws.speed,
-            radius: (w.evolved ? 9 : 10) * ws.area,
+            radius: 10 * ws.area,
             damage: ws.damage,
             pierce: ws.pierce,
             life: 1.35,
@@ -890,7 +890,7 @@ window.PBEngine = (() => {
       }
 
       case 'fan': {
-        const total = w.evolved ? Math.min(10, Math.max(7, ws.count + 2)) : ws.count;
+        const total = w.evolved ? Math.min(12, Math.max(8, ws.count + 3)) : ws.count;
         const arcSpan = w.evolved ? Math.PI * 2 : Math.min(Math.PI * 0.85, 0.24 * total);
         for (let i = 0; i < total; i++) {
           const a = w.evolved
@@ -905,7 +905,7 @@ window.PBEngine = (() => {
             x: p.x, y: p.y,
             vx: Math.cos(a) * ws.speed,
             vy: Math.sin(a) * ws.speed,
-            radius: (w.evolved ? 9.5 : 11) * ws.area,
+            radius: (w.evolved ? 10.5 : 11) * ws.area,
             damage: ws.damage,
             pierce: ws.pierce,
             life: 1.4,
@@ -917,7 +917,7 @@ window.PBEngine = (() => {
 
       case 'nova': {
         Audio.playSfx('roar');
-        const maxR = (w.evolved ? 124 : 148) * ws.area;
+        const maxR = (w.evolved ? 136 : 148) * ws.area;
         if (state.novas.length < 18) {
           state.novas.push({ x: p.x, y: p.y, radius: 18, maxRadius: maxR, evolved: w.evolved, life: 0.34, maxLife: 0.34 });
         }
@@ -928,7 +928,7 @@ window.PBEngine = (() => {
           const sumR = maxR + e.radius;
           if (dx * dx + dy * dy < sumR * sumR) {
             damageEnemy(e, ws.damage, p, w, p.x, p.y, ws.knockback);
-            if (w.evolved) e.slowTimer = 1.8;
+            if (w.evolved) e.slowTimer = 2.1;
           }
         });
         break;
@@ -974,7 +974,7 @@ window.PBEngine = (() => {
             id: state.nextEid++,
             x: p.x + Math.cos(a) * dist,
             y: p.y + Math.sin(a) * dist,
-            radius: (w.evolved ? 46 : 56) * ws.area,
+            radius: (w.evolved ? 52 : 56) * ws.area,
             damage: ws.damage,
             evolved: w.evolved,
             owner: p.pid,
@@ -1000,7 +1000,7 @@ window.PBEngine = (() => {
             x: p.x, y: p.y,
             vx: Math.cos(a) * ws.speed,
             vy: Math.sin(a) * ws.speed,
-            radius: (w.evolved ? 15 : 17) * ws.area,
+            radius: (w.evolved ? 16.5 : 17) * ws.area,
             damage: ws.damage,
             pierce: 99,
             life: ws.duration,
@@ -1013,8 +1013,8 @@ window.PBEngine = (() => {
 
       case 'chain': {
         // Sweden: Mjolnir Chain Lightning bouncing across nearby enemies!
-        const maxChains = (def.base.chains || 3) + w.level + (w.evolved ? 2 : 0);
-        const chainRange = 195 * ws.area;
+        const maxChains = (def.base.chains || 3) + w.level + (w.evolved ? 3 : 0);
+        const chainRange = (w.evolved ? 225 : 195) * ws.area;
         const casts = Math.min(3, ws.count);
         let anyHit = false;
         for (let c = 0; c < casts; c++) {
@@ -1028,7 +1028,7 @@ window.PBEngine = (() => {
             pts.push([Math.round(cur.x), Math.round(cur.y)]);
             damageEnemy(cur, ws.damage, p, w, p.x, p.y, 75);
             if (w.evolved && state.novas.length < 18) {
-              state.novas.push({ x: cur.x, y: cur.y, radius: 8, maxRadius: 34, evolved: true, life: 0.16, maxLife: 0.16, isBlast: false });
+              state.novas.push({ x: cur.x, y: cur.y, radius: 9, maxRadius: 40, evolved: true, life: 0.17, maxLife: 0.17, isBlast: false });
             }
             // Jump to closest unvisited enemy within chainRange
             let next = null;
@@ -1070,11 +1070,11 @@ window.PBEngine = (() => {
             y: p.y + Math.sin(a) * 18,
             vx: Math.cos(a) * ws.speed,
             vy: Math.sin(a) * ws.speed,
-            radius: (w.evolved ? 22 : 20) * ws.area,
+            radius: (w.evolved ? 25 : 20) * ws.area,
             damage: ws.damage,
             pierce: ws.pierce,
             knockback: ws.knockback,
-            life: w.evolved ? 1.25 : 1.15,
+            life: w.evolved ? 1.38 : 1.15,
             hitSet: new Map()
           });
         }
@@ -1083,7 +1083,7 @@ window.PBEngine = (() => {
 
       case 'aura': {
         // Switzerland: Continuous pulsing Red Cross Garlic Aura (+ lifesteal on kill when evolved!)
-        const auraR = (w.evolved ? 104 : 92) * ws.area;
+        const auraR = (w.evolved ? 116 : 92) * ws.area;
         forEachEnemyNear(p.x, p.y, auraR, (e) => {
           const dx = e.x - p.x;
           const dy = e.y - p.y;
@@ -1092,7 +1092,7 @@ window.PBEngine = (() => {
             const wasAlive = e.hp > 0;
             damageEnemy(e, ws.damage, p, w, p.x, p.y, ws.knockback);
             if (w.evolved && wasAlive && e.hp <= 0 && !p.downed) {
-              p.hp = Math.min(p.maxHp, p.hp + 1.0);
+              p.hp = Math.min(p.maxHp, p.hp + 1.3);
             }
           }
         });
@@ -1535,15 +1535,15 @@ window.PBEngine = (() => {
         pr.spin += dt * 16;
         // Evolved Galaxy Plunger pulls nearby enemies gently toward it via spatial grid!
         if (pr.evolved) {
-          forEachEnemyNear(pr.x, pr.y, 95, (e) => {
+          forEachEnemyNear(pr.x, pr.y, 112, (e) => {
             if (e.isBoss) return;
             const dx = pr.x - e.x;
             const dy = pr.y - e.y;
             const d2 = dx * dx + dy * dy;
-            if (d2 < 9025 && d2 > 100) {
+            if (d2 < 12544 && d2 > 100) {
               const d = Math.sqrt(d2);
-              e.x += (dx / d) * 70 * dt;
-              e.y += (dy / d) * 70 * dt;
+              e.x += (dx / d) * 82 * dt;
+              e.y += (dy / d) * 82 * dt;
             }
           });
         }
@@ -1568,8 +1568,8 @@ window.PBEngine = (() => {
       } else if (pr.kind === 'baguette') {
         pr.spin += dt * 13;
         if (pr.evolved) {
-          pr.spiralAngle += dt * 5.0;
-          pr.spiralR += dt * 110;
+          pr.spiralAngle += dt * 5.1;
+          pr.spiralR += dt * 125;
           const owner = getPlayerByPid(pr.owner) || state.players[0];
           pr.x = owner.x + Math.cos(pr.spiralAngle) * pr.spiralR;
           pr.y = owner.y + Math.sin(pr.spiralAngle) * pr.spiralR;
@@ -1631,7 +1631,7 @@ window.PBEngine = (() => {
         damageEnemy(e, pr.damage, ownerP, pr.weapon, pr.x, pr.y, 150);
       }
     });
-    // Evolved cluster bombs (toned down: 3 smaller sub-munitions)
+    // Evolved cluster bombs (sweet-spot balance)
     if (pr.evolved && !pr.isCluster) {
       for (let k = 0; k < 3; k++) {
         const a = (k * Math.PI * 2) / 3 + Math.random() * 0.4;
@@ -1644,14 +1644,14 @@ window.PBEngine = (() => {
           weapon: pr.weapon,
           x: pr.x + Math.cos(a) * 16,
           y: pr.y + Math.sin(a) * 16,
-          vx: Math.cos(a) * 240,
-          vy: Math.sin(a) * 240,
-          speed: 240,
-          radius: 8,
-          blastRadius: 40,
-          damage: Math.round(pr.damage * 0.45),
+          vx: Math.cos(a) * 250,
+          vy: Math.sin(a) * 250,
+          speed: 250,
+          radius: 8.5,
+          blastRadius: 48,
+          damage: Math.round(pr.damage * 0.55),
           pierce: 1,
-          life: 0.4,
+          life: 0.42,
           retargetCd: 0.1,
           target: null,
           hitSet: new Map()
@@ -2645,7 +2645,7 @@ window.PBEngine = (() => {
       if (auraW && !p.downed) {
         const stats = getComputedStats(p);
         const ws = getWeaponStats(auraW, stats);
-        const auraR = (auraW.evolved ? 104 : 92) * ws.area;
+        const auraR = (auraW.evolved ? 116 : 92) * ws.area;
         const pulse = 0.5 + 0.5 * Math.sin(state.time * 5);
         ctx.save();
         ctx.fillStyle = auraW.evolved
@@ -2667,7 +2667,7 @@ window.PBEngine = (() => {
       if (teaW && !p.downed && (teaW.evolved || p.orbitActiveTimer > 0)) {
         const stats = getComputedStats(p);
         const ws = getWeaponStats(teaW, stats);
-        const orbitR = (teaW.evolved ? 66 : 78) * ws.area;
+        const orbitR = (teaW.evolved ? 72 : 78) * ws.area;
         if (teaW.evolved) {
           ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
           ctx.lineWidth = 6;
