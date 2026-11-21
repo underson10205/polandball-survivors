@@ -848,20 +848,20 @@ window.PBEngine = (() => {
 
   function getWavePool(t, stageId) {
     if (stageId === 'space') {
-      if (t < 60) return ['alien_ball', 'speed_ball', 'turret_ball'];
-      if (t < 180) return ['alien_ball', 'turret_ball', 'kazakh_brick', 'speed_ball'];
-      return ['alien_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'speed_ball'];
+      if (t < 60) return ['alien_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball'];
+      if (t < 180) return ['alien_ball', 'cameroon_ball', 'mali_ball', 'turret_ball', 'kazakh_brick', 'speed_ball'];
+      return ['alien_ball', 'cameroon_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'speed_ball'];
     }
     if (stageId === 'sky') {
-      if (t < 60) return ['pirate_ball', 'speed_ball', 'slime_ball'];
-      if (t < 150) return ['pirate_ball', 'speed_ball', 'turret_ball', 'viking_ball'];
-      return ['speed_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'alien_ball'];
+      if (t < 60) return ['pirate_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'slime_ball'];
+      if (t < 150) return ['pirate_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball', 'viking_ball'];
+      return ['cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'alien_ball'];
     }
     // Meadow
-    if (t < 40) return ['slime_ball', 'slime_ball', 'pirate_ball'];
-    if (t < 100) return ['slime_ball', 'pirate_ball', 'viking_ball', 'speed_ball'];
-    if (t < 210) return ['pirate_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick'];
-    return ['viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'alien_ball'];
+    if (t < 40) return ['slime_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball'];
+    if (t < 100) return ['slime_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball'];
+    if (t < 210) return ['pirate_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick'];
+    return ['cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'alien_ball'];
   }
 
   function spawnEnemy(id, scale = 1) {
@@ -1134,7 +1134,9 @@ window.PBEngine = (() => {
       }
     } else {
       const r = Math.random();
-      if (r < 0.055) {
+      if (e.type === 'mali_ball' && r < 0.38) {
+        state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.round(9 * state.stage.coinMult) });
+      } else if (r < 0.055) {
         state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.round(5 * state.stage.coinMult) });
       } else if (r < 0.068) {
         state.pickups.push({ id: state.nextEid++, kind: 'heal', x: e.x - 8, y: e.y + 6, val: 38 });

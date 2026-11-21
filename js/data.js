@@ -450,6 +450,8 @@ window.PBData = (() => {
   const ENEMIES = {
     slime_ball: { id: 'slime_ball', name: 'ミニ・ローグボール', hp: 24, speed: 78, damage: 7, radius: 15, xp: 3, score: 10, desc: '群れで押し寄せる基本の敵ボール。' },
     pirate_ball: { id: 'pirate_ball', name: '海賊ソマリアボール', hp: 38, speed: 102, damage: 10, radius: 17, xp: 5, score: 18, desc: '素早く回り込んでくる眼帯の荒くれ者。' },
+    cameroon_ball: { id: 'cameroon_ball', name: 'カメルーンボール', hp: 56, speed: 112, damage: 12, radius: 18, xp: 8, score: 28, desc: '「不屈のライオン」の異名を持つ俊足＆タフな猛攻ボール！' },
+    mali_ball: { id: 'mali_ball', name: 'マリボール', hp: 46, speed: 94, damage: 10, radius: 17, xp: 7, score: 26, coinBonus: true, desc: '黄金帝国の末裔！倒すと高確率でゴールドコインを落とすお宝ボール！' },
     viking_ball: { id: 'viking_ball', name: 'バイキングボール', hp: 72, speed: 84, damage: 13, radius: 20, xp: 8, score: 30, desc: 'ツノ付き兜がトレードマークのタフな戦士。' },
     speed_ball: { id: 'speed_ball', name: 'ターボ・レーサーボール', hp: 34, speed: 145, damage: 11, radius: 15, xp: 7, score: 25, desc: '猛スピードで突っ込んでくる危険な弾丸ボール。' },
     kazakh_brick: { id: 'kazakh_brick', name: 'カザフスタン・ブリック', hp: 155, speed: 62, damage: 16, radius: 24, xp: 15, score: 50, desc: 'ずっしり重い長方形の守護壁。ノックバックに強い！' },

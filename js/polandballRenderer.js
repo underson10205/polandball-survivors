@@ -578,6 +578,32 @@ window.PBRenderer = (() => {
         ctx.restore();
         break;
 
+      case 'cameroon_ball':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#007a5e';
+          ctx.fillRect(-r, -r, (r * 2) / 3, r * 2);
+          ctx.fillStyle = '#ce1126';
+          ctx.fillRect(-r / 3, -r, (r * 2) / 3, r * 2);
+          ctx.fillStyle = '#fcd116';
+          ctx.fillRect(r / 3, -r, (r * 2) / 3, r * 2);
+          // Central golden star of Cameroon
+          drawStar(ctx, 0, r * 0.38, 5, r * 0.28, r * 0.11, '#fcd116');
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.14 });
+        break;
+
+      case 'mali_ball':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#14b53a';
+          ctx.fillRect(-r, -r, (r * 2) / 3, r * 2);
+          ctx.fillStyle = '#fcd116';
+          ctx.fillRect(-r / 3, -r, (r * 2) / 3, r * 2);
+          ctx.fillStyle = '#ce1126';
+          ctx.fillRect(r / 3, -r, (r * 2) / 3, r * 2);
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY);
+        break;
+
       case 'viking_ball':
       case 'boss_viking': {
         const isKing = id === 'boss_viking';
