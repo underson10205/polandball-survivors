@@ -199,7 +199,7 @@ window.PBData = (() => {
     rocket_fuel: {
       id: 'rocket_fuel',
       name: 'ロケット燃料',
-      icon: '🚀',
+      icon: '⛽',
       maxLevel: 5,
       desc: '移動速度 +10%/Lv（ラバーカップ進化素材）',
       stat: 'speedMult',
