@@ -159,6 +159,7 @@ window.PBAudio = (() => {
     meadow: { src: 'bgm/stage1_meadow.mp3', label: 'かけっこ競争' },
     sky: { src: 'bgm/stage2_sky.mp3?v=8', label: '楽しく軽快に' },
     space: { src: 'bgm/stage3_space.mp3', label: 'Warp_Area' },
+    desert: { src: 'bgm/stage4_desert.mp3', label: 'shuffle_shuffle' },
     midboss: { src: 'bgm/boss_mid.mp3', label: 'Will_you_still_cry_' },
     finalboss: { src: 'bgm/boss_final.mp3', label: '全てを創造する者「Dominus_Deus」' }
   };

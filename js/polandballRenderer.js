@@ -1454,6 +1454,232 @@ window.PBRenderer = (() => {
         break;
       }
 
+      // === STAGE 4 (黄金の古代砂漠) BOSSES ===
+      case 'boss_egypt': {
+        // Pharaoh Nemes headdress behind & around ball
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.08);
+        // Lapis-blue & gold Nemes side drapes
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.18, r * 0.65);
+        ctx.quadraticCurveTo(-r * 1.32, -r * 0.45, -r * 0.72, -r * 1.12);
+        ctx.lineTo(r * 0.72, -r * 1.12);
+        ctx.quadraticCurveTo(r * 1.32, -r * 0.45, r * 1.18, r * 0.65);
+        ctx.lineTo(r * 0.75, r * 0.75);
+        ctx.lineTo(-r * 0.75, r * 0.75);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Lapis blue stripes on Nemes sides
+        ctx.strokeStyle = '#1d4ed8';
+        ctx.lineWidth = Math.max(2, r * 0.085);
+        for (let k = -2; k <= 2; k++) {
+          const sy = k * r * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(-r * 1.14, sy); ctx.lineTo(-r * 0.85, sy);
+          ctx.moveTo(r * 0.85, sy); ctx.lineTo(r * 1.14, sy);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        drawFlagCircle(ctx, r, () => {
+          // Authentic Egypt flag: Red / White / Black + Golden Eagle of Saladin
+          ctx.fillStyle = '#ce1126';
+          ctx.fillRect(-r, -r, r * 2, (r * 2) / 3);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r, -r / 3, r * 2, (r * 2) / 3);
+          ctx.fillStyle = '#111827';
+          ctx.fillRect(-r, r / 3, r * 2, (r * 2) / 3);
+          // Golden Eagle of Saladin in white band
+          ctx.fillStyle = '#d97706';
+          ctx.beginPath();
+          ctx.moveTo(0, -r * 0.14);
+          ctx.lineTo(r * 0.22, r * 0.06);
+          ctx.lineTo(r * 0.12, r * 0.24);
+          ctx.lineTo(-r * 0.12, r * 0.24);
+          ctx.lineTo(-r * 0.22, r * 0.06);
+          ctx.closePath();
+          ctx.fill();
+        });
+        // Golden Pharaoh headband & Uraeus cobra crest on top!
+        ctx.save();
+        ctx.fillStyle = '#facc15';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.8, r * 0.07);
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.82, -r * 1.06, r * 1.64, r * 0.3, r * 0.1);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(0, -r * 1.16, r * 0.18, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.05 });
+        break;
+      }
+
+      case 'boss_mongol': {
+        drawFlagCircle(ctx, r, () => {
+          // Royal Mongol Blue banner with crimson bands & golden Soyombo crest
+          ctx.fillStyle = '#0284c7';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(-r, -r, r * 0.56, r * 2);
+          ctx.fillRect(r * 0.44, -r, r * 0.56, r * 2);
+          // Golden Soyombo sun & crescent on left
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.arc(-r * 0.72, r * 0.14, r * 0.16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillRect(-r * 0.8, r * 0.32, r * 0.16, r * 0.28);
+          // Golden Tamga / steppe emblem in center
+          drawStar(ctx, 0, r * 0.36, 4, r * 0.24, r * 0.1, '#facc15');
+        });
+        // Mongol Warrior Fur-Trimmed Conical Helmet with Crimson Plume!
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.08);
+        // Crimson horsehair plume waving at apex
+        const sway = Math.sin(time * 8) * r * 0.16;
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 1.56);
+        ctx.quadraticCurveTo(r * 0.55 + sway, -r * 1.72, r * 0.78 + sway, -r * 1.15);
+        ctx.quadraticCurveTo(r * 0.38, -r * 1.32, 0, -r * 1.44);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Steel conical dome
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.88, -r * 0.62);
+        ctx.quadraticCurveTo(-r * 0.52, -r * 1.35, 0, -r * 1.58);
+        ctx.quadraticCurveTo(r * 0.52, -r * 1.35, r * 0.88, -r * 0.62);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Fluffy brown fur brim
+        ctx.fillStyle = '#92400e';
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.96, -r * 0.78, r * 1.92, r * 0.3, r * 0.14);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.02 });
+        break;
+      }
+
+      case 'boss_byzantine': {
+        drawFlagCircle(ctx, r, () => {
+          // Imperial Tyrian Purple-Crimson & Gold Tetragrammic Cross!
+          ctx.fillStyle = '#7e22ce';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Bold gold Byzantine cross
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(-r * 0.16, -r, r * 0.32, r * 2);
+          ctx.fillRect(-r, -r * 0.14, r * 2, r * 0.28);
+          // Four golden B firesteels in corners
+          ctx.font = `900 ${Math.round(r * 0.34)}px serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('B', -r * 0.48, r * 0.44);
+          ctx.fillText('B', r * 0.48, r * 0.44);
+        });
+        // Ornate Golden Byzantine Imperial Crown with Pearl Pendilia!
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.8, r * 0.075);
+        // Dangling pearl chains on both sides
+        ctx.fillStyle = '#f8fafc';
+        for (const side of [-1, 1]) {
+          for (let j = 0; j < 3; j++) {
+            ctx.beginPath();
+            ctx.arc(side * r * 0.88, -r * 0.56 + j * r * 0.22, r * 0.09, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+          }
+        }
+        // Golden domed kamelaukion crown
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.78, r * 0.74, Math.PI, 0);
+        ctx.lineTo(r * 0.82, -r * 0.65);
+        ctx.lineTo(-r * 0.82, -r * 0.65);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Ruby & emerald jewels + golden cross atop crown
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath(); ctx.arc(0, -r * 0.92, r * 0.13, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath(); ctx.arc(-r * 0.44, -r * 0.84, r * 0.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(r * 0.44, -r * 0.84, r * 0.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(-r * 0.06, -r * 1.76, r * 0.12, r * 0.34);
+        ctx.fillRect(-r * 0.16, -r * 1.66, r * 0.32, r * 0.1);
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.08 });
+        break;
+      }
+
+      case 'boss_pyramid': {
+        // Stage 4 Final Boss: Towering Golden Giza Pharaoh Pyramid!
+        const s = r * 1.24;
+        const pulse = 0.5 + 0.5 * Math.sin(time * 6);
+        ctx.save();
+        // Shimmering golden desert aura (lightweight, no shadowBlur!)
+        ctx.fillStyle = `rgba(250, 204, 21, ${0.22 + pulse * 0.16})`;
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 1.28);
+        ctx.lineTo(s * 1.28, s * 0.96);
+        ctx.lineTo(-s * 1.28, s * 0.96);
+        ctx.closePath();
+        ctx.fill();
+
+        // Main pyramid triangle
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 1.12);
+        ctx.lineTo(s * 1.1, s * 0.84);
+        ctx.lineTo(-s * 1.1, s * 0.84);
+        ctx.closePath();
+        ctx.save();
+        ctx.clip();
+        // Sunlit left face & warm amber shaded right face
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(-s * 1.2, -s * 1.2, s * 1.2, s * 2.2);
+        ctx.fillStyle = '#d97706';
+        ctx.fillRect(0, -s * 1.2, s * 1.2, s * 2.2);
+        // Lapis-blue royal capstone stripes at apex
+        ctx.fillStyle = '#1e3a8a';
+        ctx.fillRect(-s, -s * 0.88, s * 2, s * 0.16);
+        ctx.fillRect(-s, -s * 0.58, s * 2, s * 0.12);
+        // Ancient stone block masonry lines
+        ctx.strokeStyle = 'rgba(120, 53, 15, 0.38)';
+        ctx.lineWidth = Math.max(1.5, r * 0.05);
+        for (let row = -1; row <= 3; row++) {
+          const ly = row * s * 0.26;
+          ctx.beginPath();
+          ctx.moveTo(-s * 1.15, ly); ctx.lineTo(s * 1.15, ly);
+          ctx.stroke();
+        }
+        // Center ridge line
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 1.12); ctx.lineTo(0, s * 0.84);
+        ctx.stroke();
+        ctx.restore();
+
+        // Crisp ink outline
+        ctx.lineWidth = Math.max(3, r * 0.1);
+        ctx.strokeStyle = INK;
+        ctx.stroke();
+
+        // Floating golden sun disk above pyramid apex!
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(0, -s * 1.24, r * 0.22, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+
+        drawEyes(ctx, r * 0.92, 'angry', lookX, lookY, { spacing: 0.3, yOffset: 0.2 });
+        break;
+      }
+
       default:
         drawFlagCircle(ctx, r, () => {
           ctx.fillStyle = '#64748b';

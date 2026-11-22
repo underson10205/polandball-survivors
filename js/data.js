@@ -785,6 +785,38 @@ window.PBData = (() => {
       alertCry: 'Guten Tag...', dashCry: 'GUTEN TAG!', rageCry: '🔥 ANSCHLUSS MODE!!',
       summonId: 'cameroon_ball',
       desc: 'Stage 3最恐の最終ボス！HP半分以下で本気モード（螺旋弾幕＆連続突進）へ！'
+    },
+
+    // === Stage 4 (黄金の古代砂漠) Bosses ===
+    boss_egypt: {
+      id: 'boss_egypt', name: 'ファラオ・エジプト', stageTag: '🏜️ Stage 4 中ボス(1:30)',
+      hp: 6800, speed: 112, damage: 29, radius: 41, xp: 135, score: 720,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true,
+      bulletPattern: 'fan5', bulletColor: '#facc15', dashCry: '🐪 ファラオ突撃！',
+      desc: 'Stage 4（1分半）に出現する黄金頭巾の王。砂塵突進と黄金5連弾で攻めてくる！'
+    },
+    boss_mongol: {
+      id: 'boss_mongol', name: 'モンゴル帝国', stageTag: '🏜️ Stage 4 中ボス(3:00)',
+      hp: 14600, speed: 126, damage: 34, radius: 44, xp: 220, score: 1200,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true,
+      bulletPattern: 'fan7', bulletColor: '#38bdf8', dashCry: '🐎 蒼き狼の突撃！',
+      desc: 'Stage 4（3分）に出現する超高速騎馬帝国！素早い突撃と7連矢弾幕が脅威！'
+    },
+    boss_byzantine: {
+      id: 'boss_byzantine', name: 'ビザンツ帝国', stageTag: '🏜️ Stage 4 中ボス(4:30)',
+      hp: 26000, speed: 106, damage: 37, radius: 46, xp: 300, score: 1750,
+      isBoss: true, isMidBoss: true, shooter: true, summoner: true,
+      bulletPattern: 'ring12', bulletColor: '#a855f7', summonId: 'kazakh_brick',
+      desc: 'Stage 4（4分半）に出現する高貴なる東ローマ皇帝。紫の12方向弾幕＆重装護衛を展開！'
+    },
+    boss_pyramid: {
+      id: 'boss_pyramid', name: '黄金ギザ・ファラオ王', stageTag: '🏜️ Stage 4 最終ボス(6:00)',
+      hp: 59000, speed: 116, damage: 43, radius: 52, xp: 880, score: 5800,
+      isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletColor: '#facc15', bulletColorP2: '#f97316',
+      alertCry: 'AWAKEN THE SANDS!!', dashCry: '🏜️ 砂嵐突進！', rageCry: '🔥 PHARAOH CURSE MODE!!',
+      summonId: 'mali_ball',
+      desc: 'Stage 4最終ボス！そびえ立つ黄金の大ピラミッド王！HP半分以下で黄金砂嵐＆マリ護衛召喚！'
     }
   };
 
@@ -863,6 +895,22 @@ window.PBData = (() => {
       difficulty: 1.75,
       coinMult: 1.75,
       badge: '🌌 超激戦'
+    },
+    {
+      id: 'desert',
+      name: '黄金の古代砂漠',
+      subtitle: 'Stage 4 — ピラミッド大決戦',
+      desc: '黄金の砂丘とオアシス！エジプト・モンゴル・ビザンツ、最奥に巨大ピラミッド王が待つ！',
+      bgmName: '♪ shuffle_shuffle',
+      midBosses: ['boss_egypt', 'boss_mongol', 'boss_byzantine'],
+      finalBoss: 'boss_pyramid',
+      duration: 360,
+      bg: '#e5b25d',
+      bgAccent: '#d99f43',
+      propType: 'desert',
+      difficulty: 1.55,
+      coinMult: 1.60,
+      badge: '🏜️ 上級・黄金ロマン'
     }
   ];
 
@@ -888,6 +936,7 @@ window.PBData = (() => {
     { id: 'defeat_napoleon', name: 'ワーテルローの勝者', desc: 'Stage 1 最終ボス「ナポレオン帝国」を撃破', reward: 90, icon: '🎖️' },
     { id: 'defeat_ussr', name: '成層圏の覇者', desc: 'Stage 2 最終ボス「ソビエト連邦」を撃破', reward: 115, icon: '☁️' },
     { id: 'defeat_reichtangle', name: 'Guten Tag 撃退！', desc: 'Stage 3 最終ボス「ライヒタングル」を撃破', reward: 140, icon: '👑' },
+    { id: 'defeat_pyramid', name: 'ピラミッドの覇者', desc: 'Stage 4 最終ボス「黄金ギザ・ファラオ王」を撃破', reward: 130, icon: '🏺' },
     { id: 'poland_space', name: 'Polan CAN into Space!', desc: 'ポーランドで宇宙軌道ステージをクリア', reward: 180, icon: '🪐' },
     { id: 'coop_play', name: '同盟締結！', desc: '2〜3人協力プレイで出撃する', reward: 40, icon: '🤝' },
     { id: 'coop_revive', name: '友情の蘇生', desc: '協力プレイでパートナーを蘇生させる', reward: 60, icon: '💖' },

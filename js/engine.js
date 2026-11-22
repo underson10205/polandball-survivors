@@ -1607,6 +1607,7 @@ window.PBEngine = (() => {
       if (e.type === 'boss_napoleon') tryUnlockAch('defeat_napoleon');
       else if (e.type === 'boss_ussr') tryUnlockAch('defeat_ussr');
       else if (e.type === 'reichtangle') tryUnlockAch('defeat_reichtangle');
+      else if (e.type === 'boss_pyramid') tryUnlockAch('defeat_pyramid');
       if (state.stage.id === 'space' && state.players.some(p => p.charId === 'poland')) {
         tryUnlockAch('poland_space');
       }
@@ -2548,6 +2549,12 @@ window.PBEngine = (() => {
       g.addColorStop(1, '#bae6fd');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
+    } else if (stage.propType === 'desert') {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#f3ca7d');
+      g.addColorStop(1, '#e2ae55');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
     } else {
       ctx.fillStyle = '#74b855';
       ctx.fillRect(0, 0, w, h);
@@ -2615,6 +2622,76 @@ window.PBEngine = (() => {
             ctx.arc(px + 26, py + 6, 20 + r1 * 14, 0, Math.PI * 2);
             ctx.arc(px - 22, py + 8, 18 + r2 * 10, 0, Math.PI * 2);
             ctx.fill();
+          }
+        } else if (stage.propType === 'desert') {
+          // Sweeping soft sand dunes
+          if (r1 < 0.52) {
+            ctx.fillStyle = 'rgba(202, 138, 4, 0.22)';
+            ctx.beginPath();
+            ctx.ellipse(px, py, 44 + r2 * 30, 15 + r1 * 10, (r1 - 0.25) * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          if (r1 > 0.86) {
+            // Ancient sunlit mini-pyramid landmark
+            const ps = 20 + r2 * 12;
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.moveTo(px, py - ps);
+            ctx.lineTo(px - ps * 0.95, py + ps * 0.55);
+            ctx.lineTo(px, py + ps * 0.55);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#b45309';
+            ctx.beginPath();
+            ctx.moveTo(px, py - ps);
+            ctx.lineTo(px + ps * 0.95, py + ps * 0.55);
+            ctx.lineTo(px, py + ps * 0.55);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(120, 53, 15, 0.55)';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(px, py - ps);
+            ctx.lineTo(px + ps * 0.95, py + ps * 0.55);
+            ctx.lineTo(px - ps * 0.95, py + ps * 0.55);
+            ctx.closePath();
+            ctx.stroke();
+          } else if (r1 < 0.08) {
+            // Sparkling turquoise desert oasis pool + palm tuft
+            ctx.fillStyle = '#38bdf8';
+            ctx.strokeStyle = '#ca8a04';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(px, py, 26, 15, 0.15, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = 'rgba(224, 242, 254, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(px - 6, py - 4, 10, 4, 0.15, 0, Math.PI * 2);
+            ctx.fill();
+            // Tiny green palm frond cluster next to oasis
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath();
+            ctx.arc(px + 22, py - 10, 7, 0, Math.PI * 2);
+            ctx.arc(px + 28, py - 6, 5, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (r2 > 0.78 && r1 > 0.25 && r1 < 0.7) {
+            // Cute desert cactus silhouette
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath();
+            ctx.roundRect(px - 3.5, py - 14, 7, 18, 3);
+            ctx.roundRect(px - 10, py - 9, 7, 4, 2);
+            ctx.roundRect(px - 10, py - 13, 4, 7, 2);
+            ctx.roundRect(px + 3, py - 7, 7, 4, 2);
+            ctx.roundRect(px + 6, py - 11, 4, 7, 2);
+            ctx.fill();
+          } else if (r1 > 0.14 && r1 < 0.24) {
+            // Weathered sandstone boulder
+            ctx.fillStyle = '#d97706';
+            ctx.strokeStyle = '#92400e';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.ellipse(px, py, 12, 8, -0.2, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
           }
         } else {
           // Twinkling stars & mini asteroids
