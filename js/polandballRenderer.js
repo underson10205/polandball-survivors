@@ -1074,6 +1074,195 @@ window.PBRenderer = (() => {
         drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.1 });
         break;
 
+      case 'greece_ball':
+        drawFlagCircle(ctx, r, () => {
+          // Authentic Greece flag: 9 alternating blue & white stripes + top-left blue canton with white cross
+          const stripeH = (r * 2) / 9;
+          for (let i = 0; i < 9; i++) {
+            ctx.fillStyle = i % 2 === 0 ? '#0d5eaf' : '#ffffff';
+            ctx.fillRect(-r, -r + i * stripeH, r * 2, stripeH + 0.5);
+          }
+          const cw = r * 1.02;
+          const ch = stripeH * 5;
+          ctx.fillStyle = '#0d5eaf';
+          ctx.fillRect(-r, -r, cw, ch);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r + cw * 0.4, -r, cw * 0.2, ch);
+          ctx.fillRect(-r, -r + ch * 0.4, cw, ch * 0.2);
+        });
+        // Cute ancient Greek Hoplite bronze rim & crimson plume crest!
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.6, r * 0.08);
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.92, r * 0.52, Math.PI, 0);
+        ctx.quadraticCurveTo(r * 0.56, -r * 0.72, 0, -r * 0.85);
+        ctx.quadraticCurveTo(-r * 0.56, -r * 0.72, -r * 0.52, -r * 0.92);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#d97706';
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.58, -r * 0.95, r * 1.16, r * 0.2, r * 0.08);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.02 });
+        break;
+
+      case 'brazil_ball':
+        drawFlagCircle(ctx, r, () => {
+          // Authentic Brazil flag: Green field + yellow diamond + blue celestial globe & white sash!
+          ctx.fillStyle = '#009c3b';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.fillStyle = '#ffdf00';
+          ctx.beginPath();
+          ctx.moveTo(0, -r * 0.76);
+          ctx.lineTo(r * 0.86, 0);
+          ctx.lineTo(0, r * 0.76);
+          ctx.lineTo(-r * 0.86, 0);
+          ctx.closePath();
+          ctx.fill();
+          // Blue celestial globe
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(0, 0.05 * r, r * 0.42, 0, Math.PI * 2);
+          ctx.fillStyle = '#002776';
+          ctx.fill();
+          ctx.clip();
+          // White curved Ordem e Progresso band
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = Math.max(2, r * 0.12);
+          ctx.beginPath();
+          ctx.arc(-r * 0.1, r * 0.65, r * 0.68, Math.PI * 1.25, Math.PI * 1.85);
+          ctx.stroke();
+          // Tiny stars in globe
+          ctx.fillStyle = '#ffffff';
+          for (const [sx, sy] of [[-0.14, 0.24], [0, 0.3], [0.16, 0.22], [0.06, 0.14]]) {
+            ctx.beginPath();
+            ctx.arc(sx * r, sy * r, Math.max(1, r * 0.035), 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.14 });
+        break;
+
+      case 'korea_ball':
+        drawFlagCircle(ctx, r, () => {
+          // Authentic South Korea flag: White field + Red/Blue Taegeuk + 4 black trigrams!
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Taegeuk (red top, blue bottom S-curve) positioned slightly lower so eyes sit cleanly above
+          const cy = r * 0.2;
+          const tr = r * 0.34;
+          ctx.fillStyle = '#cd2e3a';
+          ctx.beginPath();
+          ctx.arc(0, cy, tr, Math.PI, 0);
+          ctx.arc(tr * 0.5, cy, tr * 0.5, 0, Math.PI, false);
+          ctx.arc(-tr * 0.5, cy, tr * 0.5, 0, Math.PI, true);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#0047a0';
+          ctx.beginPath();
+          ctx.arc(0, cy, tr, 0, Math.PI);
+          ctx.arc(-tr * 0.5, cy, tr * 0.5, Math.PI, 0, false);
+          ctx.arc(tr * 0.5, cy, tr * 0.5, Math.PI, 0, true);
+          ctx.closePath();
+          ctx.fill();
+          // 4 Corner Black Trigrams (simplified crisp bars)
+          ctx.strokeStyle = '#111827';
+          ctx.lineWidth = Math.max(1.5, r * 0.065);
+          const corners = [
+            [-0.58, -0.45, -0.7], [0.58, -0.45, 0.7],
+            [-0.58, 0.56, 0.7], [0.58, 0.56, -0.7]
+          ];
+          for (const [cx0, cy0, rot] of corners) {
+            ctx.save();
+            ctx.translate(cx0 * r, cy0 * r);
+            ctx.rotate(rot);
+            for (let b = -1; b <= 1; b++) {
+              ctx.beginPath();
+              ctx.moveTo(-r * 0.16, b * r * 0.09);
+              ctx.lineTo(r * 0.16, b * r * 0.09);
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+        });
+        // Space satellite antenna dish on top (Stage 3 theme!)
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.6, r * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 0.92);
+        ctx.lineTo(0, -r * 1.32);
+        ctx.stroke();
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(0, -r * 1.36, r * 0.14, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.18 });
+        break;
+
+      case 'saudi_ball': {
+        // Red & white checkered Keffiyeh cloth drapes behind ball!
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.8, r * 0.08);
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.12, r * 0.42);
+        ctx.quadraticCurveTo(-r * 1.2, -r * 0.55, -r * 0.65, -r * 1.05);
+        ctx.lineTo(r * 0.65, -r * 1.05);
+        ctx.quadraticCurveTo(r * 1.2, -r * 0.55, r * 1.12, r * 0.42);
+        ctx.lineTo(r * 0.78, r * 0.52);
+        ctx.lineTo(-r * 0.78, r * 0.52);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Red pattern stripes on keffiyeh sides
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = Math.max(1.5, r * 0.065);
+        for (let k = -1; k <= 1; k++) {
+          const sy = k * r * 0.22;
+          ctx.beginPath();
+          ctx.moveTo(-r * 1.08, sy); ctx.lineTo(-r * 0.85, sy);
+          ctx.moveTo(r * 0.85, sy); ctx.lineTo(r * 1.08, sy);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        drawFlagCircle(ctx, r, () => {
+          // Authentic Saudi Arabia flag: Deep green (#006c35) + white calligraphy & scimitar sword!
+          ctx.fillStyle = '#006c35';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Stylized white Shahada calligraphy strokes
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = Math.max(1.6, r * 0.075);
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.52, r * 0.22);
+          ctx.quadraticCurveTo(-r * 0.2, r * 0.08, r * 0.1, r * 0.22);
+          ctx.quadraticCurveTo(r * 0.35, r * 0.12, r * 0.54, r * 0.22);
+          ctx.stroke();
+          // Crisp white horizontal scimitar sword underneath
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r * 0.52, r * 0.42, r * 0.96, r * 0.1);
+          ctx.fillRect(r * 0.34, r * 0.34, r * 0.08, r * 0.26);
+        });
+        // Black Agal cord ring atop Keffiyeh
+        ctx.save();
+        ctx.fillStyle = '#111827';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.6, r * 0.07);
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.78, -r * 1.12, r * 1.56, r * 0.26, r * 0.12);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.14 });
+        break;
+      }
+
       case 'boss_prussia':
         drawFlagCircle(ctx, r, () => {
           ctx.fillStyle = '#111827';

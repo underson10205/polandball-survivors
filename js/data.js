@@ -691,6 +691,26 @@ window.PBData = (() => {
     kazakh_brick: { id: 'kazakh_brick', name: 'カザフスタン・ブリック', hp: 275, speed: 62, damage: 16, radius: 24, xp: 15, score: 50, desc: 'ずっしり重い長方形の守護壁。ノックバックに強い！' },
     turret_ball: { id: 'turret_ball', name: '砲台ボール', hp: 102, speed: 68, damage: 12, radius: 18, xp: 11, score: 40, shooter: true, desc: '距離を取りながらエネルギー弾を撃ってくる厄介者。' },
     alien_ball: { id: 'alien_ball', name: 'エイリアン6ボール', hp: 165, speed: 110, damage: 15, radius: 18, xp: 13, score: 48, desc: '宇宙空間を漂う謎の緑エイリアン6ボール。' },
+    greece_ball: {
+      id: 'greece_ball', name: 'ギリシャボール', stageTag: '🌿 Stage 1 固有の敵',
+      hp: 74, speed: 92, damage: 11, radius: 18, xp: 7, score: 26,
+      desc: 'Stage 1（大草原）に登場！古代ギリシャの赤いトサカ兜を被った堅実な重装歩兵ボール。'
+    },
+    brazil_ball: {
+      id: 'brazil_ball', name: 'ブラジルボール', stageTag: '☁️ Stage 2 固有の敵',
+      hp: 88, speed: 124, damage: 13, radius: 18, xp: 9, score: 34,
+      desc: 'Stage 2（成層圏）に登場！青空に映える緑と黄色の俊足サンバステップ・ボール！'
+    },
+    korea_ball: {
+      id: 'korea_ball', name: '韓国ボール', stageTag: '🌌 Stage 3 固有の敵',
+      hp: 132, speed: 96, damage: 14, radius: 18, xp: 12, score: 44, shooter: true,
+      desc: 'Stage 3（宇宙軌道）に登場！衛星アンテナからエネルギー弾を放つハイテク宇宙ボール！'
+    },
+    saudi_ball: {
+      id: 'saudi_ball', name: 'サウジアラビアボール', stageTag: '🏜️ Stage 4 固有の敵',
+      hp: 118, speed: 108, damage: 13, radius: 19, xp: 11, score: 40, coinBonus: true,
+      desc: 'Stage 4（古代砂漠）に登場！クーフィーヤ頭巾のタフな砂漠ボール。倒すとコインを落としやすい！'
+    },
     // === Stage 1 (ヨーロッパ大草原) Bosses ===
     boss_viking: {
       id: 'boss_viking', name: '巨大バイキング王', stageTag: '🌿 Stage 1 中ボス(1:30)',

@@ -1251,21 +1251,26 @@ window.PBEngine = (() => {
   }
 
   function getWavePool(t, stageId) {
+    if (stageId === 'desert') {
+      if (t < 60) return ['saudi_ball', 'saudi_ball', 'mali_ball', 'cameroon_ball', 'pirate_ball', 'speed_ball'];
+      if (t < 160) return ['saudi_ball', 'saudi_ball', 'mali_ball', 'cameroon_ball', 'turret_ball', 'viking_ball', 'speed_ball'];
+      return ['saudi_ball', 'saudi_ball', 'mali_ball', 'cameroon_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'speed_ball'];
+    }
     if (stageId === 'space') {
-      if (t < 60) return ['alien_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball'];
-      if (t < 180) return ['alien_ball', 'cameroon_ball', 'mali_ball', 'turret_ball', 'kazakh_brick', 'speed_ball'];
-      return ['alien_ball', 'cameroon_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'speed_ball'];
+      if (t < 60) return ['korea_ball', 'korea_ball', 'alien_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball'];
+      if (t < 180) return ['korea_ball', 'korea_ball', 'alien_ball', 'cameroon_ball', 'mali_ball', 'turret_ball', 'kazakh_brick', 'speed_ball'];
+      return ['korea_ball', 'korea_ball', 'alien_ball', 'cameroon_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'speed_ball'];
     }
     if (stageId === 'sky') {
-      if (t < 60) return ['pirate_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'slime_ball'];
-      if (t < 150) return ['pirate_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball', 'viking_ball'];
-      return ['cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'alien_ball'];
+      if (t < 60) return ['brazil_ball', 'brazil_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'slime_ball'];
+      if (t < 150) return ['brazil_ball', 'brazil_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball', 'viking_ball'];
+      return ['brazil_ball', 'brazil_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'alien_ball'];
     }
-    // Meadow
-    if (t < 40) return ['slime_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball'];
-    if (t < 100) return ['slime_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball'];
-    if (t < 210) return ['pirate_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick'];
-    return ['cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'alien_ball'];
+    // Meadow (Stage 1)
+    if (t < 40) return ['greece_ball', 'greece_ball', 'slime_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball'];
+    if (t < 100) return ['greece_ball', 'greece_ball', 'slime_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball'];
+    if (t < 210) return ['greece_ball', 'greece_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick'];
+    return ['greece_ball', 'greece_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'alien_ball'];
   }
 
   function spawnEnemy(id, scale = 1, customPos = null) {
@@ -1621,7 +1626,7 @@ window.PBEngine = (() => {
       const r = Math.random();
       const anyLowHp = state.players.some(p => !p.downed && !p.disconnected && p.hp < p.maxHp * 0.55);
       const healChance = (anyLowHp ? 0.048 : 0.034) + (state.difficulty?.healBonus || 0);
-      if (e.type === 'mali_ball' && r < 0.18) {
+      if ((e.type === 'mali_ball' || e.type === 'saudi_ball') && r < 0.18) {
         state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.max(2, Math.round(4 * state.stage.coinMult)) });
       } else if (r < 0.025) {
         state.pickups.push({ id: state.nextEid++, kind: 'coin', x: e.x + 8, y: e.y + 4, val: Math.max(1, Math.round(2 * state.stage.coinMult)) });
