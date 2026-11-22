@@ -6,7 +6,7 @@ window.PBStorage = (() => {
     coins: 0,
     totalKills: 0,
     totalRuns: 0,
-    unlockedChars: ['poland', 'japan', 'usa', 'uk', 'france', 'germany', 'italy', 'russia'],
+    unlockedChars: ['poland', 'japan', 'usa', 'uk', 'france', 'germany', 'italy', 'russia', 'spain'],
     shop: {
       might: 0,
       maxHp: 0,

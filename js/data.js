@@ -98,6 +98,18 @@ window.PBData = (() => {
       badgeColor: '#1d4ed8'
     },
     {
+      id: 'spain',
+      name: 'スペイン',
+      en: 'Spain',
+      tagline: '情熱の赤いムレータ＆闘牛士の舞！',
+      lore: '「¡Olé!」の掛け声とともに戦場を華麗に舞う情熱のボール。弧を描く闘牛サーベルで敵を切り裂く！',
+      startWeapon: 'matador',
+      unlockCost: 0,
+      stats: { maxHp: 118, speed: 204, might: 1.08, cooldown: 0.94, area: 1.08, amount: 0, armor: 1, regen: 0.25, magnet: 90, xpMult: 1.05 },
+      passiveDesc: '攻撃力 +8% / 移動速度 +7% / CD -6%',
+      badgeColor: '#aa151b'
+    },
+    {
       id: 'sweden',
       name: 'スウェーデン',
       en: 'Sweden',
@@ -144,6 +156,18 @@ window.PBData = (() => {
       stats: { maxHp: 102, speed: 226, might: 1.08, cooldown: 0.89, area: 1.05, amount: 0, armor: 0, regen: 0.15, magnet: 115, xpMult: 1.22 },
       passiveDesc: '移動速度 +20% / 経験値 +22% / CD -11%',
       badgeColor: '#e11d48'
+    },
+    {
+      id: 'portugal',
+      name: 'ポルトガル',
+      en: 'Portugal',
+      tagline: '大航海時代を切り拓く不屈の航海王！',
+      lore: '七つの海を制した大航海時代の先駆者！キャラベル船の連装大砲と黄金羅針盤で敵の大軍を撃沈する。',
+      startWeapon: 'caravel',
+      unlockCost: 640,
+      stats: { maxHp: 128, speed: 202, might: 1.12, cooldown: 0.92, area: 1.12, amount: 0, armor: 1, regen: 0.3, magnet: 105, xpMult: 1.12 },
+      passiveDesc: '攻撃力 +12% / 攻撃範囲 +12% / 経験値 +12%',
+      badgeColor: '#047857'
     },
     {
       id: 'israel',
@@ -311,6 +335,26 @@ window.PBData = (() => {
       stat: 'durationMult',
       perLevel: 0.15,
       evolves: 'med_cross'
+    },
+    paella: {
+      id: 'paella',
+      name: '情熱パエリア',
+      icon: '🥘',
+      maxLevel: 5,
+      desc: '攻撃力 +8%/Lv ＆ 移動速度 +5%/Lv（闘牛サーベル進化素材）',
+      stat: 'mightAndSpeed',
+      perLevel: 1,
+      evolves: 'matador'
+    },
+    nata: {
+      id: 'nata',
+      name: 'エッグタルト',
+      icon: '🥧',
+      maxLevel: 5,
+      desc: '攻撃範囲 +8%/Lv ＆ HP回復 +0.35/秒/Lv（キャラベル大砲進化素材）',
+      stat: 'areaAndRegen',
+      perLevel: 1,
+      evolves: 'caravel'
     }
   };
 
@@ -593,6 +637,46 @@ window.PBData = (() => {
         'ダメージ間隔短縮 ＆ 押し戻し強化',
         '結界範囲 +18% ＆ 威力大幅UP',
         '【MAX】超広範囲の鉄壁バリア！'
+      ]
+    },
+    matador: {
+      id: 'matador',
+      name: '情熱の闘牛サーベル',
+      icon: '🌹',
+      maxLevel: 5,
+      evolvePassive: 'paella',
+      evolvedName: 'エル・マタドール・オーレ',
+      evolvedIcon: '💃',
+      evolvedDesc: '真紅のバラと黄金サーベルが華麗な弧を描いて全方位を舞い切る！',
+      desc: '美しい弧を描いてカーブしながら敵を貫通する情熱のサーベル刃を放つ。',
+      color: '#e11d48',
+      type: 'cross_spin',
+      base: { damage: 25, cooldown: 1.32, count: 2, speed: 390, area: 1.0, pierce: 6, duration: 1.55 },
+      levelUp: [
+        'サーベル +1 ＆ 威力UP',
+        'カーブ軌道の範囲拡大 ＆ クールダウン短縮',
+        'サーベル +1 ＆ 貫通力UP',
+        '【MAX】威力・飛距離・貫通力が大幅強化！'
+      ]
+    },
+    caravel: {
+      id: 'caravel',
+      name: 'キャラベル連装大砲',
+      icon: '💣',
+      maxLevel: 5,
+      evolvePassive: 'nata',
+      evolvedName: '大航海アルマダ砲撃',
+      evolvedIcon: '⛵',
+      evolvedDesc: '黄金艦隊の全舷側斉射！命中時に大航海スプラッシュ爆風が発生！',
+      desc: '左右の両舷へ重砲弾を一斉発射！敵を貫通しながら爆風で吹き飛ばす。',
+      color: '#059669',
+      type: 'broadside',
+      base: { damage: 29, cooldown: 1.48, count: 1, speed: 440, area: 1.0, pierce: 3, knockback: 165 },
+      levelUp: [
+        '両舷の発射数 +1 ＆ 威力UP',
+        '砲弾サイズ・爆風拡大 ＆ 貫通力 +1',
+        'クールダウン短縮 ＆ 威力大幅UP',
+        '【MAX】両舷の斉射火力＆爆風が最大強化！'
       ]
     }
   };

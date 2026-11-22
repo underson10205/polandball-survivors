@@ -219,6 +219,14 @@ window.PBEngine = (() => {
         amountBonus += Math.ceil(lvl / 2); // +1 at Lv.1, +2 at Lv.3, +3 at Lv.5
         cooldownMult -= 0.04 * lvl;
       }
+      if (def.stat === 'mightAndSpeed') {
+        mightMult += 0.08 * lvl;
+        speedMult += 0.05 * lvl;
+      }
+      if (def.stat === 'areaAndRegen') {
+        areaMult += 0.08 * lvl;
+        regenBonus += 0.35 * lvl;
+      }
     }
 
     if (p.synergyActive) {
@@ -1102,6 +1110,75 @@ window.PBEngine = (() => {
         });
         break;
       }
+
+      case 'cross_spin': {
+        // Spain: Curving Matador Flamenco Sabers sweeping in graceful opposing arcs!
+        Audio.playSfx('slash');
+        const total = w.evolved ? Math.min(8, Math.max(6, ws.count + 2)) : Math.min(6, ws.count);
+        for (let i = 0; i < total; i++) {
+          const a = baseAngle + (i * Math.PI * 2) / total + (w.evolved ? state.time * 0.6 : 0);
+          const sign = i % 2 === 0 ? 1 : -1;
+          pushProjectile({
+            id: state.nextEid++,
+            kind: 'matador',
+            evolved: w.evolved,
+            owner: p.pid,
+            weapon: w,
+            x: p.x + Math.cos(a) * 14,
+            y: p.y + Math.sin(a) * 14,
+            vx: Math.cos(a) * ws.speed,
+            vy: Math.sin(a) * ws.speed,
+            speed: ws.speed,
+            curveRate: sign * (w.evolved ? 2.25 : 1.75),
+            radius: (w.evolved ? 16 : 14.5) * ws.area,
+            damage: ws.damage,
+            pierce: ws.pierce,
+            knockback: ws.knockback,
+            life: w.evolved ? 1.85 : ws.duration,
+            spin: a,
+            hitSet: new Map()
+          });
+        }
+        break;
+      }
+
+      case 'broadside': {
+        // Portugal: Age of Discovery Caravel dual-broadside cannonball salvos!
+        Audio.playSfx('explosion');
+        const dirA = Math.atan2(p.lookY, p.lookX);
+        const sideAngles = w.evolved
+          ? [dirA + Math.PI / 2, dirA - Math.PI / 2, dirA + Math.PI / 4, dirA - Math.PI / 4]
+          : [dirA + Math.PI / 2, dirA - Math.PI / 2];
+        const perSide = w.evolved
+          ? Math.min(3, Math.max(2, Math.ceil(ws.count * 0.65)))
+          : Math.min(4, Math.max(1, ws.count));
+        for (const sideA of sideAngles) {
+          for (let i = 0; i < perSide; i++) {
+            const spread = (i - (perSide - 1) / 2) * 0.19;
+            const a = sideA + spread;
+            pushProjectile({
+              id: state.nextEid++,
+              kind: 'caravel',
+              evolved: w.evolved,
+              owner: p.pid,
+              weapon: w,
+              x: p.x + Math.cos(a) * 16,
+              y: p.y + Math.sin(a) * 16,
+              vx: Math.cos(a) * ws.speed,
+              vy: Math.sin(a) * ws.speed,
+              radius: (w.evolved ? 15.5 : 13.5) * ws.area,
+              blastRadius: (w.evolved ? 56 : 42) * ws.area,
+              damage: ws.damage,
+              pierce: ws.pierce,
+              knockback: ws.knockback,
+              life: w.evolved ? 1.45 : 1.25,
+              spin: 0,
+              hitSet: new Map()
+            });
+          }
+        }
+        break;
+      }
     }
   }
 
@@ -1622,6 +1699,14 @@ window.PBEngine = (() => {
         else if (pr.x > owner.x + halfW && pr.vx > 0) pr.vx = -pr.vx;
         if (pr.y < owner.y - halfH && pr.vy < 0) pr.vy = -pr.vy;
         else if (pr.y > owner.y + halfH && pr.vy > 0) pr.vy = -pr.vy;
+      } else if (pr.kind === 'matador') {
+        const curA = Math.atan2(pr.vy, pr.vx) + (pr.curveRate || 1.75) * dt;
+        const spd = pr.speed || 390;
+        pr.vx = Math.cos(curA) * spd;
+        pr.vy = Math.sin(curA) * spd;
+        pr.spin += dt * (pr.evolved ? 14 : 11);
+      } else if (pr.kind === 'caravel') {
+        pr.spin += dt * 9;
       }
 
       if (!(pr.kind === 'baguette' && pr.evolved)) {
@@ -1645,6 +1730,22 @@ window.PBEngine = (() => {
             return false;
           } else {
             damageEnemy(e, pr.damage, ownerP, pr.weapon, pr.x, pr.y, pr.knockback || 100);
+            if (pr.kind === 'caravel' && pr.blastRadius) {
+              const splashR = pr.blastRadius;
+              if (state.novas.length < 18) {
+                state.novas.push({ x: pr.x, y: pr.y, radius: 10, maxRadius: splashR, evolved: pr.evolved, life: 0.19, maxLife: 0.19, isBlast: true });
+              }
+              const splashDmg = Math.round(pr.damage * (pr.evolved ? 0.55 : 0.4));
+              forEachEnemyNear(pr.x, pr.y, splashR, (e2) => {
+                if (e2.id === e.id) return;
+                const sdx = e2.x - pr.x;
+                const sdy = e2.y - pr.y;
+                const sSum = splashR + e2.radius;
+                if (sdx * sdx + sdy * sdy < sSum * sSum) {
+                  damageEnemy(e2, splashDmg, ownerP, pr.weapon, pr.x, pr.y, 120);
+                }
+              });
+            }
             pr.pierce--;
             if (pr.pierce <= 0) return false;
           }
@@ -2915,6 +3016,54 @@ window.PBEngine = (() => {
         ctx.beginPath();
         ctx.moveTo(22, 0); ctx.lineTo(12, -5); ctx.lineTo(12, 5);
         ctx.closePath();
+        ctx.fill();
+      } else if (pr.kind === 'matador') {
+        const a = typeof pr.angle === 'number' ? pr.angle : Math.atan2(pr.vy, pr.vx);
+        ctx.rotate(a);
+        // Crimson muleta cape arc ribbon
+        ctx.strokeStyle = pr.evolved ? 'rgba(250, 204, 21, 0.85)' : 'rgba(225, 29, 72, 0.78)';
+        ctx.lineWidth = pr.evolved ? 7 : 5;
+        ctx.beginPath();
+        ctx.arc(-pr.radius * 0.25, 0, pr.radius * 1.05, -0.95, 0.95);
+        ctx.stroke();
+        // Sleek silver/gold matador saber blade
+        ctx.fillStyle = pr.evolved ? '#fde047' : '#f8fafc';
+        ctx.strokeStyle = '#1a1d26';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(pr.radius * 1.45, 0);
+        ctx.lineTo(-pr.radius * 0.55, -pr.radius * 0.28);
+        ctx.lineTo(-pr.radius * 0.85, 0);
+        ctx.lineTo(-pr.radius * 0.55, pr.radius * 0.28);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Crimson rose guard at hilt
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath();
+        ctx.arc(-pr.radius * 0.45, 0, pr.radius * 0.34, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+      } else if (pr.kind === 'caravel') {
+        const a = typeof pr.angle === 'number' ? pr.angle : Math.atan2(pr.vy, pr.vx);
+        ctx.rotate(a);
+        // Fiery cannonball wake / golden sea ring when evolved
+        ctx.fillStyle = pr.evolved ? 'rgba(56, 189, 248, 0.55)' : 'rgba(249, 115, 22, 0.55)';
+        ctx.beginPath();
+        ctx.moveTo(-pr.radius * 1.9, 0);
+        ctx.lineTo(-pr.radius * 0.3, -pr.radius * 0.75);
+        ctx.lineTo(-pr.radius * 0.3, pr.radius * 0.75);
+        ctx.closePath();
+        ctx.fill();
+        // Heavy cannonball (dark iron -> golden armada ball when evolved)
+        ctx.fillStyle = pr.evolved ? '#facc15' : '#1e293b';
+        ctx.strokeStyle = '#1a1d26';
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.arc(0, 0, pr.radius * 0.92, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Specular highlight
+        ctx.fillStyle = pr.evolved ? '#fef9c3' : '#94a3b8';
+        ctx.beginPath();
+        ctx.arc(-pr.radius * 0.28, -pr.radius * 0.28, pr.radius * 0.25, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();

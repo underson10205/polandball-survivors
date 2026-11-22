@@ -767,6 +767,152 @@ window.PBRenderer = (() => {
         ctx.restore();
         break;
 
+      case 'spain':
+        drawFlagCircle(ctx, r, () => {
+          // Authentic 1:2:1 Spanish flag (Red - Gold - Red)
+          ctx.fillStyle = '#aa151b';
+          ctx.fillRect(-r, -r, r * 2, r * 0.5);
+          ctx.fillStyle = '#f1bf00';
+          ctx.fillRect(-r, -r * 0.5, r * 2, r);
+          ctx.fillStyle = '#aa151b';
+          ctx.fillRect(-r, r * 0.5, r * 2, r * 0.5);
+          // Simplified Spanish Coat of Arms (left of center on yellow band)
+          const cx = -r * 0.34;
+          const cy = r * 0.14;
+          // Pillars of Hercules
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fillRect(cx - r * 0.24, cy - r * 0.16, r * 0.08, r * 0.32);
+          ctx.fillRect(cx + r * 0.16, cy - r * 0.16, r * 0.08, r * 0.32);
+          // Red ribbon across pillars
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(cx - r * 0.27, cy - r * 0.03, r * 0.54, r * 0.06);
+          // Heraldic shield
+          ctx.fillStyle = '#b91c1c';
+          ctx.strokeStyle = INK;
+          ctx.lineWidth = Math.max(1, r * 0.045);
+          ctx.beginPath();
+          ctx.roundRect(cx - r * 0.14, cy - r * 0.16, r * 0.28, r * 0.3, [2, 2, r * 0.12, r * 0.12]);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(cx - r * 0.11, cy - r * 0.13, r * 0.1, r * 0.12);
+          ctx.fillRect(cx + r * 0.01, cy, r * 0.1, r * 0.11);
+          // Tiny crown above shield
+          ctx.fillStyle = '#dc2626';
+          ctx.beginPath();
+          ctx.arc(cx, cy - r * 0.21, r * 0.09, Math.PI, 0);
+          ctx.fill();
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(cx - r * 0.1, cy - r * 0.22, r * 0.2, r * 0.05);
+        });
+        drawEyes(ctx, r, mood, lookX, lookY);
+        // Iconic Black Matador Montera Hat + Crimson Rose!
+        ctx.save();
+        ctx.fillStyle = '#18181b';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.5, r * 0.08);
+        // Side ear-caps of the montera
+        ctx.beginPath();
+        ctx.ellipse(-r * 0.72, -r * 0.76, r * 0.26, r * 0.22, -0.35, 0, Math.PI * 2);
+        ctx.ellipse(r * 0.72, -r * 0.76, r * 0.26, r * 0.22, 0.35, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Main curved crown of the montera
+        ctx.beginPath();
+        ctx.ellipse(0, -r * 0.9, r * 0.68, r * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Gold embroidery accent
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = Math.max(1.4, r * 0.06);
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.88, r * 0.42, Math.PI * 1.15, Math.PI * 1.85);
+        ctx.stroke();
+        // Crimson Rose tucked on the right side
+        ctx.fillStyle = '#e11d48';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.1, r * 0.05);
+        ctx.beginPath();
+        ctx.arc(r * 0.56, -r * 0.92, r * 0.16, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fda4af';
+        ctx.beginPath();
+        ctx.arc(r * 0.54, -r * 0.94, r * 0.06, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+
+      case 'portugal':
+        drawFlagCircle(ctx, r, () => {
+          // Authentic Portugal flag: 40% deep green (left) / 60% crimson red (right)
+          const splitX = -r * 0.2;
+          ctx.fillStyle = '#006600';
+          ctx.fillRect(-r, -r, r * 0.8, r * 2);
+          ctx.fillStyle = '#da291c';
+          ctx.fillRect(splitX, -r, r * 1.2, r * 2);
+          // Golden Armillary Sphere centered on the green/red boundary
+          const cy = r * 0.14;
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = Math.max(1.6, r * 0.075);
+          ctx.beginPath();
+          ctx.arc(splitX, cy, r * 0.34, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(splitX, cy, r * 0.34, r * 0.14, 0.35, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(splitX, cy, r * 0.14, r * 0.34, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          // Portuguese Shield (red border + white inner + 5 blue quinas)
+          ctx.fillStyle = '#dc2626';
+          ctx.strokeStyle = INK;
+          ctx.lineWidth = Math.max(1.1, r * 0.05);
+          ctx.beginPath();
+          ctx.roundRect(splitX - r * 0.19, cy - r * 0.21, r * 0.38, r * 0.42, [2, 2, r * 0.16, r * 0.16]);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.roundRect(splitX - r * 0.12, cy - r * 0.14, r * 0.24, r * 0.28, [1, 1, r * 0.1, r * 0.1]);
+          ctx.fill();
+          // 5 blue escutcheons (quinas) in cross pattern
+          ctx.fillStyle = '#1d4ed8';
+          const q = r * 0.036;
+          for (const [qx, qy] of [[0, 0], [0, -0.08], [0, 0.08], [-0.07, 0], [0.07, 0]]) {
+            ctx.beginPath();
+            ctx.arc(splitX + qx * r, cy + qy * r, q, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+        drawEyes(ctx, r, mood, lookX, lookY);
+        // Age of Discovery Navigator Tricorne Hat with Gold Trim & Azure Plume!
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.6, r * 0.08);
+        // Feather plume behind hat
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(r * 0.45, -r * 0.95);
+        ctx.quadraticCurveTo(r * 1.05, -r * 1.48, r * 0.62, -r * 1.56);
+        ctx.quadraticCurveTo(r * 0.32, -r * 1.38, r * 0.3, -r * 0.96);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Navy admiral tricorne hat body
+        ctx.fillStyle = '#1e3a8a';
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.92, -r * 0.72);
+        ctx.quadraticCurveTo(-r * 0.55, -r * 1.45, 0, -r * 1.24);
+        ctx.quadraticCurveTo(r * 0.55, -r * 1.45, r * 0.92, -r * 0.72);
+        ctx.quadraticCurveTo(0, -r * 0.56, -r * 0.92, -r * 0.72);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Golden trim & compass emblem on hat front
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = Math.max(1.5, r * 0.065);
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.74, -r * 0.8);
+        ctx.quadraticCurveTo(0, -r * 1.15, r * 0.74, -r * 0.8);
+        ctx.stroke();
+        drawStar(ctx, 0, -r * 0.96, 4, r * 0.16, r * 0.06, '#facc15');
+        ctx.restore();
+        break;
+
       // === ENEMIES ===
       case 'slime_ball':
         drawFlagCircle(ctx, r, () => {
