@@ -1521,20 +1521,36 @@ window.PBRenderer = (() => {
 
       case 'boss_mongol': {
         drawFlagCircle(ctx, r, () => {
-          // Royal Mongol Blue banner with crimson bands & golden Soyombo crest
-          ctx.fillStyle = '#0284c7';
+          // Authentic Polandball Mongol Empire flag: Deep blue (#004DAF) with white Flame-Sun-Crescent!
+          ctx.fillStyle = '#004daf';
           ctx.fillRect(-r, -r, r * 2, r * 2);
-          ctx.fillStyle = '#dc2626';
-          ctx.fillRect(-r, -r, r * 0.56, r * 2);
-          ctx.fillRect(r * 0.44, -r, r * 0.56, r * 2);
-          // Golden Soyombo sun & crescent on left
-          ctx.fillStyle = '#facc15';
+
+          // White Soyombo top symbol (Flame + Sun + Upward Crescent -> iconic "smiling" face!)
+          ctx.fillStyle = '#ffffff';
+          // 1. Upward white crescent near bottom (the iconic "smile" curve!)
           ctx.beginPath();
-          ctx.arc(-r * 0.72, r * 0.14, r * 0.16, 0, Math.PI * 2);
+          ctx.arc(0, r * 0.28, r * 0.44, 0.12 * Math.PI, 0.88 * Math.PI);
+          ctx.arc(0, r * 0.16, r * 0.39, 0.86 * Math.PI, 0.14 * Math.PI, true);
+          ctx.closePath();
           ctx.fill();
-          ctx.fillRect(-r * 0.8, r * 0.32, r * 0.16, r * 0.28);
-          // Golden Tamga / steppe emblem in center
-          drawStar(ctx, 0, r * 0.36, 4, r * 0.24, r * 0.1, '#facc15');
+
+          // 2. White sun disk nestled above the crescent
+          ctx.beginPath();
+          ctx.arc(0, r * 0.24, r * 0.18, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 3. White three-tongued eternal flame above the sun
+          ctx.beginPath();
+          ctx.moveTo(0, -r * 0.28);
+          ctx.quadraticCurveTo(r * 0.1, -r * 0.1, r * 0.14, r * 0.02);
+          ctx.quadraticCurveTo(r * 0.22, -r * 0.12, r * 0.24, -r * 0.18);
+          ctx.quadraticCurveTo(r * 0.28, r * 0.02, r * 0.14, r * 0.1);
+          ctx.lineTo(-r * 0.14, r * 0.1);
+          ctx.quadraticCurveTo(-r * 0.28, r * 0.02, -r * 0.24, -r * 0.18);
+          ctx.quadraticCurveTo(-r * 0.22, -r * 0.12, -r * 0.14, r * 0.02);
+          ctx.quadraticCurveTo(-r * 0.1, -r * 0.1, 0, -r * 0.28);
+          ctx.closePath();
+          ctx.fill();
         });
         // Mongol Warrior Fur-Trimmed Conical Helmet with Crimson Plume!
         ctx.save();
@@ -1563,14 +1579,14 @@ window.PBRenderer = (() => {
         ctx.roundRect(-r * 0.96, -r * 0.78, r * 1.92, r * 0.3, r * 0.14);
         ctx.fill(); ctx.stroke();
         ctx.restore();
-        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.02 });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.18, spacing: 0.34 });
         break;
       }
 
       case 'boss_byzantine': {
         drawFlagCircle(ctx, r, () => {
-          // Imperial Tyrian Purple-Crimson & Gold Tetragrammic Cross!
-          ctx.fillStyle = '#7e22ce';
+          // Imperial Crimson Red & Gold Palaiologos Tetragrammic Cross!
+          ctx.fillStyle = '#b91c1c';
           ctx.fillRect(-r, -r, r * 2, r * 2);
           // Bold gold Byzantine cross
           ctx.fillStyle = '#facc15';
@@ -1582,6 +1598,8 @@ window.PBRenderer = (() => {
           ctx.textBaseline = 'middle';
           ctx.fillText('B', -r * 0.48, r * 0.44);
           ctx.fillText('B', r * 0.48, r * 0.44);
+          ctx.fillText('B', -r * 0.48, -r * 0.44);
+          ctx.fillText('B', r * 0.48, -r * 0.44);
         });
         // Ornate Golden Byzantine Imperial Crown with Pearl Pendilia!
         ctx.save();

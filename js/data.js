@@ -806,8 +806,8 @@ window.PBData = (() => {
       id: 'boss_byzantine', name: 'ビザンツ帝国', stageTag: '🏜️ Stage 4 中ボス(4:30)',
       hp: 26000, speed: 106, damage: 37, radius: 46, xp: 300, score: 1750,
       isBoss: true, isMidBoss: true, shooter: true, summoner: true,
-      bulletPattern: 'ring12', bulletColor: '#a855f7', summonId: 'kazakh_brick',
-      desc: 'Stage 4（4分半）に出現する高貴なる東ローマ皇帝。紫の12方向弾幕＆重装護衛を展開！'
+      bulletPattern: 'ring12', bulletColor: '#dc2626', summonId: 'kazakh_brick',
+      desc: 'Stage 4（4分半）に出現する高貴なる東ローマ皇帝。紅蓮の12方向弾幕＆重装護衛を展開！'
     },
     boss_pyramid: {
       id: 'boss_pyramid', name: '黄金ギザ・ファラオ王', stageTag: '🏜️ Stage 4 最終ボス(6:00)',
