@@ -1033,6 +1033,32 @@ button, input {
   width: fit-content;
 }
 
+.gear-card.unobtained {
+  opacity: 0.72;
+  filter: grayscale(0.4);
+  border-style: dashed !important;
+  background: #f8fafc !important;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+.gear-card.unobtained:hover {
+  opacity: 0.95;
+  filter: grayscale(0);
+}
+
+.codex-gear-summary {
+  grid-column: 1 / -1;
+  background: #f8fafc;
+  border: 2px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
 .gacha-bonus-bar {
   display: flex;
   flex-wrap: wrap;

@@ -14,6 +14,7 @@
   let selectedStage = 'meadow';
   let selectedDifficulty = 'normal';
   let activeCodexTab = 'weapons';
+  let codexGearSlotFilter = 'all';
   let lastRunConfig = null;
 
   const DEFAULT_SLOT_CHARS = ['poland', 'japan', 'usa'];
@@ -618,6 +619,93 @@
         `;
         top.append(cv, info);
         card.appendChild(top);
+        content.appendChild(card);
+      }
+    } else if (activeCodexTab === 'gear') {
+      const items = Data.GEAR_ITEMS || [];
+      const rarities = Data.GEAR_RARITIES || {};
+      const slots = Data.GEAR_SLOTS || [];
+      const ownedIds = save.gearOwned || [];
+      const gearPlus = save.gearPlus || {};
+      const equipped = save.equipped || {};
+
+      // 1. Summary Bar & Slot Filter
+      const summaryBox = document.createElement('div');
+      summaryBox.className = 'codex-gear-summary';
+      const pct = Math.round((ownedIds.length / items.length) * 100);
+      summaryBox.innerHTML = `
+        <div>
+          <div style="font-weight:900;font-size:0.95rem;color:#1e293b;">
+            🛡️ 装備コレクション: <span style="color:#d97706;">${ownedIds.length} / ${items.length}種</span> (${pct}%)
+          </div>
+          <div style="font-size:0.75rem;color:#64748b;margin-top:2px;">
+            コインガチャで引くと図鑑が点灯＆効果が解放！ダブりで＋強化
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-tabs" style="margin:0;">
+            <button class="btn btn-sm filter-btn ${codexGearSlotFilter === 'all' ? 'active' : ''}" data-codex-slot="all">すべて (${items.length})</button>
+            ${slots.map(sl => {
+              const countInSlot = items.filter(it => it.slot === sl.id).length;
+              return `<button class="btn btn-sm filter-btn ${codexGearSlotFilter === sl.id ? 'active' : ''}" data-codex-slot="${sl.id}">${sl.icon} ${sl.name} (${countInSlot})</button>`;
+            }).join('')}
+          </div>
+          <button id="btn-codex-go-gacha" class="btn btn-sm btn-emerald" style="padding:5px 10px;font-size:0.78rem;">🎰 ガチャへGO</button>
+        </div>
+      `;
+      content.appendChild(summaryBox);
+
+      // Event listeners for filter buttons & gacha shortcut
+      summaryBox.querySelectorAll('[data-codex-slot]').forEach(b => {
+        b.addEventListener('click', () => {
+          Audio.playSfx('click');
+          codexGearSlotFilter = b.dataset.codexSlot;
+          renderCodex();
+        });
+      });
+      const goGachaBtn = summaryBox.querySelector('#btn-codex-go-gacha');
+      if (goGachaBtn) {
+        goGachaBtn.addEventListener('click', () => {
+          Audio.playSfx('click');
+          showScreen('gacha');
+        });
+      }
+
+      // 2. Filter & Render items
+      const filtered = items.filter(it => codexGearSlotFilter === 'all' || it.slot === codexGearSlotFilter);
+
+      for (const it of filtered) {
+        const isOwned = ownedIds.includes(it.id);
+        const rar = rarities[it.rarity] || { name: it.rarity, color: '#64748b', bg: '#f1f5f9', weight: 0 };
+        const slDef = slots.find(s => s.id === it.slot);
+        const plus = gearPlus[it.id] || 0;
+        const isEquipped = equipped[it.slot] === it.id;
+
+        const card = document.createElement('div');
+        card.className = `item-card gear-card rarity-${it.rarity}` + (isOwned ? '' : ' unobtained');
+
+        card.innerHTML = `
+          <div class="item-top">
+            <div class="item-icon" style="${isOwned ? '' : 'opacity:0.45;'}">${it.icon}</div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+                <span class="gear-rarity-pill" style="color:${rar.color};background:${rar.bg};">${rar.name}</span>
+                <span style="font-size:0.72rem;font-weight:900;color:#475569;">${slDef?.icon || ''} ${slDef?.name || ''}</span>
+                ${isEquipped ? '<span style="background:#16a34a;color:#fff;font-size:0.68rem;padding:2px 6px;border-radius:6px;font-weight:900;">装備中</span>' : ''}
+                ${!isOwned ? '<span style="background:#64748b;color:#fff;font-size:0.68rem;padding:2px 6px;border-radius:6px;font-weight:900;">🔒 未所持</span>' : ''}
+              </div>
+              <div class="item-title">${it.name}${plus > 0 ? ` <span style="color:#dc2626;">+${plus}</span>` : ''}</div>
+              <div class="item-desc">${isOwned ? formatGearStatsDesc(it, plus) : it.desc}</div>
+            </div>
+          </div>
+          <div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cbd5e1;font-size:0.74rem;display:flex;justify-content:space-between;align-items:center;">
+            ${isOwned
+              ? `<span style="font-weight:900;color:#16a34a;">✅ 入手済み${plus > 0 ? ` (強化 +${plus})` : ''}</span>`
+              : `<span style="font-weight:800;color:#64748b;">🔒 コインガチャで獲得可能</span>`
+            }
+            <span style="color:#64748b;font-weight:700;">排出率: ${rar.weight}%</span>
+          </div>
+        `;
         content.appendChild(card);
       }
     } else {
@@ -1279,25 +1367,18 @@
   $('btn-codex').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('codex'); });
   $('btn-ach').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('ach'); });
 
-  const resetBtn = $('btn-reset-save');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
+  document.querySelectorAll('.btn-add-coins').forEach(btn => {
+    btn.addEventListener('click', () => {
       Audio.ensure();
-      Audio.playSfx('click');
-      const ok = window.confirm('セーブデータ（コイン・ショップ強化・解放キャラ・ガチャ装備・実績）をすべて初期状態にリセットしますか？\n※この操作は取り消せません');
-      if (!ok) return;
-      Storage.resetAll();
-      selectedChar = 'poland';
-      selectedStage = 'meadow';
-      selectedDifficulty = 'normal';
-      activeGearFilter = 'all';
-      Audio.setMuted(false);
-      Audio.setBgmEnabled(true);
-      updateSoundButtons();
+      Audio.playSfx('coin');
+      Storage.addCoins(20000);
       refreshCoins();
-      showToast('🗑️ セーブデータを初期状態にリセットしました！');
+      if ($('screen-gacha') && $('screen-gacha').classList.contains('active')) {
+        renderGacha();
+      }
+      showToast('🪙 20,000コインを追加しました！（テスト用）');
     });
-  }
+  });
 
   $('btn-gacha-1').addEventListener('click', () => { Audio.ensure(); performGachaPull(1); });
   $('btn-gacha-10').addEventListener('click', () => { Audio.ensure(); performGachaPull(10); });
