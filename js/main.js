@@ -616,6 +616,58 @@
     $('modal-gacha-result').classList.add('active');
   }
 
+  // === PRESENT / GIFT CODE MODAL ===
+  function openGiftModal() {
+    Audio.ensure();
+    Audio.playSfx('click');
+    const input = $('input-gift-code');
+    const msg = $('gift-code-msg');
+    if (input) input.value = '';
+    if (msg) {
+      msg.textContent = '';
+      msg.style.color = '#475569';
+    }
+    const modal = $('modal-gift');
+    if (modal) modal.classList.add('active');
+    setTimeout(() => {
+      if (input) input.focus();
+    }, 60);
+  }
+
+  function closeGiftModal() {
+    const modal = $('modal-gift');
+    if (modal) modal.classList.remove('active');
+  }
+
+  function handleRedeemGiftCode() {
+    Audio.ensure();
+    const input = $('input-gift-code');
+    const msg = $('gift-code-msg');
+    if (!input) return;
+    const rawVal = input.value;
+    const res = Storage.redeemCode(rawVal);
+
+    if (res.success) {
+      Audio.playSfx('victory');
+      setTimeout(() => Audio.playSfx('coin'), 280);
+      if (msg) {
+        msg.style.color = '#15803d';
+        msg.textContent = res.message;
+      }
+      showToast(res.message);
+      input.value = '';
+      refreshCoins();
+      renderShop();
+      renderGacha();
+    } else {
+      Audio.playSfx('hurt');
+      if (msg) {
+        msg.style.color = res.reason === 'ALREADY_REDEEMED' ? '#d97706' : '#dc2626';
+        msg.textContent = res.message;
+      }
+    }
+  }
+
   function renderCodex() {
     const content = $('codex-content');
     content.innerHTML = '';
@@ -1578,6 +1630,13 @@
       }
       return;
     }
+    if ($('modal-gift')?.classList.contains('active')) {
+      if (e.code === 'Escape') {
+        e.preventDefault();
+        closeGiftModal();
+      }
+      return;
+    }
     if (e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
       if (Engine.isRunning()) {
         e.preventDefault();
@@ -1694,6 +1753,27 @@
   $('btn-gacha').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('gacha'); });
   $('btn-codex').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('codex'); });
   $('btn-ach').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('ach'); });
+  $('btn-gift')?.addEventListener('click', openGiftModal);
+  $('btn-shop-gift')?.addEventListener('click', openGiftModal);
+  $('btn-gacha-gift')?.addEventListener('click', openGiftModal);
+  $('btn-close-gift')?.addEventListener('click', () => {
+    Audio.playSfx('click');
+    closeGiftModal();
+  });
+  $('btn-x-close-gift')?.addEventListener('click', () => {
+    Audio.playSfx('click');
+    closeGiftModal();
+  });
+  $('modal-gift')?.addEventListener('click', (e) => {
+    if (e.target === $('modal-gift')) closeGiftModal();
+  });
+  $('btn-redeem-code')?.addEventListener('click', handleRedeemGiftCode);
+  $('input-gift-code')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleRedeemGiftCode();
+    }
+  });
 
 
   $('btn-gacha-1').addEventListener('click', () => { Audio.ensure(); performGachaPull(1); });

@@ -33,6 +33,7 @@ window.PBStorage = (() => {
       evolved: {},
       enemies: {}
     },
+    redeemedCodes: [],
     bestTime: {},
     settings: {
       muted: false,
@@ -64,6 +65,7 @@ window.PBStorage = (() => {
             evolved: { ...(parsed.codex?.evolved || {}) },
             enemies: { ...(parsed.codex?.enemies || {}) }
           },
+          redeemedCodes: Array.isArray(parsed.redeemedCodes) ? [...parsed.redeemedCodes] : [],
           bestTime: { ...(parsed.bestTime || {}) },
           settings: { ...DEFAULT_SAVE.settings, ...(parsed.settings || {}) }
         };
@@ -348,6 +350,48 @@ window.PBStorage = (() => {
     };
   }
 
+  function isCodeRedeemed(rawCode) {
+    const s = get();
+    const code = String(rawCode || '').trim();
+    return Array.isArray(s.redeemedCodes) && s.redeemedCodes.includes(code);
+  }
+
+  function getRedeemedCodes() {
+    const s = get();
+    return [...(s.redeemedCodes || [])];
+  }
+
+  function redeemCode(rawCode) {
+    const s = get();
+    const code = String(rawCode || '').trim();
+    if (!code) {
+      return { success: false, reason: 'EMPTY', message: 'コードを入力してください。' };
+    }
+    const def = window.PBData?.PRESENT_CODES?.[code];
+    if (!def) {
+      return { success: false, reason: 'INVALID', message: '❌ 無効なプレゼントコードです。' };
+    }
+    if (!Array.isArray(s.redeemedCodes)) {
+      s.redeemedCodes = [];
+    }
+    if (s.redeemedCodes.includes(code)) {
+      return { success: false, reason: 'ALREADY_REDEEMED', message: `⚠️ このコード「${code}」は既に使用済みです！` };
+    }
+    s.redeemedCodes.push(code);
+    const addedCoins = Number(def.coins || 0);
+    if (addedCoins > 0) {
+      addCoins(addedCoins);
+    }
+    save();
+    return {
+      success: true,
+      code,
+      coins: addedCoins,
+      name: def.name,
+      message: `🎉 コード「${code}」を適用しました！ 🪙 +${addedCoins.toLocaleString()} コイン獲得！`
+    };
+  }
+
   load();
   return {
     get,
@@ -365,6 +409,9 @@ window.PBStorage = (() => {
     unequipSlot,
     autoEquipBest,
     rollGacha,
-    getShopBonuses
+    getShopBonuses,
+    isCodeRedeemed,
+    getRedeemedCodes,
+    redeemCode
   };
 })();

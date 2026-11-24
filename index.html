@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ポーランドボール・サバイバーズ | 2〜3人協力対応 ヴァンサバアクション</title>
   <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット・スマホ最大3台でのオンライン協力プレイ対応。" />
-  <link rel="stylesheet" href="styles.css?v=29" />
+  <link rel="stylesheet" href="styles.css?v=30" />
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -41,6 +41,7 @@
         <button id="btn-gacha" class="btn btn-emerald btn-sm">🎰 ガチャ＆装備</button>
         <button id="btn-codex" class="btn btn-sm">📖 図鑑・装備・進化</button>
         <button id="btn-ach" class="btn btn-sm">🏆 実績</button>
+        <button id="btn-gift" class="btn btn-sm" style="background:#fef08a;border-color:#ca8a04;color:#854d0e;">🎁 プレゼント</button>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:0.82rem;font-weight:800;color:#475569;">
@@ -183,6 +184,7 @@
         <h2>🛒 永続強化ショップ ＆ キャラ解放</h2>
         <div style="display:flex;gap:8px;align-items:center;">
           <span class="coin-pill">🪙 <span id="shop-coins">0</span></span>
+          <button id="btn-shop-gift" class="btn btn-sm" style="background:#fef08a;border-color:#ca8a04;color:#854d0e;">🎁 コード入力</button>
           <button class="btn btn-sm" data-back="title">← もどる</button>
         </div>
       </div>
@@ -200,6 +202,7 @@
         <h2>🎰 装備ガチャ ＆ ロードアウト</h2>
         <div style="display:flex;gap:8px;align-items:center;">
           <span class="coin-pill">🪙 <span id="gacha-coins">0</span></span>
+          <button id="btn-gacha-gift" class="btn btn-sm" style="background:#fef08a;border-color:#ca8a04;color:#854d0e;">🎁 コード入力</button>
           <button class="btn btn-sm" data-back="title">← もどる</button>
         </div>
       </div>
@@ -412,6 +415,35 @@
     </div>
   </div>
 
+  <!-- === MODAL: PRESENT / GIFT CODE === -->
+  <div id="modal-gift" class="modal-backdrop">
+    <div class="modal-card" style="max-width:440px;text-align:center;position:relative;">
+      <button id="btn-x-close-gift" class="modal-close-corner" title="閉じる" aria-label="閉じる">✕</button>
+      <div style="font-size:2.4rem;line-height:1;margin-bottom:6px;">🎁</div>
+      <div style="font-size:1.45rem;font-weight:900;color:#b45309;margin-bottom:4px;">プレゼントコード</div>
+      <div style="font-size:0.86rem;font-weight:800;color:#475569;margin-bottom:14px;">
+        プレゼントコードを入力すると、コインなどの豪華ボーナスがもらえます！
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px;justify-content:center;">
+        <input id="input-gift-code" type="text" class="code-input" placeholder="例: 12345" style="max-width:210px;letter-spacing:1px;font-size:1.15rem;" maxlength="24" autocomplete="off" />
+        <button id="btn-redeem-code" class="btn btn-gold" style="min-width:96px;">受け取る</button>
+      </div>
+
+      <div id="gift-code-msg" style="min-height:22px;font-size:0.88rem;font-weight:900;margin-bottom:10px;"></div>
+
+      <div style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:10px;font-size:0.82rem;color:#64748b;text-align:left;">
+        <div style="font-weight:900;color:#334155;margin-bottom:4px;">💡 ヒント＆案内:</div>
+        <div>・コード「<strong>12345</strong>」入力で <strong>20,000ゴールドコイン</strong> をプレゼント！</div>
+        <div>・各コードは1回のみ使用可能です。</div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <button id="btn-close-gift" class="btn btn-sm" style="min-width:120px;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
 
   <!-- Local Bundled Libraries (No external CDN dependency!) -->
@@ -419,12 +451,12 @@
   <script src="lib/qrcode.min.js"></script>
 
   <!-- Game Modules -->
-  <script src="js/data.js?v=29"></script>
-  <script src="js/polandballRenderer.js?v=29"></script>
-  <script src="js/audio.js?v=29"></script>
-  <script src="js/storage.js?v=29"></script>
-  <script src="js/network.js?v=29"></script>
-  <script src="js/engine.js?v=29"></script>
-  <script src="js/main.js?v=29"></script>
+  <script src="js/data.js?v=30"></script>
+  <script src="js/polandballRenderer.js?v=30"></script>
+  <script src="js/audio.js?v=30"></script>
+  <script src="js/storage.js?v=30"></script>
+  <script src="js/network.js?v=30"></script>
+  <script src="js/engine.js?v=30"></script>
+  <script src="js/main.js?v=30"></script>
 </body>
 </html>

@@ -1342,6 +1342,15 @@ window.PBData = (() => {
     }
   ];
 
+  const PRESENT_CODES = {
+    '12345': {
+      code: '12345',
+      name: 'スペシャルプレゼント',
+      coins: 20000,
+      description: '20,000ゴールドコイン'
+    }
+  };
+
   return {
     CHARACTERS,
     PASSIVES,
@@ -1356,6 +1365,7 @@ window.PBData = (() => {
     GACHA_CONFIG,
     GEAR_ITEMS,
     EMOTES,
-    HEAL_ITEMS
+    HEAL_ITEMS,
+    PRESENT_CODES
   };
 })();
