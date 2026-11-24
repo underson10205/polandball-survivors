@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ポーランドボール・サバイバーズ | 2〜3人協力対応 ヴァンサバアクション</title>
   <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット・スマホ最大3台でのオンライン協力プレイ対応。" />
-  <link rel="stylesheet" href="styles.css?v=17" />
+  <link rel="stylesheet" href="styles.css?v=18" />
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -38,6 +38,7 @@
 
       <div class="title-actions-sub">
         <button id="btn-shop" class="btn btn-gold btn-sm">🛒 強化ショップ</button>
+        <button id="btn-gacha" class="btn btn-emerald btn-sm">🎰 ガチャ＆装備</button>
         <button id="btn-codex" class="btn btn-sm">📖 図鑑・進化表</button>
         <button id="btn-ach" class="btn btn-sm">🏆 実績</button>
       </div>
@@ -192,6 +193,52 @@
     </div>
   </section>
 
+  <!-- === SCREEN: GACHA & EQUIPMENT === -->
+  <section id="screen-gacha" class="screen">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🎰 装備ガチャ ＆ ロードアウト</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="coin-pill">🪙 <span id="gacha-coins">0</span></span>
+          <button class="btn btn-sm" data-back="title">← もどる</button>
+        </div>
+      </div>
+
+      <div class="gacha-banner">
+        <div style="font-size:1.15rem;font-weight:900;">✨ ポーランドボール装備ガチャ！ ✨</div>
+        <div style="font-size:0.84rem;font-weight:800;color:#475569;">
+          頭・体・盾・武器の4部位（コモン〜レジェンドの5ランク）をランダムGET！装備するとソロ・協力プレイで能力UP！
+        </div>
+        <div class="gacha-pull-btns">
+          <button id="btn-gacha-1" class="btn btn-primary">🎰 1回引く（🪙 100）</button>
+          <button id="btn-gacha-10" class="btn btn-gold">✨ 10連ガチャ（🪙 900・レア以上確定！）</button>
+        </div>
+        <div id="gacha-pity-info" style="font-size:0.76rem;font-weight:800;color:#7c2d12;">
+          確率: コモン45% / アンコモン30% / レア16% / エピック7% / レジェンド2%（ダブりはコイン還元！）
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div style="font-weight:900;">🛡️ 装備スロット（頭・体・盾・武器）</div>
+        <button id="btn-auto-equip" class="btn btn-emerald btn-sm">⚡ 最強を自動装備</button>
+      </div>
+      <div id="gacha-equip-slots" class="equip-slots-grid"></div>
+      <div id="gacha-bonus-summary" class="gacha-bonus-bar"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:4px;">
+        <div style="font-weight:900;">🎒 所持装備一覧 <span id="gacha-collection-count" style="font-size:0.82rem;color:#475569;"></span></div>
+        <div class="tabs" id="gacha-filter-tabs">
+          <button class="btn btn-sm tab-btn active" data-gear-filter="all">すべて</button>
+          <button class="btn btn-sm tab-btn" data-gear-filter="head">🎩 頭</button>
+          <button class="btn btn-sm tab-btn" data-gear-filter="body">🦺 体</button>
+          <button class="btn btn-sm tab-btn" data-gear-filter="shield">🛡️ 盾</button>
+          <button class="btn btn-sm tab-btn" data-gear-filter="weapon">⚔️ 武器</button>
+        </div>
+      </div>
+      <div id="gacha-inventory-grid" class="list-grid"></div>
+    </div>
+  </section>
+
   <!-- === SCREEN: CODEX === -->
   <section id="screen-codex" class="screen">
     <div class="panel">
@@ -341,6 +388,20 @@
     </div>
   </div>
 
+  <!-- === MODAL: GACHA RESULT === -->
+  <div id="modal-gacha-result" class="modal-backdrop">
+    <div class="modal-card" style="text-align:center;">
+      <div id="gacha-modal-title" style="font-size:1.55rem;font-weight:900;color:#b45309;">🎰 ガチャ結果！</div>
+      <div id="gacha-result-grid" class="gacha-result-grid"></div>
+      <div id="gacha-result-summary" style="font-size:0.86rem;font-weight:800;color:#475569;"></div>
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:4px;">
+        <button id="btn-gacha-again-1" class="btn btn-primary btn-sm">🎰 もう1回 (🪙 100)</button>
+        <button id="btn-gacha-again-10" class="btn btn-gold btn-sm">✨ もう10連 (🪙 900)</button>
+        <button id="btn-close-gacha-result" class="btn btn-emerald btn-sm" style="min-width:120px;">OK（閉じる）</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
 
   <!-- Local Bundled Libraries (No external CDN dependency!) -->
@@ -348,12 +409,12 @@
   <script src="lib/qrcode.min.js"></script>
 
   <!-- Game Modules -->
-  <script src="js/data.js?v=17"></script>
-  <script src="js/polandballRenderer.js?v=17"></script>
-  <script src="js/audio.js?v=17"></script>
-  <script src="js/storage.js?v=17"></script>
-  <script src="js/network.js?v=17"></script>
-  <script src="js/engine.js?v=17"></script>
-  <script src="js/main.js?v=17"></script>
+  <script src="js/data.js?v=18"></script>
+  <script src="js/polandballRenderer.js?v=18"></script>
+  <script src="js/audio.js?v=18"></script>
+  <script src="js/storage.js?v=18"></script>
+  <script src="js/network.js?v=18"></script>
+  <script src="js/engine.js?v=18"></script>
+  <script src="js/main.js?v=18"></script>
 </body>
 </html>

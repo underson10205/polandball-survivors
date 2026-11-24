@@ -186,17 +186,18 @@ window.PBEngine = (() => {
     let speedMult = p.shop.speedMult;
     let cooldownMult = p.shop.cooldownMult;
     let mightMult = p.shop.mightMult;
-    let areaMult = 1.0;
+    let areaMult = 1.0 + (p.shop.areaBonus || 0);
     let magnetMult = p.shop.magnetMult;
-    let xpMult = p.baseStats.xpMult;
+    let xpMult = p.baseStats.xpMult + (p.shop.xpBonus || 0);
     let maxHpBonus = 0;
-    let regenBonus = 0;
+    let regenBonus = p.shop.regenFlat || 0;
     let armorBonus = p.shop.armorFlat;
-    let amountBonus = 0;
+    let amountBonus = p.shop.amountFlat || 0;
     let projSpeedMult = 1.0;
-    let critChance = 0.14;
+    let critChance = 0.14 + (p.shop.critBonus || 0);
     let knockbackMult = 1.0;
     let durationMult = 1.0;
+    const rangedCut = Math.min(1.0, p.shop.rangedCut || 0);
 
     for (const [passId, lvl] of Object.entries(p.passives)) {
       const def = Data.PASSIVES[passId];
@@ -245,9 +246,10 @@ window.PBEngine = (() => {
       magnet: p.baseStats.magnet * magnetMult,
       xpMult,
       projSpeedMult,
-      critChance: Math.min(0.75, critChance),
+      critChance: Math.min(0.85, critChance),
       knockbackMult,
-      durationMult
+      durationMult,
+      rangedCut
     };
   }
 
@@ -276,7 +278,7 @@ window.PBEngine = (() => {
     let duration = (b.duration || 2.5) * (1 + (lv - 1) * 0.14) * evoDurMult * (pStats.durationMult || 1);
 
     if (w.id === 'katana' && lv >= 2) count = Math.max(count, 2);
-    if (w.id === 'teacup' && evo) { count = Math.max(6, count); duration = 999; cooldown = 0.1; }
+    if (w.id === 'teacup' && evo) { count = Math.max(7, count + 1); duration = 999; cooldown = 0.1; }
     if (w.id === 'roar') count = 1;
 
     return {
@@ -699,7 +701,7 @@ window.PBEngine = (() => {
       if (def.type === 'orbit') {
         if (w.evolved) {
           p.orbitActiveTimer = 99;
-          p.orbitAngle += ws.speed * 1.25 * dt;
+          p.orbitAngle += ws.speed * 1.42 * dt;
           checkOrbitHits(p, w, ws);
         } else {
           if (p.orbitActiveTimer > 0) {
@@ -710,7 +712,7 @@ window.PBEngine = (() => {
             p.orbitCdTimer -= dt;
             if (p.orbitCdTimer <= 0) {
               p.orbitActiveTimer = ws.duration;
-              p.orbitCdTimer = Math.max(0.8, ws.cooldown - ws.duration);
+              p.orbitCdTimer = Math.max(0.45, ws.cooldown - ws.duration);
             }
           }
         }
@@ -726,8 +728,8 @@ window.PBEngine = (() => {
   }
 
   function checkOrbitHits(p, w, ws) {
-    const orbitR = (w.evolved ? 72 : 78) * ws.area;
-    const hitR = (w.evolved ? 22 : 24) * ws.area;
+    const orbitR = (w.evolved ? 94 : 88) * ws.area;
+    const hitR = (w.evolved ? 28 : 26) * ws.area;
     for (let i = 0; i < ws.count; i++) {
       const a = p.orbitAngle + (i * Math.PI * 2) / ws.count;
       const ox = p.x + Math.cos(a) * orbitR;
@@ -738,8 +740,8 @@ window.PBEngine = (() => {
         const dy = e.y - oy;
         const sumR = hitR + e.radius;
         if (dx * dx + dy * dy < sumR * sumR) {
-          e.orbitHitCd = 0.28;
-          damageEnemy(e, ws.damage, p, w, ox, oy, 185);
+          e.orbitHitCd = w.evolved ? 0.16 : 0.20;
+          damageEnemy(e, ws.damage, p, w, ox, oy, 220);
         }
       });
     }
@@ -931,8 +933,9 @@ window.PBEngine = (() => {
         Audio.playSfx('roar');
         const maxR = (w.evolved ? 136 : 148) * ws.area;
         if (state.novas.length < 18) {
-          state.novas.push({ x: p.x, y: p.y, radius: 18, maxRadius: maxR, evolved: w.evolved, life: 0.34, maxLife: 0.34 });
+          state.novas.push({ x: p.x, y: p.y, radius: 18, maxRadius: maxR, evolved: w.evolved, isRoar: true, life: 0.42, maxLife: 0.42 });
         }
+        spawnBurst(p.x, p.y, w.evolved ? '#e0f2fe' : '#38bdf8', w.evolved ? 14 : 9);
         if (w.evolved) state.shake = Math.max(state.shake, 6);
         forEachEnemyNear(p.x, p.y, maxR, (e) => {
           const dx = e.x - p.x;
@@ -1817,7 +1820,17 @@ window.PBEngine = (() => {
         const dy = p.y - b.y;
         const sumR = p.radius + b.r - 2;
         if (dx * dx + dy * dy < sumR * sumR) {
-          damagePlayer(p, b.damage);
+          const cut = getComputedStats(p).rangedCut || 0;
+          if (cut >= 1.0) {
+            Audio.playSfx('click');
+            spawnBurst(b.x, b.y, '#38bdf8', 7);
+            addFloatingText(p.x, p.y - p.radius - 10, '🛡️ BLOCK!', '#38bdf8', false);
+            if (state.mode === 'coop_host') broadcastFx({ sfx: 'click', burst: true, x: b.x, y: b.y, color: '#38bdf8', count: 7, text: '🛡️ BLOCK!' });
+          } else {
+            const finalDmg = cut > 0 ? Math.max(1, Math.round(b.damage * (1 - cut))) : b.damage;
+            damagePlayer(p, finalDmg);
+            if (cut > 0) spawnBurst(b.x, b.y, '#93c5fd', 4);
+          }
           state.enemyBullets.splice(i, 1);
           break;
         }
@@ -2332,7 +2345,7 @@ window.PBEngine = (() => {
       zn: state.zones.map(z => [Math.round(z.x), Math.round(z.y), Math.round(z.radius), z.evolved ? 1 : 0, Math.round((z.life / z.maxLife) * 10) / 10]),
       sl: state.slashes.map(s => [Math.round(s.x), Math.round(s.y), Math.round(s.angle * 100) / 100, Math.round(s.radius), s.evolved ? 1 : 0, Math.round((s.life / s.maxLife) * 10) / 10]),
       bm: state.beams.map(b => [Math.round(b.x), Math.round(b.y), Math.round(b.radius), b.evolved ? 1 : 0, Math.round((b.life / b.maxLife) * 10) / 10]),
-      nv: state.novas.map(n => [Math.round(n.x), Math.round(n.y), Math.round(n.radius), n.evolved ? 1 : 0, n.isBlast ? 1 : 0, Math.round((n.life / n.maxLife) * 10) / 10]),
+      nv: state.novas.map(n => [Math.round(n.x), Math.round(n.y), Math.round(n.radius), n.evolved ? 1 : 0, n.isBlast ? 1 : 0, Math.round((n.life / n.maxLife) * 10) / 10, n.isRoar ? 1 : 0]),
       ch: state.chains.map(c => [c.pts, c.evolved ? 1 : 0, Math.round((c.life / c.maxLife) * 10) / 10]),
       pk: state.pickups.slice(0, 140).map(pk => [pk.kind, Math.round(pk.x), Math.round(pk.y), pk.tier || 0])
     };
@@ -2408,7 +2421,7 @@ window.PBEngine = (() => {
     state.zones = snap.zn.map(a => ({ x: a[0], y: a[1], radius: a[2], evolved: !!a[3], alpha: a[4] }));
     state.slashes = snap.sl.map(a => ({ x: a[0], y: a[1], angle: a[2], radius: a[3], evolved: !!a[4], life: a[5], maxLife: 1 }));
     state.beams = snap.bm.map(a => ({ x: a[0], y: a[1], radius: a[2], evolved: !!a[3], life: a[4], maxLife: 1 }));
-    state.novas = snap.nv.map(a => ({ x: a[0], y: a[1], radius: a[2], evolved: !!a[3], isBlast: !!a[4], life: a[5], maxLife: 1 }));
+    state.novas = snap.nv.map(a => ({ x: a[0], y: a[1], radius: a[2], evolved: !!a[3], isBlast: !!a[4], life: a[5], maxLife: 1, isRoar: !!a[6] }));
     state.chains = (snap.ch || []).map(a => ({ pts: a[0], evolved: !!a[1], life: a[2], maxLife: 1 }));
     state.pickups = snap.pk.map(a => ({ kind: a[0], x: a[1], y: a[2], tier: a[3] }));
   }
@@ -2886,20 +2899,39 @@ window.PBEngine = (() => {
         ctx.restore();
       }
 
+      // Draw Legend Ranged-Immunity Shield Barrier Ring!
+      if (!p.downed && (p.shop?.rangedCut || 0) >= 1.0) {
+        ctx.save();
+        const shR = p.radius + 9 + Math.sin(state.time * 5) * 2;
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.72)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 6]);
+        ctx.lineDashOffset = state.time * 24;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, shR, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
       // Draw Orbital Teacups (cached emoji sprites!)
       const teaW = p.weapons.find(w => w.id === 'teacup');
       if (teaW && !p.downed && (teaW.evolved || p.orbitActiveTimer > 0)) {
         const stats = getComputedStats(p);
         const ws = getWeaponStats(teaW, stats);
-        const orbitR = (teaW.evolved ? 72 : 78) * ws.area;
+        const orbitR = (teaW.evolved ? 94 : 88) * ws.area;
+        ctx.strokeStyle = teaW.evolved ? 'rgba(251, 191, 36, 0.48)' : 'rgba(217, 119, 6, 0.25)';
+        ctx.lineWidth = teaW.evolved ? 8 : 4;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, orbitR, 0, Math.PI * 2);
+        ctx.stroke();
         if (teaW.evolved) {
-          ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
-          ctx.lineWidth = 6;
+          ctx.strokeStyle = 'rgba(254, 240, 138, 0.55)';
+          ctx.lineWidth = 2.5;
           ctx.beginPath();
-          ctx.arc(p.x, p.y, orbitR, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, orbitR * 0.88, 0, Math.PI * 2);
           ctx.stroke();
         }
-        const teaSp = Renderer.getEmojiSprite(teaW.evolved ? '🫖' : '☕', teaW.evolved ? 28 : 24);
+        const teaSp = Renderer.getEmojiSprite(teaW.evolved ? '🫖' : '☕', teaW.evolved ? 34 : 28);
         const hw = teaSp.width / 2;
         const hh = teaSp.height / 2;
         for (let i = 0; i < ws.count; i++) {
@@ -2973,17 +3005,96 @@ window.PBEngine = (() => {
     }
 
     for (const n of state.novas) {
-      if (Math.abs(n.x - cx) > cullX + n.radius || Math.abs(n.y - cy) > cullY + n.radius) continue;
+      if (Math.abs(n.x - cx) > cullX + n.radius + 20 || Math.abs(n.y - cy) > cullY + n.radius + 20) continue;
       const a = Math.max(0, n.life / n.maxLife);
-      ctx.globalAlpha = a * 0.85;
-      ctx.strokeStyle = n.isBlast ? (n.evolved ? '#fb923c' : '#facc15') : (n.evolved ? '#38bdf8' : '#e0f2fe');
-      ctx.lineWidth = n.evolved ? 10 : 6;
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
-      ctx.stroke();
-      if (n.isBlast) {
-        ctx.fillStyle = 'rgba(251, 146, 60, 0.28)';
+      if (n.isRoar) {
+        // EPIC Himalayan Roar / Everest Avalanche multi-layered sonic & ice shockwave!
+        ctx.save();
+        ctx.translate(n.x, n.y);
+        const r = n.radius;
+        // 1. Translucent sonic dome fill
+        ctx.globalAlpha = a * (n.evolved ? 0.30 : 0.22);
+        ctx.fillStyle = n.evolved ? '#38bdf8' : '#7dd3fc';
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
         ctx.fill();
+
+        // 2. Jagged radial sonic blast spikes (12 rays!)
+        const spikes = n.evolved ? 12 : 10;
+        const spinOff = (1 - a) * (n.evolved ? 0.9 : 0.45);
+        ctx.globalAlpha = a * 0.92;
+        ctx.strokeStyle = n.evolved ? '#e0f2fe' : '#fef08a';
+        ctx.lineWidth = n.evolved ? 4.5 : 3.5;
+        ctx.beginPath();
+        for (let k = 0; k < spikes; k++) {
+          const ang = (k * Math.PI * 2) / spikes + spinOff;
+          const rIn = r * 0.52;
+          const rOut = r * (k % 2 === 0 ? 1.12 : 0.96);
+          ctx.moveTo(Math.cos(ang) * rIn, Math.sin(ang) * rIn);
+          ctx.lineTo(Math.cos(ang) * rOut, Math.sin(ang) * rOut);
+        }
+        ctx.stroke();
+
+        // 3. Triple concentric shockwave rings (outer crisp edge + main glow + inner echo)
+        ctx.strokeStyle = n.evolved ? '#0284c7' : '#0ea5e9';
+        ctx.lineWidth = n.evolved ? 12 : 8;
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = n.evolved ? 4.5 : 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.97, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.globalAlpha = a * 0.65;
+        ctx.strokeStyle = n.evolved ? '#67e8f9' : '#bae6fd';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.68, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 4. Evolved Everest Avalanche: Rotating 6-point Frost Star & Diamond Ice Shards!
+        if (n.evolved) {
+          ctx.globalAlpha = a * 0.9;
+          ctx.strokeStyle = '#bae6fd';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          for (let k = 0; k < 6; k++) {
+            const ang = (k * Math.PI) / 3 - spinOff * 1.3;
+            const angNext = ((k + 2) * Math.PI) / 3 - spinOff * 1.3;
+            ctx.moveTo(Math.cos(ang) * r * 0.86, Math.sin(ang) * r * 0.86);
+            ctx.lineTo(Math.cos(angNext) * r * 0.86, Math.sin(angNext) * r * 0.86);
+          }
+          ctx.stroke();
+
+          ctx.fillStyle = '#ffffff';
+          for (let k = 0; k < 8; k++) {
+            const ang = (k * Math.PI) / 4 + spinOff * 1.6;
+            const sx = Math.cos(ang) * r * 1.02;
+            const sy = Math.sin(ang) * r * 1.02;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - 7);
+            ctx.lineTo(sx + 5, sy);
+            ctx.lineTo(sx, sy + 7);
+            ctx.lineTo(sx - 5, sy);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      } else {
+        ctx.globalAlpha = a * 0.85;
+        ctx.strokeStyle = n.isBlast ? (n.evolved ? '#fb923c' : '#facc15') : (n.evolved ? '#38bdf8' : '#e0f2fe');
+        ctx.lineWidth = n.evolved ? 10 : 6;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        if (n.isBlast) {
+          ctx.fillStyle = 'rgba(251, 146, 60, 0.28)';
+          ctx.fill();
+        }
       }
     }
     ctx.globalAlpha = 1;

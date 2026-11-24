@@ -431,7 +431,7 @@ window.PBData = (() => {
       desc: '熱い紅茶のカップが周囲を周回し、近づく敵を弾き飛ばす。',
       color: '#d97706',
       type: 'orbit',
-      base: { damage: 17, cooldown: 4.2, duration: 3.1, count: 2, speed: 3.2, area: 1.0 },
+      base: { damage: 26, cooldown: 3.6, duration: 3.2, count: 3, speed: 4.1, area: 1.0 },
       levelUp: [
         'ティーカップ +1 ＆ 威力UP',
         '回転速度UP ＆ 持続時間延長',
@@ -960,7 +960,159 @@ window.PBData = (() => {
     { id: 'poland_space', name: 'Polan CAN into Space!', desc: 'ポーランドで宇宙軌道ステージをクリア', reward: 180, icon: '🪐' },
     { id: 'coop_play', name: '同盟締結！', desc: '2〜3人協力プレイで出撃する', reward: 40, icon: '🤝' },
     { id: 'coop_revive', name: '友情の蘇生', desc: '協力プレイでパートナーを蘇生させる', reward: 60, icon: '💖' },
-    { id: 'unlock_char', name: '新たな仲間', desc: '隠しキャラクターを1体解放する', reward: 35, icon: '🔓' }
+    { id: 'unlock_char', name: '新たな仲間', desc: '隠しキャラクターを1体解放する', reward: 35, icon: '🔓' },
+    { id: 'first_gacha', name: 'ガチャデビュー！', desc: '初めてコインで装備ガチャを引く', reward: 50, icon: '🎰' }
+  ];
+
+  const GEAR_SLOTS = [
+    { id: 'head', name: '頭', icon: '🎩' },
+    { id: 'body', name: '体', icon: '🦺' },
+    { id: 'shield', name: '盾', icon: '🛡️' },
+    { id: 'weapon', name: '武器', icon: '⚔️' }
+  ];
+
+  const GEAR_RARITIES = {
+    common:   { id: 'common',   rank: 1, name: 'コモン',     color: '#475569', bg: '#f1f5f9', border: '#64748b', weight: 45, guaranteeWeight: 0,  refund: 25 },
+    uncommon: { id: 'uncommon', rank: 2, name: 'アンコモン', color: '#15803d', bg: '#dcfce7', border: '#16a34a', weight: 30, guaranteeWeight: 0,  refund: 45 },
+    rare:     { id: 'rare',     rank: 3, name: 'レア',       color: '#1d4ed8', bg: '#dbeafe', border: '#2563eb', weight: 16, guaranteeWeight: 65, refund: 90 },
+    epic:     { id: 'epic',     rank: 4, name: 'エピック',   color: '#7e22ce', bg: '#f3e8ff', border: '#9333ea', weight: 7,  guaranteeWeight: 26, refund: 180 },
+    legend:   { id: 'legend',   rank: 5, name: 'レジェンド', color: '#b45309', bg: '#fef3c7', border: '#f59e0b', weight: 2,  guaranteeWeight: 9,  refund: 400 }
+  };
+
+  const GACHA_CONFIG = {
+    singleCost: 100,
+    tenCost: 900,
+    pityLimit: 25
+  };
+
+  const GEAR_ITEMS = [
+    // === 頭 (head): クールダウン / 経験値 / 回収範囲 / クリティカル ===
+    {
+      id: 'head_common_knit', slot: 'head', rarity: 'common', icon: '🧢',
+      name: '旅人のニット帽', desc: '経験値 +6% / 回収範囲 +10%',
+      stats: { xpBonus: 0.06, magnetMult: 0.10 }
+    },
+    {
+      id: 'head_uncommon_helm', slot: 'head', rarity: 'uncommon', icon: '⛑️',
+      name: '鉄の偵察ヘルメット', desc: 'クールダウン -4% / 回収範囲 +18%',
+      stats: { cooldownMult: -0.04, magnetMult: 0.18 }
+    },
+    {
+      id: 'head_rare_beret', slot: 'head', rarity: 'rare', icon: '🎓',
+      name: '賢者のベレー帽', desc: 'クールダウン -7% / 経験値 +14% / 会心率 +4%',
+      stats: { cooldownMult: -0.07, xpBonus: 0.14, critBonus: 0.04 }
+    },
+    {
+      id: 'head_epic_radar', slot: 'head', rarity: 'epic', icon: '📡',
+      name: '宇宙レーダーバイザー', desc: 'クールダウン -11% / 回収範囲 +35% / 会心率 +8%',
+      stats: { cooldownMult: -0.11, magnetMult: 0.35, critBonus: 0.08 }
+    },
+    {
+      id: 'head_legend_crown', slot: 'head', rarity: 'legend', icon: '👑',
+      name: 'ポーランド大帝の王冠', desc: 'CD -15% / 経験値 +25% / 回収 +50% / 会心率 +14%',
+      stats: { cooldownMult: -0.15, xpBonus: 0.25, magnetMult: 0.50, critBonus: 0.14 }
+    },
+    {
+      id: 'head_legend_astro', slot: 'head', rarity: 'legend', icon: '🪐',
+      name: 'コズミック・アストロ兜', desc: 'CD -18% / 攻撃範囲 +18% / 経験値 +20%',
+      stats: { cooldownMult: -0.18, areaBonus: 0.18, xpBonus: 0.20 }
+    },
+
+    // === 体 (body): 最大HP / 移動速度 / HP自然回復 / アーマー / 復活 ===
+    {
+      id: 'body_common_cape', slot: 'body', rarity: 'common', icon: '👕',
+      name: 'コットン旅マント', desc: '最大HP +15 / 移動速度 +4%',
+      stats: { maxHpFlat: 15, speedMult: 0.04 }
+    },
+    {
+      id: 'body_uncommon_coat', slot: 'body', rarity: 'uncommon', icon: '🧥',
+      name: '防風トレンチコート', desc: '最大HP +28 / 移動速度 +7% / HP回復 +0.2/秒',
+      stats: { maxHpFlat: 28, speedMult: 0.07, regenFlat: 0.2 }
+    },
+    {
+      id: 'body_rare_samurai', slot: 'body', rarity: 'rare', icon: '🥋',
+      name: '侍の軽装胴丸', desc: '最大HP +42 / 移動速度 +10% / アーマー +1',
+      stats: { maxHpFlat: 42, speedMult: 0.10, armorFlat: 1 }
+    },
+    {
+      id: 'body_epic_titan', slot: 'body', rarity: 'epic', icon: '🦺',
+      name: '強化チタン・バトルアーマー', desc: '最大HP +65 / アーマー +2 / HP回復 +0.5/秒 / 速度 +10%',
+      stats: { maxHpFlat: 65, armorFlat: 2, regenFlat: 0.5, speedMult: 0.10 }
+    },
+    {
+      id: 'body_legend_suit', slot: 'body', rarity: 'legend', icon: '🚀',
+      name: '宇宙英雄パワードスーツ', desc: '最大HP +100 / 速度 +16% / アーマー +3 / 回復 +1.0/秒',
+      stats: { maxHpFlat: 100, speedMult: 0.16, armorFlat: 3, regenFlat: 1.0 }
+    },
+    {
+      id: 'body_legend_wings', slot: 'body', rarity: 'legend', icon: '🪽',
+      name: '翼騎兵の聖なる羽鎧', desc: '最大HP +80 / 速度 +24% / 回復 +1.2/秒 / 自動復活 +1回',
+      stats: { maxHpFlat: 80, speedMult: 0.24, regenFlat: 1.2, revives: 1 }
+    },
+
+    // === 盾 (shield): 遠距離攻撃ダメージカット ＆ 完全無効!! ===
+    {
+      id: 'shield_common_wood', slot: 'shield', rarity: 'common', icon: '🪵',
+      name: '木の丸盾', desc: '遠距離ダメージ -20% / アーマー +1',
+      stats: { rangedCut: 0.20, armorFlat: 1 }
+    },
+    {
+      id: 'shield_uncommon_iron', slot: 'shield', rarity: 'uncommon', icon: '🛡️',
+      name: '鉄のラウンドシールド', desc: '遠距離ダメージ -35% / アーマー +1 / 最大HP +15',
+      stats: { rangedCut: 0.35, armorFlat: 1, maxHpFlat: 15 }
+    },
+    {
+      id: 'shield_rare_scutum', slot: 'shield', rarity: 'rare', icon: '🏛️',
+      name: 'ローマ大盾スクトゥム', desc: '遠距離ダメージ -55% / アーマー +2 / 最大HP +25',
+      stats: { rangedCut: 0.55, armorFlat: 2, maxHpFlat: 25 }
+    },
+    {
+      id: 'shield_epic_prism', slot: 'shield', rarity: 'epic', icon: '💠',
+      name: 'プリズム反射バリア', desc: '遠距離ダメージ -78% / アーマー +3 / 最大HP +35',
+      stats: { rangedCut: 0.78, armorFlat: 3, maxHpFlat: 35 }
+    },
+    {
+      id: 'shield_legend_aegis', slot: 'shield', rarity: 'legend', icon: '✨',
+      name: 'イージスの絶対神盾', desc: '【遠距離攻撃 完全無効！】アーマー +4 / 最大HP +55',
+      stats: { rangedCut: 1.0, armorFlat: 4, maxHpFlat: 55 }
+    },
+    {
+      id: 'shield_legend_mirror', slot: 'shield', rarity: 'legend', icon: '🪞',
+      name: 'ミラー・イージス', desc: '【遠距離攻撃 完全無効！】攻撃力 +15% / アーマー +3',
+      stats: { rangedCut: 1.0, mightMult: 0.15, armorFlat: 3 }
+    },
+
+    // === 武器 (weapon): 攻撃力アップ / 球数（発射数）アップ / 攻撃範囲アップ ===
+    {
+      id: 'weapon_common_dagger', slot: 'weapon', rarity: 'common', icon: '🗡️',
+      name: '見習いの短剣', desc: '攻撃力 +8%',
+      stats: { mightMult: 0.08 }
+    },
+    {
+      id: 'weapon_uncommon_axe', slot: 'weapon', rarity: 'uncommon', icon: '🪓',
+      name: '戦士の戦斧', desc: '攻撃力 +14% / 攻撃範囲 +8%',
+      stats: { mightMult: 0.14, areaBonus: 0.08 }
+    },
+    {
+      id: 'weapon_rare_crossbow', slot: 'weapon', rarity: 'rare', icon: '🏹',
+      name: '連射のクロスボウ', desc: '攻撃力 +18% / 発射数（球数）+1',
+      stats: { mightMult: 0.18, amountFlat: 1 }
+    },
+    {
+      id: 'weapon_epic_trident', slot: 'weapon', rarity: 'epic', icon: '🔱',
+      name: '黄金トライデント', desc: '攻撃力 +28% / 発射数（球数）+1 / 攻撃範囲 +15%',
+      stats: { mightMult: 0.28, amountFlat: 1, areaBonus: 0.15 }
+    },
+    {
+      id: 'weapon_legend_excalibur', slot: 'weapon', rarity: 'legend', icon: '⚔️',
+      name: '伝説の聖剣エクスカリバー', desc: '攻撃力 +45% / 球数 +1 / 会心率 +15% / 範囲 +22%',
+      stats: { mightMult: 0.45, amountFlat: 1, critBonus: 0.15, areaBonus: 0.22 }
+    },
+    {
+      id: 'weapon_legend_cannon', slot: 'weapon', rarity: 'legend', icon: '🌟',
+      name: '星屑のマルチキャノン', desc: '攻撃力 +32% / 発射数（球数）+2 / クールダウン -10%',
+      stats: { mightMult: 0.32, amountFlat: 2, cooldownMult: -0.10 }
+    }
   ];
 
   const EMOTES = [
@@ -979,6 +1131,10 @@ window.PBData = (() => {
     STAGES,
     SHOP_UPGRADES,
     ACHIEVEMENTS,
+    GEAR_SLOTS,
+    GEAR_RARITIES,
+    GACHA_CONFIG,
+    GEAR_ITEMS,
     EMOTES
   };
 })();

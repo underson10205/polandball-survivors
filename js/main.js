@@ -131,6 +131,8 @@
     }, 3200);
   }
 
+  let activeGearFilter = 'all';
+
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const target = $('screen-' + name);
@@ -138,6 +140,7 @@
     refreshCoins();
     if (name === 'solo') renderSoloSelect();
     if (name === 'shop') renderShop();
+    if (name === 'gacha') renderGacha();
     if (name === 'codex') renderCodex();
     if (name === 'ach') renderAchievements();
     if (name === 'coop') renderCoopLobbyUI();
@@ -145,7 +148,7 @@
 
   function refreshCoins() {
     const coins = Storage.get().coins;
-    ['title-coins', 'solo-coins', 'shop-coins', 'ach-coins'].forEach(id => {
+    ['title-coins', 'solo-coins', 'shop-coins', 'gacha-coins', 'ach-coins'].forEach(id => {
       const el = $(id);
       if (el) el.textContent = coins.toLocaleString();
     });
@@ -328,6 +331,215 @@
       card.append(top, btn);
       charGrid.appendChild(card);
     }
+  }
+
+  // === GACHA & EQUIPMENT ===
+  function formatGearBonusChips(g) {
+    const chips = [];
+    if (g.mightMult > 0) chips.push(`⚔️ 攻撃力 +${Math.round(g.mightMult * 100)}%`);
+    if (g.amountFlat > 0) chips.push(`🎯 球数 +${g.amountFlat}`);
+    if (g.areaBonus > 0) chips.push(`💥 攻撃範囲 +${Math.round(g.areaBonus * 100)}%`);
+    if (g.cooldownMult < 0) chips.push(`⚡ CD -${Math.round(-g.cooldownMult * 100)}%`);
+    if (g.rangedCut >= 1.0) chips.push(`🛡️ 遠距離攻撃 完全無効！`);
+    else if (g.rangedCut > 0) chips.push(`🛡️ 遠距離ダメ -${Math.round(g.rangedCut * 100)}%`);
+    if (g.maxHpFlat > 0) chips.push(`❤️ 最大HP +${g.maxHpFlat}`);
+    if (g.armorFlat > 0) chips.push(`🧱 アーマー +${g.armorFlat}`);
+    if (g.speedMult > 0) chips.push(`👟 移動速度 +${Math.round(g.speedMult * 100)}%`);
+    if (g.regenFlat > 0) chips.push(`💚 HP回復 +${g.regenFlat.toFixed(1)}/秒`);
+    if (g.critBonus > 0) chips.push(`💢 会心率 +${Math.round(g.critBonus * 100)}%`);
+    if (g.magnetMult > 0) chips.push(`🧲 回収範囲 +${Math.round(g.magnetMult * 100)}%`);
+    if (g.xpBonus > 0) chips.push(`📘 経験値 +${Math.round(g.xpBonus * 100)}%`);
+    if (g.revives > 0) chips.push(`✨ 自動復活 +${g.revives}回`);
+    return chips;
+  }
+
+  function renderGacha() {
+    const save = Storage.get();
+    const cfg = Data.GACHA_CONFIG || { singleCost: 100, tenCost: 900, pityLimit: 25 };
+    const rarities = Data.GEAR_RARITIES || {};
+    const items = Data.GEAR_ITEMS || [];
+    const slots = Data.GEAR_SLOTS || [];
+
+    refreshCoins();
+
+    const btn1 = $('btn-gacha-1');
+    const btn10 = $('btn-gacha-10');
+    if (btn1) btn1.disabled = save.coins < cfg.singleCost;
+    if (btn10) btn10.disabled = save.coins < cfg.tenCost;
+
+    const pityLeft = Math.max(1, cfg.pityLimit - (save.gachaPity || 0));
+    const pityEl = $('gacha-pity-info');
+    if (pityEl) {
+      pityEl.textContent = `確率: コモン45% / アンコモン30% / レア16% / エピック7% / レジェンド2%（ダブりはコイン還元・レジェンド天井まであと ${pityLeft}回！）`;
+    }
+
+    // 1. Equipped 4 Slots (Head / Body / Shield / Weapon)
+    const slotsEl = $('gacha-equip-slots');
+    if (slotsEl) {
+      slotsEl.innerHTML = '';
+      for (const sl of slots) {
+        const eqId = save.equipped?.[sl.id];
+        const eqItem = eqId ? items.find(it => it.id === eqId) : null;
+        const rar = eqItem ? rarities[eqItem.rarity] : null;
+        const card = document.createElement('div');
+        card.className = 'equip-slot-card' + (eqItem ? ` rarity-${eqItem.rarity}` : '');
+        if (eqItem && rar) {
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">
+              <span style="font-size:0.75rem;font-weight:900;color:#475569;">${sl.icon} ${sl.name}</span>
+              <span class="gear-rarity-pill" style="color:${rar.color};background:${rar.bg};">${rar.name}</span>
+            </div>
+            <div style="font-size:1.7rem;line-height:1.1;margin-top:2px;">${eqItem.icon}</div>
+            <div style="font-weight:900;font-size:0.86rem;">${eqItem.name}</div>
+            <div style="font-size:0.72rem;color:#334155;line-height:1.3;">${eqItem.desc}</div>
+          `;
+          const unBtn = document.createElement('button');
+          unBtn.className = 'btn btn-sm';
+          unBtn.style.marginTop = 'auto';
+          unBtn.style.padding = '3px 8px';
+          unBtn.style.fontSize = '0.72rem';
+          unBtn.textContent = '外す';
+          unBtn.addEventListener('click', () => {
+            Audio.playSfx('click');
+            Storage.unequipSlot(sl.id);
+            renderGacha();
+          });
+          card.appendChild(unBtn);
+        } else {
+          card.innerHTML = `
+            <div style="font-size:0.75rem;font-weight:900;color:#64748b;">${sl.icon} ${sl.name}</div>
+            <div style="margin:auto 0;text-align:center;color:#94a3b8;font-weight:800;font-size:0.82rem;">未装備<br/>ガチャでGET！</div>
+          `;
+        }
+        slotsEl.appendChild(card);
+      }
+    }
+
+    // 2. Total Equipped Bonus Summary Bar
+    const bonusBar = $('gacha-bonus-summary');
+    if (bonusBar) {
+      const chips = formatGearBonusChips(Storage.getGearBonuses());
+      if (chips.length === 0) {
+        bonusBar.innerHTML = '<span style="color:#64748b;">装備ボーナスなし — ガチャを引いて装備をセットしよう！</span>';
+      } else {
+        bonusBar.innerHTML = '<span>✨ 装備合計ボーナス:</span> ' + chips.map(c => `<span class="gacha-bonus-chip">${c}</span>`).join('');
+      }
+    }
+
+    // 3. Owned Inventory Grid (sorted by rarity desc -> slot)
+    const ownedIds = save.gearOwned || [];
+    const colEl = $('gacha-collection-count');
+    if (colEl) colEl.textContent = `（コレクション ${ownedIds.length} / ${items.length}）`;
+
+    const invGrid = $('gacha-inventory-grid');
+    if (invGrid) {
+      invGrid.innerHTML = '';
+      const filtered = items
+        .filter(it => ownedIds.includes(it.id) && (activeGearFilter === 'all' || it.slot === activeGearFilter))
+        .sort((a, b) => (rarities[b.rarity]?.rank || 0) - (rarities[a.rarity]?.rank || 0));
+
+      if (filtered.length === 0) {
+        invGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:18px;color:#64748b;font-weight:800;">まだこの部位の装備を持っていません！上のガチャを引いてみよう🎰</div>`;
+      } else {
+        for (const it of filtered) {
+          const rar = rarities[it.rarity];
+          const slDef = slots.find(s => s.id === it.slot);
+          const isEquipped = save.equipped?.[it.slot] === it.id;
+          const card = document.createElement('div');
+          card.className = `item-card gear-card rarity-${it.rarity}`;
+          card.innerHTML = `
+            <div class="item-top">
+              <div class="item-icon">${it.icon}</div>
+              <div>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+                  <span class="gear-rarity-pill" style="color:${rar.color};background:${rar.bg};">${rar.name}</span>
+                  <span style="font-size:0.72rem;font-weight:900;color:#475569;">${slDef?.icon || ''} ${slDef?.name || ''}</span>
+                </div>
+                <div class="item-title">${it.name}</div>
+                <div class="item-desc">${it.desc}</div>
+              </div>
+            </div>
+          `;
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-sm ' + (isEquipped ? '' : 'btn-primary');
+          btn.textContent = isEquipped ? '✅ 装備中（クリックで外す）' : '⚡ 装備する';
+          btn.addEventListener('click', () => {
+            Audio.playSfx('click');
+            if (isEquipped) Storage.unequipSlot(it.slot);
+            else Storage.equipGear(it.id);
+            renderGacha();
+          });
+          card.appendChild(btn);
+          invGrid.appendChild(card);
+        }
+      }
+    }
+  }
+
+  function performGachaPull(times) {
+    const res = Storage.rollGacha(times);
+    if (!res.ok) {
+      Audio.playSfx('hurt');
+      showToast(`🪙 コインが足りません！（必要: ${res.cost}）`);
+      return;
+    }
+    const hasLegend = res.pulls.some(p => p.item.rarity === 'legend');
+    const hasEpic = res.pulls.some(p => p.item.rarity === 'epic');
+    if (hasLegend) Audio.playSfx('victory');
+    else if (hasEpic) Audio.playSfx('evolve');
+    else Audio.playSfx('levelup');
+
+    if (res.firstAch) {
+      showToast(`🏆 実績解除: ${res.firstAch.name} (+${res.firstAch.reward}🪙)`);
+    }
+
+    refreshCoins();
+    renderGacha();
+    renderGachaResultModal(res);
+  }
+
+  function renderGachaResultModal(res) {
+    const rarities = Data.GEAR_RARITIES || {};
+    const slots = Data.GEAR_SLOTS || [];
+    const cfg = Data.GACHA_CONFIG || { singleCost: 100, tenCost: 900 };
+    const save = Storage.get();
+    const hasLegend = res.pulls.some(p => p.item.rarity === 'legend');
+
+    $('gacha-modal-title').textContent = hasLegend
+      ? '👑✨ LEGEND GET!! ガチャ大当たり！！ ✨👑'
+      : (res.pulls.length === 10 ? '🎰 10連ガチャ結果！' : '🎰 ガチャ結果！');
+
+    const grid = $('gacha-result-grid');
+    grid.innerHTML = '';
+    res.pulls.forEach((entry, idx) => {
+      const it = entry.item;
+      const rar = rarities[it.rarity];
+      const slDef = slots.find(s => s.id === it.slot);
+      const card = document.createElement('div');
+      card.className = `gacha-pull-card rarity-${it.rarity}`;
+      card.style.animationDelay = `${idx * 45}ms`;
+      card.innerHTML = `
+        <div style="display:flex;justify-content:center;gap:4px;align-items:center;flex-wrap:wrap;">
+          <span class="gear-rarity-pill" style="color:${rar.color};background:${rar.bg};">${rar.name}</span>
+          ${entry.isNew ? '<span class="gear-new-badge">NEW!</span>' : `<span class="gear-refund-badge">ダブり +${entry.refundCoins}🪙</span>`}
+        </div>
+        <div style="font-size:2rem;line-height:1.1;">${it.icon}</div>
+        <div style="font-size:0.72rem;font-weight:900;color:#475569;">${slDef?.icon || ''} ${slDef?.name || ''}</div>
+        <div style="font-weight:900;font-size:0.84rem;line-height:1.25;">${it.name}</div>
+        <div style="font-size:0.7rem;color:#334155;line-height:1.3;">${it.desc}</div>
+      `;
+      grid.appendChild(card);
+    });
+
+    const newCount = res.pulls.filter(p => p.isNew).length;
+    $('gacha-result-summary').textContent =
+      `新規GET: ${newCount}個` +
+      (res.totalRefund > 0 ? ` / ダブりコイン還元: +${res.totalRefund}🪙` : '') +
+      ` / のこり所持コイン: ${save.coins.toLocaleString()}🪙`;
+
+    $('btn-gacha-again-1').disabled = save.coins < cfg.singleCost;
+    $('btn-gacha-again-10').disabled = save.coins < cfg.tenCost;
+    $('modal-gacha-result').classList.add('active');
   }
 
   function renderCodex() {
@@ -1032,8 +1244,35 @@
   $('btn-solo').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('solo'); });
   $('btn-coop').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('coop'); });
   $('btn-shop').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('shop'); });
+  $('btn-gacha').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('gacha'); });
   $('btn-codex').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('codex'); });
   $('btn-ach').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('ach'); });
+
+  $('btn-gacha-1').addEventListener('click', () => { Audio.ensure(); performGachaPull(1); });
+  $('btn-gacha-10').addEventListener('click', () => { Audio.ensure(); performGachaPull(10); });
+  $('btn-gacha-again-1').addEventListener('click', () => { Audio.ensure(); performGachaPull(1); });
+  $('btn-gacha-again-10').addEventListener('click', () => { Audio.ensure(); performGachaPull(10); });
+  $('btn-close-gacha-result').addEventListener('click', () => {
+    Audio.playSfx('click');
+    $('modal-gacha-result').classList.remove('active');
+  });
+  $('btn-auto-equip').addEventListener('click', () => {
+    Audio.playSfx('levelup');
+    if (Storage.autoEquipBest()) {
+      showToast('⚡ 所持中の最強ランク装備をセットしました！');
+    } else {
+      showToast('✅ すでに最強の装備がセットされています！');
+    }
+    renderGacha();
+  });
+  document.querySelectorAll('[data-gear-filter]').forEach(b => {
+    b.addEventListener('click', () => {
+      Audio.playSfx('click');
+      activeGearFilter = b.dataset.gearFilter;
+      document.querySelectorAll('[data-gear-filter]').forEach(x => x.classList.toggle('active', x === b));
+      renderGacha();
+    });
+  });
 
   document.querySelectorAll('[data-back]').forEach(b => {
     b.addEventListener('click', () => { Audio.playSfx('click'); showScreen(b.dataset.back); });
