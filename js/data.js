@@ -845,13 +845,13 @@ window.PBData = (() => {
       id: 'easy',
       name: 'イージー',
       icon: '🌱',
-      desc: '敵HP -40% / 被ダメ -30% / 回復ドロップ増！気軽に爽快プレイ向け',
+      desc: '敵HP -40% / 被ダメ -30% / 回復増・コイン獲得 半減（×0.5）',
       enemyHpMult: 0.60,
       bossHpMult: 0.58,
       enemyDmgMult: 0.70,
       spawnMult: 0.85,
       healBonus: 0.022,
-      coinMult: 0.85
+      coinMult: 0.5
     },
     {
       id: 'normal',

@@ -1947,7 +1947,8 @@ window.PBEngine = (() => {
         triggerLevelUp();
       }
     } else if (pk.kind === 'coin') {
-      const bonus = Math.round(pk.val * (collector.shop.greedMult || 1));
+      const diffMult = state.difficulty?.coinMult ?? 1.0;
+      const bonus = Math.max(1, Math.round(pk.val * (collector.shop.greedMult || 1) * diffMult));
       state.coinsEarned += bonus;
       Audio.playSfx('coin');
       addFloatingText(collector.x, collector.y - 26, `+${bonus}🪙`, '#facc15', false);
@@ -2208,7 +2209,8 @@ window.PBEngine = (() => {
       p.hp = Math.min(p.maxHp, p.hp + 50);
       p.invuln = 1.5;
     } else if (choice.kind === 'coin_bonus') {
-      state.coinsEarned += 15;
+      const diffMult = state.difficulty?.coinMult ?? 1.0;
+      state.coinsEarned += Math.max(1, Math.round(15 * diffMult));
     }
   }
 
@@ -2222,7 +2224,8 @@ window.PBEngine = (() => {
       const evo = choices.find(c => c.kind === 'evolve');
       const reward = evo || choices[0];
       applyChoiceEffect(p, reward);
-      const coinBonus = Math.round(18 * state.stage.coinMult);
+      const diffMult = state.difficulty?.coinMult ?? 1.0;
+      const coinBonus = Math.max(1, Math.round(18 * state.stage.coinMult * diffMult));
       state.coinsEarned += coinBonus;
       rewardsByPid.push({ pid: p.pid, playerName: `${p.pid + 1}P ${p.name}`, reward, coins: coinBonus });
     }
