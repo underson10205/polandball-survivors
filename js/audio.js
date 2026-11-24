@@ -156,12 +156,13 @@ window.PBAudio = (() => {
 
   // Stage & Boss MP3 BGM Tracks (from Google Drive ゲームBGM)
   const BGM_TRACKS = {
-    meadow: { src: 'bgm/stage1_meadow.mp3', label: 'かけっこ競争' },
-    sky: { src: 'bgm/stage2_sky.mp3?v=8', label: '楽しく軽快に' },
-    space: { src: 'bgm/stage3_space.mp3', label: 'Warp_Area' },
-    desert: { src: 'bgm/stage4_desert.mp3', label: 'shuffle_shuffle' },
-    midboss: { src: 'bgm/boss_mid.mp3', label: 'Will_you_still_cry_' },
-    finalboss: { src: 'bgm/boss_final.mp3', label: '全てを創造する者「Dominus_Deus」' }
+    title: { src: 'bgm/title.mp3?v=31', label: 'パステルハウス', volume: 0.38 },
+    meadow: { src: 'bgm/stage1_meadow.mp3', label: 'かけっこ競争', volume: 0.44 },
+    sky: { src: 'bgm/stage2_sky.mp3?v=8', label: '楽しく軽快に', volume: 0.44 },
+    space: { src: 'bgm/stage3_space.mp3', label: 'Warp_Area', volume: 0.44 },
+    desert: { src: 'bgm/stage4_desert.mp3', label: 'shuffle_shuffle', volume: 0.44 },
+    midboss: { src: 'bgm/boss_mid.mp3', label: 'Will_you_still_cry_', volume: 0.46 },
+    finalboss: { src: 'bgm/boss_final.mp3', label: '全てを創造する者「Dominus_Deus」', volume: 0.48 }
   };
 
   const audioPool = {};
@@ -171,19 +172,19 @@ window.PBAudio = (() => {
   const MP3_BGM_VOLUME = 0.44;
 
   function getTrackAudio(key) {
-    const k = BGM_TRACKS[key] ? key : 'meadow';
+    const k = BGM_TRACKS[key] ? key : 'title';
     if (!audioPool[k]) {
       const a = new Audio(BGM_TRACKS[k].src);
       a.loop = true;
       a.preload = 'auto';
-      a.volume = MP3_BGM_VOLUME;
+      a.volume = BGM_TRACKS[k].volume || MP3_BGM_VOLUME;
       audioPool[k] = a;
     }
     return audioPool[k];
   }
 
-  function startBgm(trackKey = 'meadow') {
-    const key = BGM_TRACKS[trackKey] ? trackKey : (trackKey === 'boss' ? 'finalboss' : 'meadow');
+  function startBgm(trackKey = 'title') {
+    const key = BGM_TRACKS[trackKey] ? trackKey : (trackKey === 'boss' ? 'finalboss' : 'title');
     const prevKey = currentTrackKey;
     currentTrackKey = key;
     bgmMode = key;
@@ -205,7 +206,7 @@ window.PBAudio = (() => {
     }
 
     currentAudio = nextAudio;
-    currentAudio.volume = MP3_BGM_VOLUME;
+    currentAudio.volume = BGM_TRACKS[key]?.volume || MP3_BGM_VOLUME;
     if (prevKey !== key) {
       try { currentAudio.currentTime = 0; } catch {}
     }
@@ -216,7 +217,7 @@ window.PBAudio = (() => {
   }
 
   function setBgmMode(trackKey) {
-    const key = BGM_TRACKS[trackKey] ? trackKey : (trackKey === 'boss' ? 'finalboss' : 'meadow');
+    const key = BGM_TRACKS[trackKey] ? trackKey : (trackKey === 'boss' ? 'finalboss' : 'title');
     if (currentTrackKey === key && currentAudio && !currentAudio.paused) return;
     if (bgmPlaying) startBgm(key);
     else {
@@ -239,6 +240,7 @@ window.PBAudio = (() => {
     if (bgmPlaying && !muted && bgmEnabled && currentTrackKey) {
       const a = getTrackAudio(currentTrackKey);
       currentAudio = a;
+      a.volume = BGM_TRACKS[currentTrackKey]?.volume || MP3_BGM_VOLUME;
       if (a.paused) {
         const p = a.play();
         if (p && typeof p.catch === 'function') p.catch(() => {});

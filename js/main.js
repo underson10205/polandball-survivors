@@ -139,6 +139,9 @@
     const target = $('screen-' + name);
     if (target) target.classList.add('active');
     refreshCoins();
+    if (!Engine.isRunning() && Audio.getCurrentTrack() !== 'title') {
+      Audio.startBgm('title');
+    }
     if (name === 'solo') renderSoloSelect();
     if (name === 'shop') renderShop();
     if (name === 'gacha') renderGacha();
@@ -1723,6 +1726,9 @@
     save.settings.muted = nextMuted;
     Storage.save();
     updateSoundButtons();
+    if (!nextMuted && !Engine.isRunning() && Audio.isBgmEnabled()) {
+      Audio.startBgm('title');
+    }
   }
 
   function updateSoundButtons() {
@@ -1970,6 +1976,17 @@
   updateSoundButtons();
   refreshCoins();
   startTitleDiorama();
+  Audio.startBgm('title');
+
+  // Auto-start audio and resume BGM on first user interaction (browser autoplay compliant)
+  function onFirstUserGesture() {
+    Audio.ensure();
+    if (!Engine.isRunning()) {
+      Audio.startBgm('title');
+    }
+  }
+  window.addEventListener('pointerdown', onFirstUserGesture, { once: true });
+  window.addEventListener('keydown', onFirstUserGesture, { once: true });
 
   // Check if launched via QR / Invite link (?room=XXXX)
   try {
