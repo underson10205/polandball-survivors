@@ -1271,6 +1271,77 @@ window.PBData = (() => {
     { id: 'space', label: '宇宙へ！', icon: '🚀' }
   ];
 
+  const HEAL_ITEMS = [
+    {
+      tier: 0,
+      id: 'pierogi',
+      name: 'ピエロギ',
+      icon: '🥟',
+      heal: 35,
+      rarity: 'コモン',
+      rarityCol: '#94a3b8',
+      weight: 55,
+      desc: 'ポーランド伝統のダンプリング。素朴で優しい味わいでHPを35回復する。',
+      floatText: '🥟 +35 HP',
+      floatCol: '#4ade80'
+    },
+    {
+      tier: 1,
+      id: 'pizza',
+      name: 'マルゲリータピザ',
+      icon: '🍕',
+      heal: 65,
+      rarity: 'アンコモン',
+      rarityCol: '#38bdf8',
+      weight: 22,
+      desc: '焼きたてアツアツのイタリアンピザ。とろけるチーズでHPを65回復する。',
+      floatText: '🍕 +65 HP',
+      floatCol: '#22c55e'
+    },
+    {
+      tier: 2,
+      id: 'chicken',
+      name: 'ローストチキン',
+      icon: '🍗',
+      heal: 110,
+      rarity: 'レア',
+      rarityCol: '#a855f7',
+      weight: 10,
+      desc: '香ばしく焼き上げたごちそうチキン。ジューシーな肉汁でHPを一気に110回復！中ボスからもドロップ。',
+      floatText: '🍗 +110 HP!',
+      floatCol: '#10b981'
+    },
+    {
+      tier: 3,
+      id: 'sachertorte',
+      name: '至高のザッハトルテ',
+      icon: '🍰',
+      heal: 999,
+      invuln: 2.5,
+      rarity: 'レジェンド',
+      rarityCol: '#f59e0b',
+      weight: 3,
+      desc: 'オーストリア伝統の最高峰チョコレートケーキ。HPを完全全快＋2.5秒間の完全無敵バリアを展開！中ボスからも低確率でドロップ。',
+      floatText: '🍰 完全全快＆無敵！',
+      floatCol: '#facc15'
+    },
+    {
+      tier: 4,
+      id: 'vodka',
+      name: '特製ウォッカ',
+      icon: '🍾',
+      heal: 45,
+      speedBoost: 6.0,
+      speedBoostMult: 1.35,
+      rarity: 'スペシャル',
+      rarityCol: '#06b6d4',
+      weight: 10,
+      desc: '強烈なポーランドスピリッツ！HPを45回復し、さらに6秒間移動速度が+35%急上昇する！',
+      floatText: '🍾 +45 HP & 快速！',
+      floatCol: '#38bdf8'
+    }
+  ];
+
   return {
     CHARACTERS,
     PASSIVES,
@@ -1284,6 +1355,7 @@ window.PBData = (() => {
     GEAR_RARITIES,
     GACHA_CONFIG,
     GEAR_ITEMS,
-    EMOTES
+    EMOTES,
+    HEAL_ITEMS
   };
 })();

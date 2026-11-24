@@ -750,6 +750,73 @@
         `;
         content.appendChild(card);
       }
+    } else if (activeCodexTab === 'items') {
+      const healItems = Data.HEAL_ITEMS || [];
+      for (const it of healItems) {
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.innerHTML = `
+          <div class="item-top">
+            <div class="item-icon" style="font-size:2.2rem;">${it.icon}</div>
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span class="item-title">${it.name}</span>
+                <span style="background:${it.rarityCol};color:#fff;font-size:0.7rem;font-weight:900;padding:2px 7px;border-radius:999px;">${it.rarity}</span>
+              </div>
+              <div class="item-desc" style="margin-top:4px;">${it.desc}</div>
+            </div>
+          </div>
+          <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:10px;padding:6px 9px;font-size:0.8rem;display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+            <div style="font-weight:900;color:#15803d;">
+              ${it.heal >= 999 ? '💚 HP完全全快' : `💚 HP +${it.heal} 回復`}
+              ${it.invuln ? ` ＋ 🛡️ ${it.invuln}秒間完全無敵` : ''}
+              ${it.speedBoost ? ` ＋ ⚡ ${it.speedBoost}秒間移動速度+35%` : ''}
+            </div>
+            <div style="font-weight:800;color:#64748b;font-size:0.75rem;">出現率: ${it.weight}%</div>
+          </div>
+        `;
+        content.appendChild(card);
+      }
+
+      // Also display special field drops (Magnet & Boss Chest)
+      const specialDrops = [
+        {
+          name: '強力磁石',
+          icon: '🧲',
+          desc: 'フィールド上にある全ジェム・コインをプレイヤーの元へ一瞬で引き寄せる超便利アイテム！',
+          effect: '🧲 全ジェム＆全コイン即時回収',
+          col: '#38bdf8',
+          tag: 'フィールドドロップ'
+        },
+        {
+          name: 'ボス宝箱',
+          icon: '🎁',
+          desc: '中ボス撃破時に確定ドロップ！ガチャ装備・コイン・進化素材などの豪華報酬を獲得！',
+          effect: '🎁 装備＆大量コイン＆進化チャンス',
+          col: '#facc15',
+          tag: '中ボス確定ドロップ'
+        }
+      ];
+      for (const sp of specialDrops) {
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.innerHTML = `
+          <div class="item-top">
+            <div class="item-icon" style="font-size:2.2rem;">${sp.icon}</div>
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="item-title">${sp.name}</span>
+                <span style="background:${sp.col};color:#1e293b;font-size:0.7rem;font-weight:900;padding:2px 7px;border-radius:999px;">${sp.tag}</span>
+              </div>
+              <div class="item-desc" style="margin-top:4px;">${sp.desc}</div>
+            </div>
+          </div>
+          <div style="background:#f8fafc;border:2px solid #cbd5e1;border-radius:10px;padding:6px 9px;font-size:0.8rem;display:flex;align-items:center;margin-top:4px;">
+            <div style="font-weight:900;color:#0f172a;">${sp.effect}</div>
+          </div>
+        `;
+        content.appendChild(card);
+      }
     } else {
       for (const en of Object.values(Data.ENEMIES)) {
         const kills = save.codex.enemies[en.id] || 0;

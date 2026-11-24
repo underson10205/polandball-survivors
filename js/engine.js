@@ -176,7 +176,8 @@ window.PBEngine = (() => {
       orbitAngle: 0,
       orbitActiveTimer: 0,
       orbitCdTimer: 0,
-      synergyActive: false
+      synergyActive: false,
+      speedBoostTimer: 0
     };
     Storage.recordWeaponSeen(def.startWeapon, false);
     return p;
@@ -234,9 +235,12 @@ window.PBEngine = (() => {
       cooldownMult *= 0.90; // +10% attack speed co-op synergy!
     }
 
+    const baseSpeed = p.baseStats.speed * speedMult;
+    const finalSpeed = (p.speedBoostTimer > 0 || p.speedBoostActive) ? baseSpeed * 1.35 : baseSpeed;
+
     return {
       maxHp: Math.round(p.baseStats.maxHp + p.shop.maxHpFlat + maxHpBonus),
-      speed: p.baseStats.speed * speedMult,
+      speed: finalSpeed,
       might: p.baseStats.might * mightMult,
       cooldown: Math.max(0.32, p.baseStats.cooldown * cooldownMult),
       area: p.baseStats.area * areaMult,
@@ -581,6 +585,7 @@ window.PBEngine = (() => {
       p.maxHp = stats.maxHp;
 
       if (p.invuln > 0) p.invuln = Math.max(0, p.invuln - dt);
+      if (p.speedBoostTimer > 0) p.speedBoostTimer = Math.max(0, p.speedBoostTimer - dt);
       if (p.hitFlash > 0) p.hitFlash = Math.max(0, p.hitFlash - dt * 4);
       if (p.dashCd > 0) p.dashCd = Math.max(0, p.dashCd - dt);
       if (p.emoteTimer > 0) {
@@ -1612,9 +1617,12 @@ window.PBEngine = (() => {
     // Drop random goodies & restore stage BGM when bosses are cleared!
     if (e.isMidBoss) {
       state.pickups.push({ id: state.nextEid++, kind: 'chest', x: e.x + 12, y: e.y, val: 1 });
-      state.pickups.push({ id: state.nextEid++, kind: 'heal', x: e.x - 18, y: e.y + 8, val: 48 });
-      addFloatingText(e.x, e.y - 30, '🎁 ボス宝箱＆🥟ドロップ！', '#fde047', true);
-      if (state.mode === 'coop_host') broadcastFx({ sfx: 'explosion', burst: true, x: e.x, y: e.y, color: '#facc15', count: 28, text: '🎁 ボス宝箱＆🥟ドロップ！', big: true });
+      // Midboss drops Roast Chicken (tier 2, 70%) or Sachertorte (tier 3, 30%)!
+      const bossTier = Math.random() < 0.30 ? 3 : 2;
+      const bossHeal = (Data.HEAL_ITEMS && Data.HEAL_ITEMS[bossTier]) || { icon: '🍗', name: 'ローストチキン', heal: 110 };
+      state.pickups.push({ id: state.nextEid++, kind: 'heal', x: e.x - 18, y: e.y + 8, tier: bossTier, val: bossHeal.heal });
+      addFloatingText(e.x, e.y - 30, `🎁 宝箱＆${bossHeal.icon}${bossHeal.name}！`, '#fde047', true);
+      if (state.mode === 'coop_host') broadcastFx({ sfx: 'explosion', burst: true, x: e.x, y: e.y, color: '#facc15', count: 28, text: `🎁 宝箱＆${bossHeal.icon}ドロップ！`, big: true });
       syncActiveBgm();
     } else if (e.isFinalBoss) {
       state.pickups.push({ id: state.nextEid++, kind: 'chest', x: e.x, y: e.y, val: 1 });
@@ -1642,9 +1650,17 @@ window.PBEngine = (() => {
       } else if (r < 0.030) {
         state.pickups.push({ id: state.nextEid++, kind: 'magnet', x: e.x, y: e.y - 8, val: 1 });
       }
-      // Independent heal (Pierogi) drop roll so Mali coins never block heals!
+      // Independent varied heal drop roll so Mali coins never block heals!
       if (Math.random() < healChance) {
-        state.pickups.push({ id: state.nextEid++, kind: 'heal', x: e.x - 8, y: e.y + 6, val: 42 });
+        const hr = Math.random() * 100;
+        let pickedTier = 0;
+        if (hr < 55) pickedTier = 0;       // 🥟 ピエロギ (55%)
+        else if (hr < 77) pickedTier = 1;  // 🍕 マルゲリータピザ (22%)
+        else if (hr < 87) pickedTier = 4;  // 🍾 特製ウォッカ (10%)
+        else if (hr < 97) pickedTier = 2;  // 🍗 ローストチキン (10%)
+        else pickedTier = 3;               // 🍰 至高のザッハトルテ (3%)
+        const hItem = (Data.HEAL_ITEMS && Data.HEAL_ITEMS[pickedTier]) || { heal: 35 };
+        state.pickups.push({ id: state.nextEid++, kind: 'heal', x: e.x - 8, y: e.y + 6, tier: pickedTier, val: hItem.heal });
       }
     }
   }
@@ -1957,13 +1973,36 @@ window.PBEngine = (() => {
       const bonus = Math.max(1, Math.round(pk.val * (collector.shop.greedMult || 1) * diffMult));
       state.coinsEarned += bonus;
       Audio.playSfx('coin');
-      addFloatingText(collector.x, collector.y - 26, `+${bonus}🪙`, '#facc15', false);
     } else if (pk.kind === 'heal') {
+      const hDef = (Data.HEAL_ITEMS && Data.HEAL_ITEMS[pk.tier || 0]) || { tier: 0, heal: 35, floatText: '🥟 +35 HP', floatCol: '#4ade80' };
+      const healAmt = pk.val || hDef.heal;
       for (const p of state.players) {
-        if (!p.downed) p.hp = Math.min(p.maxHp, p.hp + pk.val);
+        if (!p.downed) {
+          p.hp = Math.min(p.maxHp, p.hp + healAmt);
+          if (hDef.invuln) p.invuln = Math.max(p.invuln, hDef.invuln);
+          if (hDef.speedBoost) p.speedBoostTimer = Math.max(p.speedBoostTimer || 0, hDef.speedBoost);
+        }
       }
-      Audio.playSfx('revive');
-      addFloatingText(collector.x, collector.y - 26, `🥟 +${pk.val} HP`, '#4ade80', true);
+      if (hDef.tier === 3) {
+        Audio.playSfx('levelup');
+        spawnBurst(collector.x, collector.y, '#facc15', 26);
+      } else if (hDef.tier === 2 || hDef.tier === 4) {
+        Audio.playSfx('evolve');
+        spawnBurst(collector.x, collector.y, hDef.tier === 4 ? '#38bdf8' : '#10b981', 18);
+      } else {
+        Audio.playSfx('revive');
+        spawnBurst(collector.x, collector.y, '#4ade80', 12);
+      }
+      addFloatingText(collector.x, collector.y - 26, hDef.floatText || `+${healAmt} HP`, hDef.floatCol || '#4ade80', true);
+      if (state.mode === 'coop_host') {
+        broadcastFx({
+          sfx: hDef.tier >= 3 ? 'levelup' : (hDef.tier === 2 || hDef.tier === 4 ? 'evolve' : 'revive'),
+          text: hDef.floatText,
+          color: hDef.floatCol,
+          x: collector.x,
+          y: collector.y
+        });
+      }
     } else if (pk.kind === 'magnet') {
       Audio.playSfx('levelup');
       addFloatingText(collector.x, collector.y - 30, '🧲 全回収！', '#38bdf8', true);
@@ -2132,12 +2171,21 @@ window.PBEngine = (() => {
     const picked = [...evos, ...rest].slice(0, 3);
 
     // Fallback if everything maxed!
+    const healBonusOptions = [
+      { kind: 'heal_bonus', id: 'pierogi', title: '特盛ピエロギ', icon: '🥟', badge: '回復ボーナス', desc: 'HPを50回復＆1.5秒間無敵！', heal: 50, invuln: 1.5 },
+      { kind: 'heal_bonus', id: 'pizza', title: '特製マルゲリータピザ', icon: '🍕', badge: '回復ボーナス', desc: 'HPを75回復＆1.5秒間無敵！', heal: 75, invuln: 1.5 },
+      { kind: 'heal_bonus', id: 'chicken', title: '黄金のローストチキン', icon: '🍗', badge: 'ごちそう回復', desc: 'HPを110回復＆2秒間無敵！', heal: 110, invuln: 2.0 },
+      { kind: 'heal_bonus', id: 'vodka', title: 'スピリッツ・ウォッカ', icon: '🍾', badge: '速度ボーナス', desc: 'HPを45回復＆8秒間移動速度+35%！', heal: 45, speedBoost: 8.0 },
+      { kind: 'heal_bonus', id: 'sachertorte', title: '奇跡のザッハトルテ', icon: '🍰', badge: '全快ボーナス', desc: 'HPを完全全快＆3秒間無敵バリア！', heal: 999, invuln: 3.0 }
+    ];
+    let healOptIdx = Math.floor(Math.random() * healBonusOptions.length);
     while (picked.length < 3) {
-      picked.push(
-        picked.length % 2 === 0
-          ? { kind: 'heal_bonus', id: 'pierogi', title: '特盛ピエロギ', icon: '🥟', badge: '回復ボーナス', desc: 'HPを50回復＆一時無敵！' }
-          : { kind: 'coin_bonus', id: 'gold', title: 'ポーランド金貨袋', icon: '🪙', badge: 'コインボーナス', desc: 'ゴールドコイン +15 を獲得！' }
-      );
+      if (picked.length % 2 === 0) {
+        picked.push(healBonusOptions[healOptIdx % healBonusOptions.length]);
+        healOptIdx++;
+      } else {
+        picked.push({ kind: 'coin_bonus', id: 'gold', title: 'ポーランド金貨袋', icon: '🪙', badge: 'コインボーナス', desc: 'ゴールドコイン +15 を獲得！' });
+      }
     }
     return picked;
   }
@@ -2212,8 +2260,12 @@ window.PBEngine = (() => {
       }
       Audio.playSfx('click');
     } else if (choice.kind === 'heal_bonus') {
-      p.hp = Math.min(p.maxHp, p.hp + 50);
-      p.invuln = 1.5;
+      const healAmt = choice.heal || 50;
+      p.hp = Math.min(p.maxHp, p.hp + healAmt);
+      if (choice.invuln) p.invuln = Math.max(p.invuln, choice.invuln);
+      if (choice.speedBoost) p.speedBoostTimer = Math.max(p.speedBoostTimer || 0, choice.speedBoost);
+      Audio.playSfx(choice.invuln >= 3 ? 'levelup' : 'revive');
+      addFloatingText(p.x, p.y - 28, `${choice.icon} +${healAmt} HP`, '#4ade80', true);
     } else if (choice.kind === 'coin_bonus') {
       const diffMult = state.difficulty?.coinMult ?? 1.0;
       state.coinsEarned += Math.max(1, Math.round(15 * diffMult));
@@ -2338,6 +2390,8 @@ window.PBEngine = (() => {
         em: p.emote || '',
         oa: Math.round(p.orbitAngle * 100) / 100,
         ot: p.orbitActiveTimer > 0 ? 1 : 0,
+        sb: p.speedBoostTimer > 0 ? 1 : 0,
+        iv: p.invuln > 0.3 ? 1 : 0,
         w: p.weapons.map(w => [w.id, w.level, w.evolved ? 1 : 0]),
         pa: p.passives
       })),
@@ -2396,6 +2450,8 @@ window.PBEngine = (() => {
       else if (p.emoteTimer <= 0) p.emote = null;
       p.orbitAngle = sp.oa;
       p.orbitActiveTimer = sp.ot ? 1 : 0;
+      p.speedBoostActive = !!sp.sb;
+      p.invulnActive = !!sp.iv;
       p.weapons = sp.w.map(arr => ({ id: arr[0], level: arr[1], evolved: !!arr[2], damageDealt: 0 }));
       p.passives = sp.pa || {};
     }
@@ -2825,9 +2881,48 @@ window.PBEngine = (() => {
           ctx.beginPath();
           ctx.arc(pk.x, pk.y, 28 + Math.sin(state.time * 7) * 4, 0, Math.PI * 2);
           ctx.fill();
+        } else if (pk.kind === 'heal') {
+          const tier = pk.tier || 0;
+          if (tier === 3) {
+            // Sachertorte: Rainbow / Gold shimmering aura
+            ctx.save();
+            ctx.fillStyle = `hsla(${(state.time * 120) % 360}, 100%, 70%, 0.35)`;
+            ctx.beginPath();
+            ctx.arc(pk.x, pk.y + bob, 20 + Math.sin(state.time * 8) * 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+          } else if (tier === 2) {
+            // Roast Chicken: Golden aura
+            ctx.save();
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.30)';
+            ctx.beginPath();
+            ctx.arc(pk.x, pk.y + bob, 17 + Math.sin(state.time * 6) * 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          } else if (tier === 4) {
+            // Vodka: Cyan speed aura
+            ctx.save();
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.30)';
+            ctx.beginPath();
+            ctx.arc(pk.x, pk.y + bob, 16 + Math.sin(state.time * 6) * 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
         }
-        const emoji = pk.kind === 'chest' ? '🎁' : (pk.kind === 'heal' ? '🥟' : '🧲');
-        const sp = Renderer.getEmojiSprite(emoji, pk.kind === 'chest' ? 32 : 24);
+        let emoji = '🧲';
+        let sz = 24;
+        if (pk.kind === 'chest') {
+          emoji = '🎁';
+          sz = 32;
+        } else if (pk.kind === 'heal') {
+          const hDef = (Data.HEAL_ITEMS && Data.HEAL_ITEMS[pk.tier || 0]) || { icon: '🥟' };
+          emoji = hDef.icon;
+          sz = (pk.tier === 2 || pk.tier === 3 || pk.tier === 4) ? 27 : 24;
+        }
+        const sp = Renderer.getEmojiSprite(emoji, sz);
         ctx.drawImage(sp, pk.x - sp.width / 2, pk.y + bob - sp.height / 2);
       }
     }
@@ -2962,6 +3057,28 @@ window.PBEngine = (() => {
         label: state.players.length >= 2 ? `${p.pid + 1}P` : null,
         labelColor: PLAYER_COLORS[p.pid] || '#fde047'
       });
+
+      // Special visual effects: Speed Boost (Vodka) & Invulnerability Barrier (Sachertorte)
+      if ((p.speedBoostTimer > 0 || p.speedBoostActive) && !p.downed) {
+        ctx.save();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([7, 4]);
+        ctx.lineDashOffset = -state.time * 24;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius + 6 + Math.sin(state.time * 10) * 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+      if ((p.invuln > 0.3 || p.invulnActive) && !p.downed) {
+        ctx.save();
+        ctx.strokeStyle = (p.invuln > 1.2 || p.invulnActive) ? '#facc15' : 'rgba(255, 255, 255, 0.75)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius + 5 + Math.sin(state.time * 9) * 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
 
       // Under-ball mini HP bar
       if (!p.downed) {
