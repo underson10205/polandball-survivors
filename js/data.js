@@ -986,11 +986,21 @@ window.PBData = (() => {
   };
 
   const GEAR_ITEMS = [
-    // === 頭 (head): クールダウン / 経験値 / 回収範囲 / クリティカル ===
+    // === 頭 (head): クールダウン / 経験値 / 回収範囲 / クリティカル / 攻撃範囲 (計11種: 3/2/2/2/2) ===
     {
       id: 'head_common_knit', slot: 'head', rarity: 'common', icon: '🧢',
       name: '旅人のニット帽', desc: '経験値 +6% / 回収範囲 +10%',
       stats: { xpBonus: 0.06, magnetMult: 0.10 }
+    },
+    {
+      id: 'head_common_straw', slot: 'head', rarity: 'common', icon: '👒',
+      name: '農夫の麦わら帽子', desc: '移動速度 +4% / 回収範囲 +12%',
+      stats: { speedMult: 0.04, magnetMult: 0.12 }
+    },
+    {
+      id: 'head_common_bandana', slot: 'head', rarity: 'common', icon: '🧣',
+      name: '冒険者のバンダナ', desc: '会心率 +4% / 経験値 +4%',
+      stats: { critBonus: 0.04, xpBonus: 0.04 }
     },
     {
       id: 'head_uncommon_helm', slot: 'head', rarity: 'uncommon', icon: '⛑️',
@@ -998,14 +1008,29 @@ window.PBData = (() => {
       stats: { cooldownMult: -0.04, magnetMult: 0.18 }
     },
     {
+      id: 'head_uncommon_ushanka', slot: 'head', rarity: 'uncommon', icon: '🪆',
+      name: '極北のウシャンカ', desc: '最大HP +20 / クールダウン -5%',
+      stats: { maxHpFlat: 20, cooldownMult: -0.05 }
+    },
+    {
       id: 'head_rare_beret', slot: 'head', rarity: 'rare', icon: '🎓',
       name: '賢者のベレー帽', desc: 'クールダウン -7% / 経験値 +14% / 会心率 +4%',
       stats: { cooldownMult: -0.07, xpBonus: 0.14, critBonus: 0.04 }
     },
     {
+      id: 'head_rare_sombrero', slot: 'head', rarity: 'rare', icon: '🎺',
+      name: '情熱のソンブレロ', desc: '攻撃範囲 +14% / クールダウン -6% / 移動速度 +6%',
+      stats: { areaBonus: 0.14, cooldownMult: -0.06, speedMult: 0.06 }
+    },
+    {
       id: 'head_epic_radar', slot: 'head', rarity: 'epic', icon: '📡',
       name: '宇宙レーダーバイザー', desc: 'クールダウン -11% / 回収範囲 +35% / 会心率 +8%',
       stats: { cooldownMult: -0.11, magnetMult: 0.35, critBonus: 0.08 }
+    },
+    {
+      id: 'head_epic_monocle', slot: 'head', rarity: 'epic', icon: '🧐',
+      name: '紳士の知性モノクル', desc: 'クールダウン -13% / 経験値 +22% / 会心率 +7%',
+      stats: { cooldownMult: -0.13, xpBonus: 0.22, critBonus: 0.07 }
     },
     {
       id: 'head_legend_crown', slot: 'head', rarity: 'legend', icon: '👑',
@@ -1018,11 +1043,21 @@ window.PBData = (() => {
       stats: { cooldownMult: -0.18, areaBonus: 0.18, xpBonus: 0.20 }
     },
 
-    // === 体 (body): 最大HP / 移動速度 / HP自然回復 / アーマー / 復活 ===
+    // === 体 (body): 最大HP / 移動速度 / HP自然回復 / アーマー / 復活 (計11種: 3/2/2/2/2) ===
     {
       id: 'body_common_cape', slot: 'body', rarity: 'common', icon: '👕',
       name: 'コットン旅マント', desc: '最大HP +15 / 移動速度 +4%',
       stats: { maxHpFlat: 15, speedMult: 0.04 }
+    },
+    {
+      id: 'body_common_leather', slot: 'body', rarity: 'common', icon: '🦺',
+      name: '革の軽装ベスト', desc: '最大HP +18 / アーマー +1',
+      stats: { maxHpFlat: 18, armorFlat: 1 }
+    },
+    {
+      id: 'body_common_poncho', slot: 'body', rarity: 'common', icon: '🪡',
+      name: '風除けポンチョ', desc: '移動速度 +6% / HP回復 +0.15/秒',
+      stats: { speedMult: 0.06, regenFlat: 0.15 }
     },
     {
       id: 'body_uncommon_coat', slot: 'body', rarity: 'uncommon', icon: '🧥',
@@ -1030,14 +1065,29 @@ window.PBData = (() => {
       stats: { maxHpFlat: 28, speedMult: 0.07, regenFlat: 0.2 }
     },
     {
+      id: 'body_uncommon_chain', slot: 'body', rarity: 'uncommon', icon: '⛓️',
+      name: '鉄の鎖かたびら', desc: '最大HP +35 / アーマー +1',
+      stats: { maxHpFlat: 35, armorFlat: 1 }
+    },
+    {
       id: 'body_rare_samurai', slot: 'body', rarity: 'rare', icon: '🥋',
       name: '侍の軽装胴丸', desc: '最大HP +42 / 移動速度 +10% / アーマー +1',
       stats: { maxHpFlat: 42, speedMult: 0.10, armorFlat: 1 }
     },
     {
+      id: 'body_rare_hussar', slot: 'body', rarity: 'rare', icon: '🏇',
+      name: '有翼重騎兵の胸甲', desc: '最大HP +48 / 移動速度 +12% / HP回復 +0.3/秒',
+      stats: { maxHpFlat: 48, speedMult: 0.12, regenFlat: 0.3 }
+    },
+    {
       id: 'body_epic_titan', slot: 'body', rarity: 'epic', icon: '🦺',
       name: '強化チタン・バトルアーマー', desc: '最大HP +65 / アーマー +2 / HP回復 +0.5/秒 / 速度 +10%',
       stats: { maxHpFlat: 65, armorFlat: 2, regenFlat: 0.5, speedMult: 0.10 }
+    },
+    {
+      id: 'body_epic_nanosuit', slot: 'body', rarity: 'epic', icon: '🧬',
+      name: 'ナノ生体パワードスーツ', desc: '最大HP +55 / HP回復 +0.8/秒 / アーマー +2 / 速度 +12%',
+      stats: { maxHpFlat: 55, regenFlat: 0.8, armorFlat: 2, speedMult: 0.12 }
     },
     {
       id: 'body_legend_suit', slot: 'body', rarity: 'legend', icon: '🚀',
@@ -1050,11 +1100,21 @@ window.PBData = (() => {
       stats: { maxHpFlat: 80, speedMult: 0.24, regenFlat: 1.2, revives: 1 }
     },
 
-    // === 盾 (shield): 遠距離攻撃ダメージカット ＆ 完全無効!! ===
+    // === 盾 (shield): 遠距離攻撃ダメージカット ＆ 完全無効!! (計11種: 3/2/2/2/2) ===
     {
       id: 'shield_common_wood', slot: 'shield', rarity: 'common', icon: '🪵',
       name: '木の丸盾', desc: '遠距離ダメージ -20% / アーマー +1',
       stats: { rangedCut: 0.20, armorFlat: 1 }
+    },
+    {
+      id: 'shield_common_buckler', slot: 'shield', rarity: 'common', icon: '🫓',
+      name: '小さなバックラー', desc: '遠距離ダメージ -25% / 移動速度 +4%',
+      stats: { rangedCut: 0.25, speedMult: 0.04 }
+    },
+    {
+      id: 'shield_common_potlid', slot: 'shield', rarity: 'common', icon: '🍳',
+      name: '頑丈な中華鍋', desc: '遠距離ダメージ -18% / 最大HP +12 / アーマー +1',
+      stats: { rangedCut: 0.18, maxHpFlat: 12, armorFlat: 1 }
     },
     {
       id: 'shield_uncommon_iron', slot: 'shield', rarity: 'uncommon', icon: '🛡️',
@@ -1062,14 +1122,29 @@ window.PBData = (() => {
       stats: { rangedCut: 0.35, armorFlat: 1, maxHpFlat: 15 }
     },
     {
+      id: 'shield_uncommon_kite', slot: 'shield', rarity: 'uncommon', icon: '🪁',
+      name: '騎士のカイトシールド', desc: '遠距離ダメージ -42% / アーマー +1',
+      stats: { rangedCut: 0.42, armorFlat: 1 }
+    },
+    {
       id: 'shield_rare_scutum', slot: 'shield', rarity: 'rare', icon: '🏛️',
       name: 'ローマ大盾スクトゥム', desc: '遠距離ダメージ -55% / アーマー +2 / 最大HP +25',
       stats: { rangedCut: 0.55, armorFlat: 2, maxHpFlat: 25 }
     },
     {
+      id: 'shield_rare_viking', slot: 'shield', rarity: 'rare', icon: '🪓',
+      name: 'ヴァイキングの丸盾', desc: '遠距離ダメージ -50% / 攻撃力 +8% / アーマー +1',
+      stats: { rangedCut: 0.50, mightMult: 0.08, armorFlat: 1 }
+    },
+    {
       id: 'shield_epic_prism', slot: 'shield', rarity: 'epic', icon: '💠',
       name: 'プリズム反射バリア', desc: '遠距離ダメージ -78% / アーマー +3 / 最大HP +35',
       stats: { rangedCut: 0.78, armorFlat: 3, maxHpFlat: 35 }
+    },
+    {
+      id: 'shield_epic_force', slot: 'shield', rarity: 'epic', icon: '🌐',
+      name: 'フォースフィールド発生器', desc: '遠距離ダメージ -85% / アーマー +2 / 最大HP +40',
+      stats: { rangedCut: 0.85, armorFlat: 2, maxHpFlat: 40 }
     },
     {
       id: 'shield_legend_aegis', slot: 'shield', rarity: 'legend', icon: '✨',
@@ -1082,11 +1157,21 @@ window.PBData = (() => {
       stats: { rangedCut: 1.0, mightMult: 0.15, armorFlat: 3 }
     },
 
-    // === 武器 (weapon): 攻撃力アップ / 球数（発射数）アップ / 攻撃範囲アップ ===
+    // === 武器 (weapon): 攻撃力アップ / 球数（発射数）アップ / 攻撃範囲アップ (計11種: 3/2/2/2/2) ===
     {
       id: 'weapon_common_dagger', slot: 'weapon', rarity: 'common', icon: '🗡️',
       name: '見習いの短剣', desc: '攻撃力 +8%',
       stats: { mightMult: 0.08 }
+    },
+    {
+      id: 'weapon_common_slingshot', slot: 'weapon', rarity: 'common', icon: '🪵',
+      name: '冒険者のパチンコ', desc: '攻撃力 +6% / 移動速度 +4%',
+      stats: { mightMult: 0.06, speedMult: 0.04 }
+    },
+    {
+      id: 'weapon_common_club', slot: 'weapon', rarity: 'common', icon: '🏏',
+      name: '樫の木のこん棒', desc: '攻撃力 +10% / 攻撃範囲 +6%',
+      stats: { mightMult: 0.10, areaBonus: 0.06 }
     },
     {
       id: 'weapon_uncommon_axe', slot: 'weapon', rarity: 'uncommon', icon: '🪓',
@@ -1094,14 +1179,29 @@ window.PBData = (() => {
       stats: { mightMult: 0.14, areaBonus: 0.08 }
     },
     {
+      id: 'weapon_uncommon_spear', slot: 'weapon', rarity: 'uncommon', icon: '🔱',
+      name: '鉄の長槍', desc: '攻撃力 +12% / 攻撃範囲 +12%',
+      stats: { mightMult: 0.12, areaBonus: 0.12 }
+    },
+    {
       id: 'weapon_rare_crossbow', slot: 'weapon', rarity: 'rare', icon: '🏹',
       name: '連射のクロスボウ', desc: '攻撃力 +18% / 発射数（球数）+1',
       stats: { mightMult: 0.18, amountFlat: 1 }
     },
     {
+      id: 'weapon_rare_katana', slot: 'weapon', rarity: 'rare', icon: '⚔️',
+      name: '名刀・村雨', desc: '攻撃力 +22% / 会心率 +8%',
+      stats: { mightMult: 0.22, critBonus: 0.08 }
+    },
+    {
       id: 'weapon_epic_trident', slot: 'weapon', rarity: 'epic', icon: '🔱',
       name: '黄金トライデント', desc: '攻撃力 +28% / 発射数（球数）+1 / 攻撃範囲 +15%',
       stats: { mightMult: 0.28, amountFlat: 1, areaBonus: 0.15 }
+    },
+    {
+      id: 'weapon_epic_railgun', slot: 'weapon', rarity: 'epic', icon: '⚡',
+      name: '電磁レールスナイパー', desc: '攻撃力 +36% / クールダウン -8% / 会心率 +10%',
+      stats: { mightMult: 0.36, cooldownMult: -0.08, critBonus: 0.10 }
     },
     {
       id: 'weapon_legend_excalibur', slot: 'weapon', rarity: 'legend', icon: '⚔️',

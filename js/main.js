@@ -514,9 +514,23 @@
     }
     const hasLegend = res.pulls.some(p => p.item.rarity === 'legend');
     const hasEpic = res.pulls.some(p => p.item.rarity === 'epic');
-    if (hasLegend) Audio.playSfx('victory');
-    else if (hasEpic) Audio.playSfx('evolve');
-    else Audio.playSfx('levelup');
+    const hasRare = res.pulls.some(p => p.item.rarity === 'rare');
+    const hasUncommon = res.pulls.some(p => p.item.rarity === 'uncommon');
+
+    // Escalating sound effect by highest rarity pulled!
+    if (hasLegend) {
+      Audio.playSfx('chest');
+      setTimeout(() => Audio.playSfx('victory'), 180);
+    } else if (hasEpic) {
+      Audio.playSfx('chest');
+      setTimeout(() => Audio.playSfx('evolve'), 160);
+    } else if (hasRare) {
+      Audio.playSfx('levelup');
+    } else if (hasUncommon) {
+      Audio.playSfx('chest');
+    } else {
+      Audio.playSfx('coin');
+    }
 
     if (res.firstAch) {
       showToast(`🏆 実績解除: ${res.firstAch.name} (+${res.firstAch.reward}🪙)`);
@@ -533,30 +547,58 @@
     const cfg = Data.GACHA_CONFIG || { singleCost: 500, tenCost: 4500 };
     const save = Storage.get();
     const hasLegend = res.pulls.some(p => p.item.rarity === 'legend');
+    const hasEpic = !hasLegend && res.pulls.some(p => p.item.rarity === 'epic');
+    const hasRare = !hasLegend && !hasEpic && res.pulls.some(p => p.item.rarity === 'rare');
     const hasPity = res.pulls.some(p => p.isPity);
 
-    $('gacha-modal-title').textContent = hasLegend
-      ? '👑✨ LEGEND GET!! ガチャ大当たり！！ ✨👑'
-      : (hasPity ? '🌟 天井発動！ガチャ結果！' : (res.pulls.length === 10 ? '🎰 10連ガチャ結果！' : '🎰 ガチャ結果！'));
+    const titleEl = $('gacha-modal-title');
+    titleEl.className = '';
+    const modalContent = $('modal-gacha-result')?.querySelector('.modal-card');
+    if (modalContent) modalContent.classList.toggle('has-legend', hasLegend);
+
+    if (hasLegend) {
+      titleEl.className = 'modal-title-legend';
+      titleEl.innerHTML = '👑✨ LEGEND 大当たり！！ 超絶神引き！！ ✨👑';
+    } else if (hasEpic) {
+      titleEl.className = 'modal-title-epic';
+      titleEl.innerHTML = '🔮✨ EPIC 降臨！！ 強力装備獲得！！ ✨🔮';
+    } else if (hasRare) {
+      titleEl.className = 'modal-title-rare';
+      titleEl.innerHTML = hasPity ? '🌟 天井発動！ RARE以上確定GET！！' : '💎 RARE GET！！ ガチャ結果！';
+    } else {
+      titleEl.style.color = '#b45309';
+      titleEl.textContent = res.pulls.length === 10 ? '🎰 10連ガチャ結果！' : '🎰 ガチャ結果！';
+    }
 
     const grid = $('gacha-result-grid');
     grid.innerHTML = '';
     res.pulls.forEach((entry, idx) => {
       const it = entry.item;
-      const rar = rarities[it.rarity];
+      const rar = rarities[it.rarity] || { name: it.rarity, color: '#64748b', bg: '#f1f5f9' };
       const slDef = slots.find(s => s.id === it.slot);
       const card = document.createElement('div');
       card.className = `gacha-pull-card rarity-${it.rarity}`;
-      card.style.animationDelay = `${idx * 45}ms`;
+      card.style.animationDelay = `${idx * 65}ms`;
+
+      let rarityBadge = '';
+      if (it.rarity === 'legend') {
+        rarityBadge = '<span style="background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff;font-size:0.68rem;font-weight:900;padding:2px 7px;border-radius:999px;box-shadow:0 0 8px rgba(245,158,11,0.8);">👑 LEGEND!!</span>';
+      } else if (it.rarity === 'epic') {
+        rarityBadge = '<span style="background:#7e22ce;color:#fff;font-size:0.66rem;font-weight:900;padding:1px 6px;border-radius:999px;">🔮 EPIC</span>';
+      } else if (it.rarity === 'rare') {
+        rarityBadge = '<span style="background:#1d4ed8;color:#fff;font-size:0.66rem;font-weight:900;padding:1px 6px;border-radius:999px;">💎 RARE</span>';
+      }
+
       card.innerHTML = `
         <div style="display:flex;justify-content:center;gap:4px;align-items:center;flex-wrap:wrap;">
           <span class="gear-rarity-pill" style="color:${rar.color};background:${rar.bg};">${rar.name}</span>
+          ${rarityBadge}
           ${entry.isPity ? '<span class="gear-new-badge" style="background:#d97706;">🌟天井</span>' : ''}
           ${entry.isNew ? '<span class="gear-new-badge">NEW!</span>' : `<span class="gear-refund-badge">⬆️ +${entry.newPlus} 強化！</span>`}
         </div>
-        <div style="font-size:2rem;line-height:1.1;">${it.icon}</div>
+        <div style="font-size:2.2rem;line-height:1.1;margin:2px 0;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.15));">${it.icon}</div>
         <div style="font-size:0.72rem;font-weight:900;color:#475569;">${slDef?.icon || ''} ${slDef?.name || ''}</div>
-        <div style="font-weight:900;font-size:0.84rem;line-height:1.25;">${it.name}${entry.newPlus > 0 ? ` <span style="color:#dc2626;">+${entry.newPlus}</span>` : ''}</div>
+        <div style="font-weight:900;font-size:0.86rem;line-height:1.25;">${it.name}${entry.newPlus > 0 ? ` <span style="color:#dc2626;">+${entry.newPlus}</span>` : ''}</div>
         <div style="font-size:0.7rem;color:#334155;line-height:1.3;">${formatGearStatsDesc(it, entry.newPlus)}</div>
       `;
       grid.appendChild(card);
@@ -1367,18 +1409,6 @@
   $('btn-codex').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('codex'); });
   $('btn-ach').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('ach'); });
 
-  document.querySelectorAll('.btn-add-coins').forEach(btn => {
-    btn.addEventListener('click', () => {
-      Audio.ensure();
-      Audio.playSfx('coin');
-      Storage.addCoins(20000);
-      refreshCoins();
-      if ($('screen-gacha') && $('screen-gacha').classList.contains('active')) {
-        renderGacha();
-      }
-      showToast('🪙 20,000コインを追加しました！（テスト用）');
-    });
-  });
 
   $('btn-gacha-1').addEventListener('click', () => { Audio.ensure(); performGachaPull(1); });
   $('btn-gacha-10').addEventListener('click', () => { Audio.ensure(); performGachaPull(10); });
