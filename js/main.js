@@ -1367,18 +1367,6 @@
   $('btn-codex').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('codex'); });
   $('btn-ach').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('ach'); });
 
-  document.querySelectorAll('.btn-add-coins').forEach(btn => {
-    btn.addEventListener('click', () => {
-      Audio.ensure();
-      Audio.playSfx('coin');
-      Storage.addCoins(20000);
-      refreshCoins();
-      if ($('screen-gacha') && $('screen-gacha').classList.contains('active')) {
-        renderGacha();
-      }
-      showToast('🪙 20,000コインを追加しました！（テスト用）');
-    });
-  });
 
   $('btn-gacha-1').addEventListener('click', () => { Audio.ensure(); performGachaPull(1); });
   $('btn-gacha-10').addEventListener('click', () => { Audio.ensure(); performGachaPull(10); });
