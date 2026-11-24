@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ポーランドボール・サバイバーズ | 2〜3人協力対応 ヴァンサバアクション</title>
   <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット・スマホ最大3台でのオンライン協力プレイ対応。" />
-  <link rel="stylesheet" href="styles.css?v=28" />
+  <link rel="stylesheet" href="styles.css?v=29" />
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -356,6 +356,7 @@
   <!-- === MODAL: BOSS CHEST (Vampire Survivors Style Roulette) === -->
   <div id="modal-chest" class="modal-backdrop">
     <div id="chest-modal-card" class="modal-card chest-roulette-modal" style="text-align:center;">
+      <button id="btn-x-close-chest" class="modal-close-corner" title="閉じる" style="display:none;" aria-label="閉じる">✕</button>
       <div id="chest-header-wrap">
         <div id="chest-box-icon" class="chest-box-anim">🎁</div>
         <div id="chest-banner-title" class="chest-title">ボス宝箱オープン！！</div>
@@ -363,7 +364,7 @@
       </div>
       <div id="chest-roulette-container" class="chest-reels-container"></div>
       <div id="chest-rewards-list" class="chest-rewards-list" style="display:none;"></div>
-      <div style="display:flex;gap:12px;justify-content:center;margin-top:6px;">
+      <div class="chest-footer-actions">
         <button id="btn-skip-chest" class="btn btn-sm btn-subtle" style="display:none;min-width:110px;">⏩ スキップ</button>
         <button id="btn-close-chest" class="btn btn-gold" style="display:none;min-width:190px;">やったぜ！ (OK)</button>
       </div>
@@ -418,12 +419,12 @@
   <script src="lib/qrcode.min.js"></script>
 
   <!-- Game Modules -->
-  <script src="js/data.js?v=28"></script>
-  <script src="js/polandballRenderer.js?v=28"></script>
-  <script src="js/audio.js?v=28"></script>
-  <script src="js/storage.js?v=28"></script>
-  <script src="js/network.js?v=28"></script>
-  <script src="js/engine.js?v=28"></script>
-  <script src="js/main.js?v=28"></script>
+  <script src="js/data.js?v=29"></script>
+  <script src="js/polandballRenderer.js?v=29"></script>
+  <script src="js/audio.js?v=29"></script>
+  <script src="js/storage.js?v=29"></script>
+  <script src="js/network.js?v=29"></script>
+  <script src="js/engine.js?v=29"></script>
+  <script src="js/main.js?v=29"></script>
 </body>
 </html>

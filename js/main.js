@@ -1156,6 +1156,15 @@
   let chestRouletteTimer = null;
   let chestReelTimers = [];
 
+  function closeChestModal() {
+    const modal = $('modal-chest');
+    if (!modal || !modal.classList.contains('active')) return;
+    modal.classList.remove('active');
+    const xBtn = $('btn-x-close-chest');
+    if (xBtn) xBtn.style.display = 'none';
+    Engine.closeBossChest();
+  }
+
   function finishChestRoulette(rewardsByPid, dropCount, myRewards, totalCoins) {
     if (chestRouletteTimer) {
       clearInterval(chestRouletteTimer);
@@ -1227,6 +1236,8 @@
     list.style.display = 'flex';
     $('btn-skip-chest').style.display = 'none';
     $('btn-close-chest').style.display = 'inline-block';
+    const xBtn = $('btn-x-close-chest');
+    if (xBtn) xBtn.style.display = 'flex';
     Audio.playSfx('coin');
   }
 
@@ -1359,11 +1370,13 @@
       const list = $('chest-rewards-list');
       const btnSkip = $('btn-skip-chest');
       const btnClose = $('btn-close-chest');
+      const btnXClose = $('btn-x-close-chest');
 
       list.style.display = 'none';
       list.innerHTML = '';
       if (btnSkip) btnSkip.style.display = 'inline-block';
       if (btnClose) btnClose.style.display = 'none';
+      if (btnXClose) btnXClose.style.display = 'none';
 
       if (actualDropCount === 3) {
         titleEl.textContent = '🌟✨ 超当たり！ 3連ジャックポット！！ ✨🌟';
@@ -1485,6 +1498,8 @@
     onGameOver(summary) {
       $('modal-levelup').classList.remove('active');
       $('modal-chest').classList.remove('active');
+      const xBtn = $('btn-x-close-chest');
+      if (xBtn) xBtn.style.display = 'none';
       $('go-title').textContent = summary.victory ? `🏆 VICTORY! ${summary.finalBossName || '最終ボス'} 撃破！` : '💀 GAME OVER… また挑戦しよう！';
       $('go-title').style.color = summary.victory ? '#15803d' : '#dc143c';
       $('go-stats').innerHTML = `
@@ -1547,6 +1562,19 @@
         const idx = Number(e.code.slice(-1)) - 1;
         const btn = $('upgrade-grid').querySelector(`button[data-choice-index="${idx}"]`);
         if (btn && !btn.disabled) btn.click();
+      }
+      return;
+    }
+    if ($('modal-chest').classList.contains('active')) {
+      if (e.code === 'Space' || e.code === 'Enter' || e.code === 'Escape') {
+        e.preventDefault();
+        const btnClose = $('btn-close-chest');
+        const btnSkip = $('btn-skip-chest');
+        if (btnClose && btnClose.style.display !== 'none') {
+          closeChestModal();
+        } else if (btnSkip && btnSkip.style.display !== 'none') {
+          btnSkip.click();
+        }
       }
       return;
     }
@@ -1827,9 +1855,15 @@
   });
   $('btn-quit-run').addEventListener('click', exitToTitle);
   $('btn-dash').addEventListener('pointerdown', (e) => { e.stopPropagation(); Engine.triggerDash(); });
-  $('btn-close-chest').addEventListener('click', () => {
-    $('modal-chest').classList.remove('active');
-    Engine.closeBossChest();
+  $('btn-close-chest').addEventListener('click', closeChestModal);
+  const btnXClose = $('btn-x-close-chest');
+  if (btnXClose) {
+    btnXClose.addEventListener('click', closeChestModal);
+  }
+  $('modal-chest').addEventListener('click', (e) => {
+    if (e.target === $('modal-chest') && $('btn-close-chest').style.display !== 'none') {
+      closeChestModal();
+    }
   });
   $('btn-endless').addEventListener('click', () => {
     $('modal-gameover').classList.remove('active');
