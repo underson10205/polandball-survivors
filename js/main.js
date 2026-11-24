@@ -355,7 +355,7 @@
 
   function renderGacha() {
     const save = Storage.get();
-    const cfg = Data.GACHA_CONFIG || { singleCost: 100, tenCost: 900, pityLimit: 25 };
+    const cfg = Data.GACHA_CONFIG || { singleCost: 500, tenCost: 4500, pityLimit: 100 };
     const rarities = Data.GEAR_RARITIES || {};
     const items = Data.GEAR_ITEMS || [];
     const slots = Data.GEAR_SLOTS || [];
@@ -370,7 +370,7 @@
     const pityLeft = Math.max(1, cfg.pityLimit - (save.gachaPity || 0));
     const pityEl = $('gacha-pity-info');
     if (pityEl) {
-      pityEl.textContent = `確率: コモン45% / アンコモン30% / レア16% / エピック7% / レジェンド2%（ダブりはコイン還元・レジェンド天井まであと ${pityLeft}回！）`;
+      pityEl.textContent = `確率: コモン54% / アンコモン30% / レア10% / エピック5% / レジェンド1%（ダブりはコイン還元・レジェンド天井まであと ${pityLeft}回！）`;
     }
 
     // 1. Equipped 4 Slots (Head / Body / Shield / Weapon)
@@ -501,7 +501,7 @@
   function renderGachaResultModal(res) {
     const rarities = Data.GEAR_RARITIES || {};
     const slots = Data.GEAR_SLOTS || [];
-    const cfg = Data.GACHA_CONFIG || { singleCost: 100, tenCost: 900 };
+    const cfg = Data.GACHA_CONFIG || { singleCost: 500, tenCost: 4500 };
     const save = Storage.get();
     const hasLegend = res.pulls.some(p => p.item.rarity === 'legend');
 

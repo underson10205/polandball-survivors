@@ -231,7 +231,7 @@ window.PBStorage = (() => {
 
   function rollGacha(times = 1) {
     const s = get();
-    const cfg = window.PBData?.GACHA_CONFIG || { singleCost: 100, tenCost: 900, pityLimit: 25 };
+    const cfg = window.PBData?.GACHA_CONFIG || { singleCost: 500, tenCost: 4500, pityLimit: 100 };
     const rarities = window.PBData?.GEAR_RARITIES || {};
     const items = window.PBData?.GEAR_ITEMS || [];
     const count = times === 10 ? 10 : 1;
