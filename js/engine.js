@@ -1255,25 +1255,31 @@ window.PBEngine = (() => {
 
   function getWavePool(t, stageId) {
     if (stageId === 'desert') {
-      if (t < 60) return ['saudi_ball', 'saudi_ball', 'mali_ball', 'cameroon_ball', 'pirate_ball', 'speed_ball'];
-      if (t < 160) return ['saudi_ball', 'saudi_ball', 'mali_ball', 'cameroon_ball', 'turret_ball', 'viking_ball', 'speed_ball'];
-      return ['saudi_ball', 'saudi_ball', 'mali_ball', 'cameroon_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'speed_ball'];
+      // Stage 4: 黄金の古代砂漠 — サウジ・トルコ・古代ミイラ・モロッコ・マリ・砂漠石壁・疾風
+      if (t < 50) return ['saudi_ball', 'saudi_ball', 'turkey_ball', 'morocco_ball', 'mali_ball'];
+      if (t < 130) return ['saudi_ball', 'turkey_ball', 'morocco_ball', 'egypt_mummy', 'mali_ball', 'speed_ball'];
+      if (t < 230) return ['saudi_ball', 'turkey_ball', 'morocco_ball', 'egypt_mummy', 'kazakh_brick', 'mali_ball', 'speed_ball'];
+      return ['saudi_ball', 'turkey_ball', 'morocco_ball', 'egypt_mummy', 'kazakh_brick', 'speed_ball', 'mali_ball'];
     }
     if (stageId === 'space') {
-      if (t < 60) return ['korea_ball', 'korea_ball', 'alien_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball'];
-      if (t < 180) return ['korea_ball', 'korea_ball', 'alien_ball', 'cameroon_ball', 'mali_ball', 'turret_ball', 'kazakh_brick', 'speed_ball'];
-      return ['korea_ball', 'korea_ball', 'alien_ball', 'cameroon_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'speed_ball'];
+      // Stage 3: 宇宙軌道 — 韓国・エイリアン・イスラエルキューブ・サイバードローン・カザフブリック・宇宙砲台
+      if (t < 50) return ['korea_ball', 'korea_ball', 'alien_ball', 'space_drone', 'space_drone', 'mali_ball'];
+      if (t < 140) return ['korea_ball', 'alien_ball', 'space_drone', 'turret_ball', 'israel_cube', 'mali_ball'];
+      if (t < 240) return ['korea_ball', 'alien_ball', 'space_drone', 'israel_cube', 'kazakh_brick', 'turret_ball', 'mali_ball'];
+      return ['korea_ball', 'alien_ball', 'space_drone', 'israel_cube', 'kazakh_brick', 'turret_ball', 'mali_ball'];
     }
     if (stageId === 'sky') {
-      if (t < 60) return ['brazil_ball', 'brazil_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'slime_ball'];
-      if (t < 150) return ['brazil_ball', 'brazil_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball', 'viking_ball'];
-      return ['brazil_ball', 'brazil_ball', 'cameroon_ball', 'mali_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'viking_ball', 'alien_ball'];
+      // Stage 2: 成層圏スカイウェイ — ブラジル・アルゼンチン・コロンビア・カメルーン・対空砲台・超ターボ
+      if (t < 50) return ['brazil_ball', 'brazil_ball', 'argentina_ball', 'cameroon_ball', 'speed_ball', 'mali_ball'];
+      if (t < 130) return ['brazil_ball', 'argentina_ball', 'colombia_ball', 'cameroon_ball', 'speed_ball', 'turret_ball', 'mali_ball'];
+      if (t < 230) return ['brazil_ball', 'argentina_ball', 'colombia_ball', 'speed_ball', 'turret_ball', 'cameroon_ball', 'mali_ball'];
+      return ['brazil_ball', 'argentina_ball', 'colombia_ball', 'speed_ball', 'turret_ball', 'cameroon_ball', 'mali_ball'];
     }
-    // Meadow (Stage 1)
-    if (t < 40) return ['greece_ball', 'greece_ball', 'slime_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball'];
-    if (t < 100) return ['greece_ball', 'greece_ball', 'slime_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball'];
-    if (t < 210) return ['greece_ball', 'greece_ball', 'pirate_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick'];
-    return ['greece_ball', 'greece_ball', 'cameroon_ball', 'mali_ball', 'viking_ball', 'speed_ball', 'turret_ball', 'kazakh_brick', 'alien_ball'];
+    // Stage 1: ヨーロッパ大草原 — ギリシャ・スイス傭兵・オーストリア貴族・バイキング・ローグ・海賊
+    if (t < 40) return ['greece_ball', 'greece_ball', 'slime_ball', 'pirate_ball', 'mali_ball'];
+    if (t < 110) return ['greece_ball', 'swiss_ball', 'austria_ball', 'viking_ball', 'pirate_ball', 'mali_ball'];
+    if (t < 220) return ['greece_ball', 'swiss_ball', 'austria_ball', 'viking_ball', 'pirate_ball', 'mali_ball'];
+    return ['greece_ball', 'swiss_ball', 'austria_ball', 'viking_ball', 'pirate_ball', 'mali_ball'];
   }
 
   function spawnEnemy(id, scale = 1, customPos = null) {

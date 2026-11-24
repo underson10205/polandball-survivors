@@ -1263,6 +1263,219 @@ window.PBRenderer = (() => {
         break;
       }
 
+      // === Stage 1: Swiss Mercenary Ball ===
+      case 'swiss_ball':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Crisp Swiss White Cross
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r * 0.16, -r * 0.52, r * 0.32, r * 1.04);
+          ctx.fillRect(-r * 0.52, -r * 0.16, r * 1.04, r * 0.32);
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY);
+        break;
+
+      // === Stage 1: Austria-Hungary Empire Ball ===
+      case 'austria_ball':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(-r, -r, r * 2, r * 0.66);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r, -r * 0.34, r * 2, r * 0.68);
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(-r, r * 0.34, r * 2, r * 0.66);
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY);
+        // Aristocratic Dual Monocle / Spectacles
+        ctx.save();
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = Math.max(1.8, r * 0.08);
+        ctx.beginPath();
+        ctx.arc(-r * 0.28, -r * 0.08, r * 0.22, 0, Math.PI * 2);
+        ctx.arc(r * 0.28, -r * 0.08, r * 0.22, 0, Math.PI * 2);
+        ctx.stroke();
+        // Nose bridge
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.06, -r * 0.08);
+        ctx.lineTo(r * 0.06, -r * 0.08);
+        ctx.stroke();
+        ctx.restore();
+        break;
+
+      // === Stage 2: Argentina Ball ===
+      case 'argentina_ball':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#75aadb';
+          ctx.fillRect(-r, -r, r * 2, r * 0.66);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r, -r * 0.34, r * 2, r * 0.68);
+          ctx.fillStyle = '#75aadb';
+          ctx.fillRect(-r, r * 0.34, r * 2, r * 0.66);
+          // Sol de Mayo (Sun of May)
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.arc(0, r * 0.42, r * 0.18, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.12 });
+        break;
+
+      // === Stage 2: Colombia Ball ===
+      case 'colombia_ball':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#fcd116';
+          ctx.fillRect(-r, -r, r * 2, r);
+          ctx.fillStyle = '#003893';
+          ctx.fillRect(-r, 0, r * 2, r * 0.5);
+          ctx.fillStyle = '#ce1126';
+          ctx.fillRect(-r, r * 0.5, r * 2, r * 0.5);
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY);
+        break;
+
+      // === Stage 3: Hyper-Israel Cube (Polandball Hypercube) ===
+      case 'israel_cube':
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.1);
+        ctx.fillStyle = '#ffffff';
+        // Draw hypercube body
+        ctx.beginPath();
+        ctx.rect(-r * 0.95, -r * 0.95, r * 1.9, r * 1.9);
+        ctx.fill();
+        ctx.stroke();
+        // Top and bottom blue stripes
+        ctx.fillStyle = '#0038b8';
+        ctx.fillRect(-r * 0.95, -r * 0.65, r * 1.9, r * 0.28);
+        ctx.fillRect(-r * 0.95, r * 0.38, r * 1.9, r * 0.28);
+        // Star of David in center
+        ctx.strokeStyle = '#0038b8';
+        ctx.lineWidth = Math.max(1.6, r * 0.08);
+        ctx.beginPath();
+        drawStar(ctx, 0, -r * 0.12, 3, r * 0.28, r * 0.28, null);
+        ctx.stroke();
+        ctx.beginPath();
+        drawStar(ctx, 0, -r * 0.12, 3, r * 0.28, r * 0.28, null);
+        ctx.stroke();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.05 });
+        ctx.restore();
+        break;
+
+      // === Stage 3: Cyber Space Drone ===
+      case 'space_drone':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // High-tech circuit plates
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = Math.max(1.5, r * 0.08);
+          ctx.beginPath();
+          ctx.arc(0, 0, r * 0.65, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+        // Glowing cyan mono-visor eye
+        ctx.save();
+        ctx.shadowColor = '#06b6d4';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = '#06b6d4';
+        ctx.beginPath();
+        ctx.ellipse(0, -r * 0.1, r * 0.55, r * 0.18, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Bright eye core
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(lookX * r * 0.2, -r * 0.1, r * 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Mini antenna
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, -r);
+        ctx.lineTo(0, -r * 1.35);
+        ctx.stroke();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(0, -r * 1.38, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+
+      // === Stage 4: Turkey Fez Ball ===
+      case 'turkey_ball':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#e30a17';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // White Crescent & Star
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(-r * 0.15, r * 0.25, r * 0.32, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#e30a17';
+          ctx.beginPath();
+          ctx.arc(-r * 0.06, r * 0.25, r * 0.25, 0, Math.PI * 2);
+          ctx.fill();
+          drawStar(ctx, r * 0.25, r * 0.25, 5, r * 0.14, r * 0.06, '#ffffff');
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.14 });
+        // Red Fez Hat with black tassel atop ball
+        ctx.save();
+        ctx.fillStyle = '#b91c1c';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.8, r * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.36, -r * 0.82);
+        ctx.lineTo(-r * 0.24, -r * 1.38);
+        ctx.lineTo(r * 0.24, -r * 1.38);
+        ctx.lineTo(r * 0.36, -r * 0.82);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Black tassel string
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 1.38);
+        ctx.quadraticCurveTo(r * 0.38, -r * 1.25, r * 0.44, -r * 0.95);
+        ctx.stroke();
+        ctx.restore();
+        break;
+
+      // === Stage 4: Ancient Egypt Mummy Ball ===
+      case 'egypt_mummy':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#d4b996';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Mummy bandages wrapped across
+          ctx.strokeStyle = '#b89f7a';
+          ctx.lineWidth = Math.max(2, r * 0.12);
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.9, -r * 0.4); ctx.lineTo(r * 0.9, -r * 0.2);
+          ctx.moveTo(-r * 0.95, 0.1); ctx.lineTo(r * 0.95, 0.25);
+          ctx.moveTo(-r * 0.85, r * 0.6); ctx.lineTo(r * 0.85, r * 0.45);
+          ctx.stroke();
+        });
+        // Glowing yellow cursed eyes through bandage slit
+        ctx.save();
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 8;
+        drawEyes(ctx, r, 'angry', lookX, lookY, { eyeColor: '#facc15', pupilColor: '#78350f' });
+        ctx.restore();
+        break;
+
+      // === Stage 4: Morocco Ball ===
+      case 'morocco_ball':
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#c1272d';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Green Pentagram (Seal of Solomon)
+          ctx.strokeStyle = '#006233';
+          ctx.lineWidth = Math.max(2.2, r * 0.1);
+          drawStar(ctx, 0, r * 0.28, 5, r * 0.32, r * 0.14, null);
+          ctx.stroke();
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.14 });
+        break;
+
       case 'boss_prussia':
         drawFlagCircle(ctx, r, () => {
           ctx.fillStyle = '#111827';

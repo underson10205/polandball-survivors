@@ -711,6 +711,55 @@ window.PBData = (() => {
       hp: 118, speed: 108, damage: 13, radius: 19, xp: 11, score: 40, coinBonus: true,
       desc: 'Stage 4（古代砂漠）に登場！クーフィーヤ頭巾のタフな砂漠ボール。倒すとコインを落としやすい！'
     },
+    // === Stage 1 (ヨーロッパ大草原) 追加敵 ===
+    swiss_ball: {
+      id: 'swiss_ball', name: 'スイス傭兵ボール', stageTag: '🌿 Stage 1 出現',
+      hp: 120, speed: 76, damage: 13, radius: 19, xp: 9, score: 32,
+      desc: 'Stage 1（大草原）に出現！白十字を掲げる伝統の精鋭傭兵。頑丈な体で前線を塞ぐ！'
+    },
+    austria_ball: {
+      id: 'austria_ball', name: 'オーストリア二重帝国ボール', stageTag: '🌿 Stage 1 出現',
+      hp: 95, speed: 72, damage: 12, radius: 18, xp: 10, score: 36, shooter: true,
+      desc: 'Stage 1（大草原）に出現！二重眼鏡をかけた名門ハプスブルク貴族。遠距離から弾を放つ！'
+    },
+    // === Stage 2 (成層圏スカイウェイ) 追加敵 ===
+    argentina_ball: {
+      id: 'argentina_ball', name: 'アルゼンチンボール', stageTag: '☁️ Stage 2 出現',
+      hp: 82, speed: 135, damage: 12, radius: 17, xp: 8, score: 30,
+      desc: 'Stage 2（成層圏）に出現！天空の「5月の太陽」を背負い、青空を猛スピードで滑空する！'
+    },
+    colombia_ball: {
+      id: 'colombia_ball', name: 'コロンビアボール', stageTag: '☁️ Stage 2 出現',
+      hp: 110, speed: 100, damage: 14, radius: 19, xp: 10, score: 38,
+      desc: 'Stage 2（成層圏）に出現！三色旗をまとい高山地帯の強靭な突進を仕掛けてくる！'
+    },
+    // === Stage 3 (宇宙軌道) 追加敵 ===
+    israel_cube: {
+      id: 'israel_cube', name: 'ハイパー・イスラエルキューブ', stageTag: '🌌 Stage 3 出現',
+      hp: 260, speed: 65, damage: 16, radius: 22, xp: 15, score: 52, isCube: true,
+      desc: 'Stage 3（宇宙軌道）に出現！ポーランドボール伝統の4次元立方体（キューブ）！超重量級の宇宙防壁！'
+    },
+    space_drone: {
+      id: 'space_drone', name: 'サイバー・ドローンボール', stageTag: '🌌 Stage 3 出現',
+      hp: 70, speed: 152, damage: 13, radius: 15, xp: 11, score: 42,
+      desc: 'Stage 3（宇宙軌道）に出現！シアンの単眼センサーでプレイヤーを精密追尾する宇宙迎撃機！'
+    },
+    // === Stage 4 (黄金の古代砂漠) 追加敵 ===
+    turkey_ball: {
+      id: 'turkey_ball', name: 'トルコ・フェズ帽ボール', stageTag: '🏜️ Stage 4 出現',
+      hp: 105, speed: 112, damage: 14, radius: 18, xp: 10, score: 38,
+      desc: 'Stage 4（古代砂漠）に出現！伝統の赤いフェズ帽を被った砂漠の騎兵ボール！'
+    },
+    egypt_mummy: {
+      id: 'egypt_mummy', name: '古代ミイラボール', stageTag: '🏜️ Stage 4 出現',
+      hp: 125, speed: 70, damage: 15, radius: 19, xp: 12, score: 45, shooter: true,
+      desc: 'Stage 4（古代砂漠）に出現！包帯で巻かれた古代ファラオの従者。怪しい呪術弾を撃ってくる！'
+    },
+    morocco_ball: {
+      id: 'morocco_ball', name: 'モロッコボール', stageTag: '🏜️ Stage 4 出現',
+      hp: 92, speed: 120, damage: 12, radius: 18, xp: 9, score: 34,
+      desc: 'Stage 4（古代砂漠）に出現！緑の五芒星を宿した砂漠のベルベル戦士。砂煙をあげて高速急接近！'
+    },
     // === Stage 1 (ヨーロッパ大草原) Bosses ===
     boss_viking: {
       id: 'boss_viking', name: '巨大バイキング王', stageTag: '🌿 Stage 1 中ボス(1:30)',
