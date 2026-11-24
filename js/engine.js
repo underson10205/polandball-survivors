@@ -262,16 +262,17 @@ window.PBEngine = (() => {
     const b = def.base;
     const lv = Math.min(def.maxLevel, w.level);
     const evo = w.evolved;
-    // Evolved Laser keeps full original satellite power; all other evolved weapons are toned down in power & range
+    // Evolved Laser keeps full satellite power; Evolved Pilum gets massive legion barrage power!
     const isEvoLaser = evo && w.id === 'laser';
+    const isEvoPilum = evo && w.id === 'pilum';
 
-    const evoDmgMult = evo ? (isEvoLaser ? 1.9 : 1.58) : 1;
-    const evoCdMult = evo ? (isEvoLaser ? 0.66 : 0.75) : 1;
-    const evoCountAdd = evo ? (isEvoLaser ? 2 : 1) : 0;
-    const evoAreaMult = evo ? (isEvoLaser ? 1.48 : 1.24) : 1;
-    const evoSpeedMult = evo ? (isEvoLaser ? 1.22 : 1.18) : 1;
+    const evoDmgMult = evo ? (isEvoLaser ? 1.9 : (isEvoPilum ? 2.25 : 1.58)) : 1;
+    const evoCdMult = evo ? (isEvoLaser ? 0.66 : (isEvoPilum ? 0.50 : 0.75)) : 1;
+    const evoCountAdd = evo ? (isEvoLaser ? 2 : (isEvoPilum ? 6 : 1)) : 0;
+    const evoAreaMult = evo ? (isEvoLaser ? 1.48 : (isEvoPilum ? 1.50 : 1.24)) : 1;
+    const evoSpeedMult = evo ? (isEvoLaser ? 1.22 : (isEvoPilum ? 1.30 : 1.18)) : 1;
     const evoDurMult = evo ? (isEvoLaser ? 1.65 : 1.40) : 1;
-    const evoKbMult = evo ? (isEvoLaser ? 1.6 : 1.40) : 1;
+    const evoKbMult = evo ? (isEvoLaser ? 1.6 : (isEvoPilum ? 1.85 : 1.40)) : 1;
 
     let damage = b.damage * (1 + (lv - 1) * 0.35) * evoDmgMult;
     let cooldown = b.cooldown * Math.pow(0.915, lv - 1) * evoCdMult;
@@ -522,7 +523,7 @@ window.PBEngine = (() => {
         callbacks.onLevelUpClose();
       } else if (type === 'chest') {
         Audio.playSfx('chest');
-        callbacks.onChestOpen(payload.rewards, true);
+        callbacks.onChestOpen(payload.rewards, true, payload.dropCount || 1);
       } else if (type === 'gameover') {
         state.ended = true;
         Audio.stopBgm();
@@ -733,8 +734,10 @@ window.PBEngine = (() => {
   }
 
   function checkOrbitHits(p, w, ws) {
-    const orbitR = (w.evolved ? 94 : 88) * ws.area;
-    const hitR = (w.evolved ? 28 : 26) * ws.area;
+    // Teacup orbit stays close to player so enemies cannot enter the blind spot!
+    // Area upgrades expand the cup hitbox itself instead of pushing it outward.
+    const orbitR = w.evolved ? 78 : 70;
+    const hitR = (w.evolved ? 32 : 28) * ws.area;
     for (let i = 0; i < ws.count; i++) {
       const a = p.orbitAngle + (i * Math.PI * 2) / ws.count;
       const ox = p.x + Math.cos(a) * orbitR;
@@ -909,27 +912,75 @@ window.PBEngine = (() => {
       }
 
       case 'fan': {
-        const total = w.evolved ? Math.min(12, Math.max(8, ws.count + 3)) : ws.count;
-        const arcSpan = w.evolved ? Math.PI * 2 : Math.min(Math.PI * 0.85, 0.24 * total);
-        for (let i = 0; i < total; i++) {
-          const a = w.evolved
-            ? (i * Math.PI * 2) / total + state.time
-            : baseAngle - arcSpan / 2 + (total > 1 ? (i * arcSpan) / (total - 1) : 0);
-          pushProjectile({
-            id: state.nextEid++,
-            kind: 'pilum',
-            evolved: w.evolved,
-            owner: p.pid,
-            weapon: w,
-            x: p.x, y: p.y,
-            vx: Math.cos(a) * ws.speed,
-            vy: Math.sin(a) * ws.speed,
-            radius: (w.evolved ? 10.5 : 11) * ws.area,
-            damage: ws.damage,
-            pierce: ws.pierce,
-            life: 1.4,
-            hitSet: new Map()
-          });
+        Audio.playSfx('slash');
+        if (w.evolved) {
+          // --- EVOLVED: レギオン大行進 (Legion Grand March) ---
+          // 1. 360-degree radial Legion Ring of 16 golden javelins!
+          const ringCount = 16;
+          for (let i = 0; i < ringCount; i++) {
+            const a = (i * Math.PI * 2) / ringCount + state.time * 2;
+            pushProjectile({
+              id: state.nextEid++,
+              kind: 'pilum',
+              evolved: true,
+              owner: p.pid,
+              weapon: w,
+              x: p.x, y: p.y,
+              vx: Math.cos(a) * ws.speed,
+              vy: Math.sin(a) * ws.speed,
+              radius: 14 * ws.area,
+              damage: Math.round(ws.damage * 0.95),
+              pierce: 99, // Infinite penetration for legion ring!
+              life: 1.8,
+              hitSet: new Map()
+            });
+          }
+          // 2. Heavy Legion Phalanx spear salvo straight toward target!
+          const phalanxCount = Math.min(6, Math.max(3, ws.count));
+          const phalanxSpread = 0.20;
+          for (let i = 0; i < phalanxCount; i++) {
+            const spreadA = (i - (phalanxCount - 1) / 2) * phalanxSpread;
+            const a = baseAngle + spreadA;
+            pushProjectile({
+              id: state.nextEid++,
+              kind: 'pilum',
+              evolved: true,
+              isHeavyPhalanx: true,
+              owner: p.pid,
+              weapon: w,
+              x: p.x + Math.cos(a) * 16,
+              y: p.y + Math.sin(a) * 16,
+              vx: Math.cos(a) * (ws.speed * 1.25),
+              vy: Math.sin(a) * (ws.speed * 1.25),
+              radius: 18 * ws.area,
+              damage: Math.round(ws.damage * 1.45),
+              pierce: 99,
+              life: 2.0,
+              hitSet: new Map()
+            });
+          }
+        } else {
+          // --- BASE: ピルム投槍陣 ---
+          const total = ws.count;
+          const arcSpan = Math.min(Math.PI * 0.75, 0.18 * total);
+          for (let i = 0; i < total; i++) {
+            const a = baseAngle - arcSpan / 2 + (total > 1 ? (i * arcSpan) / (total - 1) : 0);
+            pushProjectile({
+              id: state.nextEid++,
+              kind: 'pilum',
+              evolved: false,
+              owner: p.pid,
+              weapon: w,
+              x: p.x, y: p.y,
+              vx: Math.cos(a) * ws.speed,
+              vy: Math.sin(a) * ws.speed,
+              radius: 13 * ws.area,
+              damage: ws.damage,
+              pierce: ws.pierce,
+              life: 1.7,
+              hitSet: new Map()
+            });
+          }
         }
         break;
       }
@@ -2274,23 +2325,48 @@ window.PBEngine = (() => {
 
   function openBossChest() {
     state.chestPending = true;
+
+    // Boss Chest Roll: 10% Triple Jackpot (3 items), 20% Double Hit (2 items), 70% Standard (1 item)
+    const r = Math.random();
+    let dropCount = 1;
+    if (r < 0.10) {
+      dropCount = 3; // 10% 超当たり！ 3連ジャックポット
+    } else if (r < 0.30) {
+      dropCount = 2; // 20% 当たり！ 2連ドロップ
+    } else {
+      dropCount = 1; // 70% 通常
+    }
+
     const rewardsByPid = [];
     for (const p of state.players) {
       if (p.disconnected) continue;
-      const choices = generateChoicesForPlayer(p);
-      // Prefer evolution if available!
-      const evo = choices.find(c => c.kind === 'evolve');
-      const reward = evo || choices[0];
-      applyChoiceEffect(p, reward);
+      const playerRewards = [];
+      for (let step = 0; step < dropCount; step++) {
+        const choices = generateChoicesForPlayer(p);
+        // Prefer evolution if available!
+        const evo = choices.find(c => c.kind === 'evolve');
+        const picked = evo || choices[0];
+        applyChoiceEffect(p, picked);
+        playerRewards.push(picked);
+      }
       const diffMult = state.difficulty?.coinMult ?? 1.0;
-      const coinBonus = Math.max(1, Math.round(18 * state.stage.coinMult * diffMult));
+      const baseCoin = Math.max(1, Math.round(18 * state.stage.coinMult * diffMult));
+      const coinBonus = baseCoin * dropCount;
       state.coinsEarned += coinBonus;
-      rewardsByPid.push({ pid: p.pid, playerName: `${p.pid + 1}P ${p.name}`, reward, coins: coinBonus });
+      rewardsByPid.push({
+        pid: p.pid,
+        playerName: `${p.pid + 1}P ${p.name}`,
+        dropCount,
+        rewards: playerRewards,
+        reward: playerRewards[0], // backward compatibility
+        coins: coinBonus
+      });
     }
+
     Audio.playSfx('chest');
-    callbacks.onChestOpen(rewardsByPid, state.players.length >= 2);
+    callbacks.onChestOpen(rewardsByPid, state.players.length >= 2, dropCount);
     if (state.mode === 'coop_host') {
-      Net.send('chest', { rewards: rewardsByPid });
+      Net.send('chest', { rewards: rewardsByPid, dropCount });
     }
   }
 
@@ -3022,20 +3098,23 @@ window.PBEngine = (() => {
       if (teaW && !p.downed && (teaW.evolved || p.orbitActiveTimer > 0)) {
         const stats = getComputedStats(p);
         const ws = getWeaponStats(teaW, stats);
-        const orbitR = (teaW.evolved ? 94 : 88) * ws.area;
-        ctx.strokeStyle = teaW.evolved ? 'rgba(251, 191, 36, 0.48)' : 'rgba(217, 119, 6, 0.25)';
-        ctx.lineWidth = teaW.evolved ? 8 : 4;
+        // Keep orbit distance close to player so enemies cannot enter inside!
+        const orbitR = teaW.evolved ? 78 : 70;
+        ctx.strokeStyle = teaW.evolved ? 'rgba(251, 191, 36, 0.48)' : 'rgba(217, 119, 6, 0.28)';
+        ctx.lineWidth = Math.round((teaW.evolved ? 9 : 5) * Math.min(2.0, ws.area));
         ctx.beginPath();
         ctx.arc(p.x, p.y, orbitR, 0, Math.PI * 2);
         ctx.stroke();
         if (teaW.evolved) {
-          ctx.strokeStyle = 'rgba(254, 240, 138, 0.55)';
-          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = 'rgba(254, 240, 138, 0.6)';
+          ctx.lineWidth = 3;
           ctx.beginPath();
           ctx.arc(p.x, p.y, orbitR * 0.88, 0, Math.PI * 2);
           ctx.stroke();
         }
-        const teaSp = Renderer.getEmojiSprite(teaW.evolved ? '🫖' : '☕', teaW.evolved ? 34 : 28);
+        // Area scales the cup size itself!
+        const cupSize = Math.round((teaW.evolved ? 38 : 30) * Math.min(2.5, Math.max(0.85, ws.area)));
+        const teaSp = Renderer.getEmojiSprite(teaW.evolved ? '🫖' : '☕', cupSize);
         const hw = teaSp.width / 2;
         const hh = teaSp.height / 2;
         for (let i = 0; i < ws.count; i++) {
@@ -3326,16 +3405,46 @@ window.PBEngine = (() => {
       } else if (pr.kind === 'pilum') {
         const a = typeof pr.angle === 'number' ? pr.angle : Math.atan2(pr.vy, pr.vx);
         ctx.rotate(a);
-        ctx.strokeStyle = pr.evolved ? '#fde047' : '#f59e0b';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(-16, 0); ctx.lineTo(18, 0);
-        ctx.stroke();
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.moveTo(22, 0); ctx.lineTo(12, -5); ctx.lineTo(12, 5);
-        ctx.closePath();
-        ctx.fill();
+        if (pr.evolved) {
+          ctx.save();
+          ctx.shadowColor = '#fde047';
+          ctx.shadowBlur = pr.isHeavyPhalanx ? 12 : 8;
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = pr.isHeavyPhalanx ? 5.5 : 4.2;
+          ctx.beginPath();
+          ctx.moveTo(pr.isHeavyPhalanx ? -26 : -18, 0);
+          ctx.lineTo(pr.isHeavyPhalanx ? 24 : 18, 0);
+          ctx.stroke();
+          // Roman imperial crimson spearhead with gold highlight
+          ctx.fillStyle = '#dc2626';
+          ctx.beginPath();
+          ctx.moveTo(pr.isHeavyPhalanx ? 32 : 25, 0);
+          ctx.lineTo(pr.isHeavyPhalanx ? 18 : 14, pr.isHeavyPhalanx ? -7 : -5);
+          ctx.lineTo(pr.isHeavyPhalanx ? 18 : 14, pr.isHeavyPhalanx ? 7 : 5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = '#fef08a';
+          ctx.beginPath();
+          ctx.moveTo(pr.isHeavyPhalanx ? 32 : 25, 0);
+          ctx.lineTo(pr.isHeavyPhalanx ? 22 : 17, pr.isHeavyPhalanx ? -3 : -2.5);
+          ctx.lineTo(pr.isHeavyPhalanx ? 22 : 17, pr.isHeavyPhalanx ? 3 : 2.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        } else {
+          ctx.strokeStyle = '#b91c1c';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(-16, 0); ctx.lineTo(16, 0);
+          ctx.stroke();
+          ctx.fillStyle = '#f1f5f9';
+          ctx.strokeStyle = '#1e293b';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(22, 0); ctx.lineTo(12, -5); ctx.lineTo(12, 5);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+        }
       } else if (pr.kind === 'matador') {
         const a = typeof pr.angle === 'number' ? pr.angle : Math.atan2(pr.vy, pr.vx);
         ctx.rotate(a);
@@ -3488,6 +3597,7 @@ window.PBEngine = (() => {
     continueEndless,
     handleNetMessage,
     handlePeerDisconnected,
+    getMyPid: () => (state ? (state.myPid || 0) : 0),
     isRunning: () => !!(state && state.running)
   };
 })();

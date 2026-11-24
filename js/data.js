@@ -487,16 +487,16 @@ window.PBData = (() => {
       evolvePassive: 'shield',
       evolvedName: 'レギオン大行進',
       evolvedIcon: '🏛️',
-      evolvedDesc: '黄金の投槍が全方位へ放射状に降り注ぎ、敵軍団を貫く！',
-      desc: '敵を貫通するローマ投槍を扇状に放つ。',
+      evolvedDesc: '全方位16本黄金投槍リング＆超貫通ファランクス重槍を連続投擲！軍団を粉砕する！',
+      desc: '敵を複数貫通する高速ローマ投槍を扇状に放つ。',
       color: '#b91c1c',
       type: 'fan',
-      base: { damage: 23, cooldown: 1.45, count: 3, speed: 500, area: 1.0, pierce: 3 },
+      base: { damage: 42, cooldown: 0.95, count: 4, speed: 640, area: 1.2, pierce: 6 },
       levelUp: [
-        '槍の本数 +1 ＆ 威力UP',
-        '貫通力 +1 ＆ クールダウン短縮',
-        '槍の本数 +1 ＆ 範囲拡大',
-        '【MAX】槍の本数 +1 ＆ 威力大幅強化！'
+        '槍の本数 +1 ＆ 威力UP（貫通力強化）',
+        'クールダウン大幅短縮 ＆ 弾速UP',
+        '槍の本数 +1 ＆ 攻撃判定拡大',
+        '【MAX】槍の本数 +2 ＆ 威力・貫通力が神話級強化！'
       ]
     },
     roar: {

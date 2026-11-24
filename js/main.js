@@ -1152,6 +1152,84 @@
     return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
   }
 
+  // === BOSS CHEST ROULETTE HELPERS ===
+  let chestRouletteTimer = null;
+  let chestReelTimers = [];
+
+  function finishChestRoulette(rewardsByPid, dropCount, myRewards, totalCoins) {
+    if (chestRouletteTimer) {
+      clearInterval(chestRouletteTimer);
+      chestRouletteTimer = null;
+    }
+    chestReelTimers.forEach(t => clearTimeout(t));
+    chestReelTimers = [];
+
+    const slots = document.querySelectorAll('.chest-reel-slot');
+    slots.forEach((sl, idx) => {
+      sl.classList.remove('spinning');
+      sl.classList.add('stopped');
+      const r = myRewards[idx];
+      if (r) {
+        const iconEl = sl.querySelector('.chest-reel-icon');
+        const badgeEl = sl.querySelector('.chest-reel-badge');
+        if (iconEl) iconEl.textContent = r.icon || '🎁';
+        if (badgeEl) badgeEl.textContent = r.badge || '強化';
+      }
+    });
+
+    const list = $('chest-rewards-list');
+    list.innerHTML = '';
+
+    for (const rew of myRewards) {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.style.background = rew.kind === 'evolve' ? '#fef08a' : '#fcf9ef';
+      card.innerHTML = `
+        <div class="item-top">
+          <div class="item-icon">${rew.icon}</div>
+          <div style="text-align:left;">
+            <div class="item-title">${rew.title} <span style="font-size:0.75rem;background:#1a1d26;color:#fde047;padding:1px 6px;border-radius:6px;font-weight:900;">${rew.badge}</span></div>
+            <div class="item-desc">${rew.desc}</div>
+          </div>
+        </div>
+      `;
+      list.appendChild(card);
+    }
+
+    if (rewardsByPid.length > 1) {
+      const myPid = Engine.getMyPid ? Engine.getMyPid() : 0;
+      const otherPartners = rewardsByPid.filter(p => p.pid !== myPid);
+      for (const op of otherPartners) {
+        const opRewards = op.rewards || [op.reward];
+        for (const rew of opRewards) {
+          const card = document.createElement('div');
+          card.className = 'item-card';
+          card.style.opacity = '0.9';
+          card.innerHTML = `
+            <div class="item-top">
+              <div class="item-icon" style="font-size:1.6rem;">${rew.icon}</div>
+              <div style="text-align:left;">
+                <div class="item-title" style="font-size:0.85rem;">[${op.playerName}] ${rew.title} (${rew.badge})</div>
+                <div class="item-desc" style="font-size:0.76rem;">${rew.desc}</div>
+              </div>
+            </div>
+          `;
+          list.appendChild(card);
+        }
+      }
+    }
+
+    const coinRow = document.createElement('div');
+    coinRow.style.cssText = 'background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:8px;font-weight:900;color:#b45309;font-size:1rem;display:flex;align-items:center;justify-content:center;gap:6px;';
+    coinRow.innerHTML = `🪙 +${totalCoins} ゴールドコイン獲得！`;
+    list.appendChild(coinRow);
+
+    list.style.display = 'flex';
+    $('btn-skip-chest').style.display = 'none';
+    $('btn-close-chest').style.display = 'inline-block';
+    Audio.playSfx('coin');
+  }
+
   // === ENGINE CALLBACKS ===
   Engine.init($('game-canvas'), {
     onHudUpdate(h) {
@@ -1263,25 +1341,138 @@
       $('modal-levelup').classList.remove('active');
     },
 
-    onChestOpen(rewardsByPid) {
+    onChestOpen(rewardsByPid, isCoop, dropCount = 1) {
+      const myPid = Engine.getMyPid ? Engine.getMyPid() : 0;
+      const myData = rewardsByPid.find(p => p.pid === myPid) || rewardsByPid[0];
+      const myRewards = myData.rewards || [myData.reward];
+      const actualDropCount = dropCount || myRewards.length || 1;
+      const totalCoins = myData.coins || 18;
+
+      const modal = $('modal-chest');
+      const modalCard = $('chest-modal-card');
+      if (modalCard) modalCard.className = `modal-card chest-roulette-modal tier-${actualDropCount}`;
+
+      const titleEl = $('chest-banner-title');
+      const subEl = $('chest-banner-sub');
+      const boxIcon = $('chest-box-icon');
+      const reelsContainer = $('chest-roulette-container');
       const list = $('chest-rewards-list');
+      const btnSkip = $('btn-skip-chest');
+      const btnClose = $('btn-close-chest');
+
+      list.style.display = 'none';
       list.innerHTML = '';
-      for (const item of rewardsByPid) {
-        const row = document.createElement('div');
-        row.className = 'item-card';
-        row.style.background = item.reward.kind === 'evolve' ? '#fef08a' : '#fcf9ef';
-        row.innerHTML = `
-          <div class="item-top">
-            <div class="item-icon">${item.reward.icon}</div>
-            <div style="text-align:left;">
-              <div class="item-title">${item.playerName}: ${item.reward.title} (${item.reward.badge})</div>
-              <div class="item-desc">${item.reward.desc} ・ +${item.coins}🪙</div>
-            </div>
-          </div>
-        `;
-        list.appendChild(row);
+      if (btnSkip) btnSkip.style.display = 'inline-block';
+      if (btnClose) btnClose.style.display = 'none';
+
+      if (actualDropCount === 3) {
+        titleEl.textContent = '🌟✨ 超当たり！ 3連ジャックポット！！ ✨🌟';
+        titleEl.style.color = '#d97706';
+        subEl.textContent = '奇跡のトリプル！ 3つの強化を一挙獲得！';
+        boxIcon.textContent = '👑🎁🌟';
+      } else if (actualDropCount === 2) {
+        titleEl.textContent = '🎉 当たり！ 2連ドロップ！！ 🎉';
+        titleEl.style.color = '#0284c7';
+        subEl.textContent = '大幸運のダブル！ 2つの強化を一挙獲得！';
+        boxIcon.textContent = '🎁✨';
+      } else {
+        titleEl.textContent = '🎁 ボス宝箱オープン！！';
+        titleEl.style.color = '#b45309';
+        subEl.textContent = '中ボス撃破報酬！ 強化を獲得！';
+        boxIcon.textContent = '🎁';
       }
-      $('modal-chest').classList.add('active');
+
+      // Build slot reel boxes
+      reelsContainer.innerHTML = '';
+      const ROULETTE_ICONS = ['🔱', '⚔️', '🛡️', '🥟', '🚀', '🥐', '🍺', '🫖', '👢', '🥩', '☕', '🍖', '🍰', '🍾', '💥', '🍕', '📢', '🪐'];
+      for (let i = 0; i < actualDropCount; i++) {
+        const reel = document.createElement('div');
+        reel.className = 'chest-reel-slot spinning';
+        reel.id = `chest-reel-${i}`;
+        reel.innerHTML = `
+          <div class="chest-reel-icon">${ROULETTE_ICONS[i % ROULETTE_ICONS.length]}</div>
+          <div class="chest-reel-badge">抽選中…</div>
+        `;
+        reelsContainer.appendChild(reel);
+      }
+
+      modal.classList.add('active');
+
+      // Start spinning sound & icon animation
+      let tick = 0;
+      if (chestRouletteTimer) clearInterval(chestRouletteTimer);
+      chestReelTimers.forEach(t => clearTimeout(t));
+      chestReelTimers = [];
+
+      chestRouletteTimer = setInterval(() => {
+        tick++;
+        const activeSlots = reelsContainer.querySelectorAll('.chest-reel-slot.spinning');
+        activeSlots.forEach((sl) => {
+          const randIcon = ROULETTE_ICONS[Math.floor(Math.random() * ROULETTE_ICONS.length)];
+          const icEl = sl.querySelector('.chest-reel-icon');
+          if (icEl) icEl.textContent = randIcon;
+        });
+        if (tick % 2 === 0 && activeSlots.length > 0) {
+          Audio.playSfx('click');
+        }
+      }, 55);
+
+      // Sequence stop timings
+      // Slot 0 stops at 950ms
+      const t0 = setTimeout(() => {
+        const sl0 = $(`chest-reel-0`);
+        if (sl0 && sl0.classList.contains('spinning')) {
+          sl0.classList.remove('spinning');
+          sl0.classList.add('stopped');
+          sl0.querySelector('.chest-reel-icon').textContent = myRewards[0]?.icon || '🎁';
+          sl0.querySelector('.chest-reel-badge').textContent = myRewards[0]?.badge || '獲得！';
+          Audio.playSfx(actualDropCount === 1 ? 'chest' : 'levelup');
+        }
+        if (actualDropCount === 1) {
+          finishChestRoulette(rewardsByPid, actualDropCount, myRewards, totalCoins);
+        }
+      }, 950);
+      chestReelTimers.push(t0);
+
+      // Slot 1 stops at 1700ms (if dropCount >= 2)
+      if (actualDropCount >= 2) {
+        const t1 = setTimeout(() => {
+          const sl1 = $(`chest-reel-1`);
+          if (sl1 && sl1.classList.contains('spinning')) {
+            sl1.classList.remove('spinning');
+            sl1.classList.add('stopped');
+            sl1.querySelector('.chest-reel-icon').textContent = myRewards[1]?.icon || '🎁';
+            sl1.querySelector('.chest-reel-badge').textContent = myRewards[1]?.badge || '獲得！';
+            Audio.playSfx(actualDropCount === 2 ? 'chest' : 'evolve');
+          }
+          if (actualDropCount === 2) {
+            finishChestRoulette(rewardsByPid, actualDropCount, myRewards, totalCoins);
+          }
+        }, 1700);
+        chestReelTimers.push(t1);
+      }
+
+      // Slot 2 stops at 2450ms (if dropCount === 3)
+      if (actualDropCount >= 3) {
+        const t2 = setTimeout(() => {
+          const sl2 = $(`chest-reel-2`);
+          if (sl2 && sl2.classList.contains('spinning')) {
+            sl2.classList.remove('spinning');
+            sl2.classList.add('stopped');
+            sl2.querySelector('.chest-reel-icon').textContent = myRewards[2]?.icon || '🎁';
+            sl2.querySelector('.chest-reel-badge').textContent = myRewards[2]?.badge || '獲得！';
+            Audio.playSfx('victory');
+          }
+          finishChestRoulette(rewardsByPid, actualDropCount, myRewards, totalCoins);
+        }, 2450);
+        chestReelTimers.push(t2);
+      }
+
+      if (btnSkip) {
+        btnSkip.onclick = () => {
+          finishChestRoulette(rewardsByPid, actualDropCount, myRewards, totalCoins);
+        };
+      }
     },
 
     onBossWarning(msg) {
