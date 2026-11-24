@@ -353,12 +353,34 @@
     return chips;
   }
 
+  function formatGearStatsDesc(item, plus) {
+    if (!plus || plus <= 0) return item.desc;
+    const eff = Storage.getEffectiveGearStats(item, plus);
+    const parts = [];
+    if (eff.rangedCut >= 1.0) parts.push('【遠距離攻撃 完全無効！】');
+    else if (eff.rangedCut > 0) parts.push(`遠距離ダメ -${Math.round(eff.rangedCut * 100)}%`);
+    if (eff.mightMult > 0) parts.push(`攻撃力 +${Math.round(eff.mightMult * 100)}%`);
+    if (eff.amountFlat > 0) parts.push(`球数 +${eff.amountFlat}`);
+    if (eff.areaBonus > 0) parts.push(`範囲 +${Math.round(eff.areaBonus * 100)}%`);
+    if (eff.cooldownMult < 0) parts.push(`CD -${Math.round(-eff.cooldownMult * 100)}%`);
+    if (eff.maxHpFlat > 0) parts.push(`最大HP +${eff.maxHpFlat}`);
+    if (eff.armorFlat > 0) parts.push(`アーマー +${eff.armorFlat}`);
+    if (eff.speedMult > 0) parts.push(`速度 +${Math.round(eff.speedMult * 100)}%`);
+    if (eff.regenFlat > 0) parts.push(`回復 +${eff.regenFlat.toFixed(2).replace(/0$/, '')}/秒`);
+    if (eff.critBonus > 0) parts.push(`会心率 +${Math.round(eff.critBonus * 100)}%`);
+    if (eff.magnetMult > 0) parts.push(`回収 +${Math.round(eff.magnetMult * 100)}%`);
+    if (eff.xpBonus > 0) parts.push(`経験値 +${Math.round(eff.xpBonus * 100)}%`);
+    if (eff.revives > 0) parts.push(`自動復活 +${eff.revives}回`);
+    return parts.join(' / ');
+  }
+
   function renderGacha() {
     const save = Storage.get();
-    const cfg = Data.GACHA_CONFIG || { singleCost: 500, tenCost: 4500, pityLimit: 100 };
+    const cfg = Data.GACHA_CONFIG || { singleCost: 500, tenCost: 4500, pityLimit: 30 };
     const rarities = Data.GEAR_RARITIES || {};
     const items = Data.GEAR_ITEMS || [];
     const slots = Data.GEAR_SLOTS || [];
+    const gearPlus = save.gearPlus || {};
 
     refreshCoins();
 
@@ -370,7 +392,7 @@
     const pityLeft = Math.max(1, cfg.pityLimit - (save.gachaPity || 0));
     const pityEl = $('gacha-pity-info');
     if (pityEl) {
-      pityEl.textContent = `確率: コモン54% / アンコモン30% / レア10% / エピック5% / レジェンド1%（ダブりはコイン還元・レジェンド天井まであと ${pityLeft}回！）`;
+      pityEl.textContent = `通常: コモン54% / アンコモン30% / レア10% / エピック5% / レジェンド1%（ダブりで +1 強化！）｜🌟 30回天井（レア50%・エピック35%・レジェンド15%）まであと ${pityLeft}回！`;
     }
 
     // 1. Equipped 4 Slots (Head / Body / Shield / Weapon)
@@ -381,6 +403,7 @@
         const eqId = save.equipped?.[sl.id];
         const eqItem = eqId ? items.find(it => it.id === eqId) : null;
         const rar = eqItem ? rarities[eqItem.rarity] : null;
+        const plus = eqItem ? (gearPlus[eqItem.id] || 0) : 0;
         const card = document.createElement('div');
         card.className = 'equip-slot-card' + (eqItem ? ` rarity-${eqItem.rarity}` : '');
         if (eqItem && rar) {
@@ -390,8 +413,8 @@
               <span class="gear-rarity-pill" style="color:${rar.color};background:${rar.bg};">${rar.name}</span>
             </div>
             <div style="font-size:1.7rem;line-height:1.1;margin-top:2px;">${eqItem.icon}</div>
-            <div style="font-weight:900;font-size:0.86rem;">${eqItem.name}</div>
-            <div style="font-size:0.72rem;color:#334155;line-height:1.3;">${eqItem.desc}</div>
+            <div style="font-weight:900;font-size:0.86rem;">${eqItem.name}${plus > 0 ? ` <span style="color:#dc2626;">+${plus}</span>` : ''}</div>
+            <div style="font-size:0.72rem;color:#334155;line-height:1.3;">${formatGearStatsDesc(eqItem, plus)}</div>
           `;
           const unBtn = document.createElement('button');
           unBtn.className = 'btn btn-sm';
@@ -426,7 +449,7 @@
       }
     }
 
-    // 3. Owned Inventory Grid (sorted by rarity desc -> slot)
+    // 3. Owned Inventory Grid (sorted by rarity desc -> plus desc)
     const ownedIds = save.gearOwned || [];
     const colEl = $('gacha-collection-count');
     if (colEl) colEl.textContent = `（コレクション ${ownedIds.length} / ${items.length}）`;
@@ -436,7 +459,11 @@
       invGrid.innerHTML = '';
       const filtered = items
         .filter(it => ownedIds.includes(it.id) && (activeGearFilter === 'all' || it.slot === activeGearFilter))
-        .sort((a, b) => (rarities[b.rarity]?.rank || 0) - (rarities[a.rarity]?.rank || 0));
+        .sort((a, b) => {
+          const rankDiff = (rarities[b.rarity]?.rank || 0) - (rarities[a.rarity]?.rank || 0);
+          if (rankDiff !== 0) return rankDiff;
+          return (gearPlus[b.id] || 0) - (gearPlus[a.id] || 0);
+        });
 
       if (filtered.length === 0) {
         invGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:18px;color:#64748b;font-weight:800;">まだこの部位の装備を持っていません！上のガチャを引いてみよう🎰</div>`;
@@ -444,6 +471,7 @@
         for (const it of filtered) {
           const rar = rarities[it.rarity];
           const slDef = slots.find(s => s.id === it.slot);
+          const plus = gearPlus[it.id] || 0;
           const isEquipped = save.equipped?.[it.slot] === it.id;
           const card = document.createElement('div');
           card.className = `item-card gear-card rarity-${it.rarity}`;
@@ -455,8 +483,8 @@
                   <span class="gear-rarity-pill" style="color:${rar.color};background:${rar.bg};">${rar.name}</span>
                   <span style="font-size:0.72rem;font-weight:900;color:#475569;">${slDef?.icon || ''} ${slDef?.name || ''}</span>
                 </div>
-                <div class="item-title">${it.name}</div>
-                <div class="item-desc">${it.desc}</div>
+                <div class="item-title">${it.name}${plus > 0 ? ` <span style="color:#dc2626;">+${plus}</span>` : ''}</div>
+                <div class="item-desc">${formatGearStatsDesc(it, plus)}</div>
               </div>
             </div>
           `;
@@ -480,7 +508,7 @@
     const res = Storage.rollGacha(times);
     if (!res.ok) {
       Audio.playSfx('hurt');
-      showToast(`🪙 コインが足りません！（必要: ${res.cost}）`);
+      showToast(`🪙 コインが足りません！（必要: ${res.cost.toLocaleString()}）`);
       return;
     }
     const hasLegend = res.pulls.some(p => p.item.rarity === 'legend');
@@ -504,10 +532,11 @@
     const cfg = Data.GACHA_CONFIG || { singleCost: 500, tenCost: 4500 };
     const save = Storage.get();
     const hasLegend = res.pulls.some(p => p.item.rarity === 'legend');
+    const hasPity = res.pulls.some(p => p.isPity);
 
     $('gacha-modal-title').textContent = hasLegend
       ? '👑✨ LEGEND GET!! ガチャ大当たり！！ ✨👑'
-      : (res.pulls.length === 10 ? '🎰 10連ガチャ結果！' : '🎰 ガチャ結果！');
+      : (hasPity ? '🌟 天井発動！ガチャ結果！' : (res.pulls.length === 10 ? '🎰 10連ガチャ結果！' : '🎰 ガチャ結果！'));
 
     const grid = $('gacha-result-grid');
     grid.innerHTML = '';
@@ -521,20 +550,22 @@
       card.innerHTML = `
         <div style="display:flex;justify-content:center;gap:4px;align-items:center;flex-wrap:wrap;">
           <span class="gear-rarity-pill" style="color:${rar.color};background:${rar.bg};">${rar.name}</span>
-          ${entry.isNew ? '<span class="gear-new-badge">NEW!</span>' : `<span class="gear-refund-badge">ダブり +${entry.refundCoins}🪙</span>`}
+          ${entry.isPity ? '<span class="gear-new-badge" style="background:#d97706;">🌟天井</span>' : ''}
+          ${entry.isNew ? '<span class="gear-new-badge">NEW!</span>' : `<span class="gear-refund-badge">⬆️ +${entry.newPlus} 強化！</span>`}
         </div>
         <div style="font-size:2rem;line-height:1.1;">${it.icon}</div>
         <div style="font-size:0.72rem;font-weight:900;color:#475569;">${slDef?.icon || ''} ${slDef?.name || ''}</div>
-        <div style="font-weight:900;font-size:0.84rem;line-height:1.25;">${it.name}</div>
-        <div style="font-size:0.7rem;color:#334155;line-height:1.3;">${it.desc}</div>
+        <div style="font-weight:900;font-size:0.84rem;line-height:1.25;">${it.name}${entry.newPlus > 0 ? ` <span style="color:#dc2626;">+${entry.newPlus}</span>` : ''}</div>
+        <div style="font-size:0.7rem;color:#334155;line-height:1.3;">${formatGearStatsDesc(it, entry.newPlus)}</div>
       `;
       grid.appendChild(card);
     });
 
     const newCount = res.pulls.filter(p => p.isNew).length;
+    const plusCount = res.pulls.length - newCount;
     $('gacha-result-summary').textContent =
       `新規GET: ${newCount}個` +
-      (res.totalRefund > 0 ? ` / ダブりコイン還元: +${res.totalRefund}🪙` : '') +
+      (plusCount > 0 ? ` / ダブり強化(+1): ${plusCount}個` : '') +
       ` / のこり所持コイン: ${save.coins.toLocaleString()}🪙`;
 
     $('btn-gacha-again-1').disabled = save.coins < cfg.singleCost;
@@ -1247,6 +1278,26 @@
   $('btn-gacha').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('gacha'); });
   $('btn-codex').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('codex'); });
   $('btn-ach').addEventListener('click', () => { Audio.ensure(); Audio.playSfx('click'); showScreen('ach'); });
+
+  const resetBtn = $('btn-reset-save');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      Audio.ensure();
+      Audio.playSfx('click');
+      const ok = window.confirm('セーブデータ（コイン・ショップ強化・解放キャラ・ガチャ装備・実績）をすべて初期状態にリセットしますか？\n※この操作は取り消せません');
+      if (!ok) return;
+      Storage.resetAll();
+      selectedChar = 'poland';
+      selectedStage = 'meadow';
+      selectedDifficulty = 'normal';
+      activeGearFilter = 'all';
+      Audio.setMuted(false);
+      Audio.setBgmEnabled(true);
+      updateSoundButtons();
+      refreshCoins();
+      showToast('🗑️ セーブデータを初期状態にリセットしました！');
+    });
+  }
 
   $('btn-gacha-1').addEventListener('click', () => { Audio.ensure(); performGachaPull(1); });
   $('btn-gacha-10').addEventListener('click', () => { Audio.ensure(); performGachaPull(10); });

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ポーランドボール・サバイバーズ | 2〜3人協力対応 ヴァンサバアクション</title>
   <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット・スマホ最大3台でのオンライン協力プレイ対応。" />
-  <link rel="stylesheet" href="styles.css?v=19" />
+  <link rel="stylesheet" href="styles.css?v=20" />
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -48,6 +48,7 @@
         <span>・</span>
         <span>タブレット/スマホ: 画面ドラッグ移動＋ボタン</span>
         <button id="btn-title-sound" class="btn btn-sm" style="padding:4px 10px;">🔊 音ON</button>
+        <button id="btn-reset-save" class="btn btn-sm" style="padding:4px 10px;color:#b91c1c;">🗑️ データ初期化</button>
       </div>
     </div>
   </section>
@@ -214,7 +215,7 @@
           <button id="btn-gacha-10" class="btn btn-gold">✨ 10連ガチャ（🪙 4,500・レア以上確定！）</button>
         </div>
         <div id="gacha-pity-info" style="font-size:0.76rem;font-weight:800;color:#7c2d12;">
-          確率: コモン54% / アンコモン30% / レア10% / エピック5% / レジェンド1%（ダブりはコイン還元！）
+          通常: コモン54% / アンコモン30% / レア10% / エピック5% / レジェンド1%（ダブりで +1 強化！）｜🌟 30回天井（レア50%・エピック35%・レジェンド15%）
         </div>
       </div>
 
@@ -409,12 +410,12 @@
   <script src="lib/qrcode.min.js"></script>
 
   <!-- Game Modules -->
-  <script src="js/data.js?v=19"></script>
-  <script src="js/polandballRenderer.js?v=19"></script>
-  <script src="js/audio.js?v=19"></script>
-  <script src="js/storage.js?v=19"></script>
-  <script src="js/network.js?v=19"></script>
-  <script src="js/engine.js?v=19"></script>
-  <script src="js/main.js?v=19"></script>
+  <script src="js/data.js?v=20"></script>
+  <script src="js/polandballRenderer.js?v=20"></script>
+  <script src="js/audio.js?v=20"></script>
+  <script src="js/storage.js?v=20"></script>
+  <script src="js/network.js?v=20"></script>
+  <script src="js/engine.js?v=20"></script>
+  <script src="js/main.js?v=20"></script>
 </body>
 </html>

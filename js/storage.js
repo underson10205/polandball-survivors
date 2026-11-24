@@ -18,6 +18,7 @@ window.PBStorage = (() => {
       revive: 0
     },
     gearOwned: [],
+    gearPlus: {},
     equipped: {
       head: null,
       body: null,
@@ -53,6 +54,7 @@ window.PBStorage = (() => {
           ...parsed,
           shop: { ...DEFAULT_SAVE.shop, ...(parsed.shop || {}) },
           gearOwned: Array.isArray(parsed.gearOwned) ? [...parsed.gearOwned] : [],
+          gearPlus: { ...(parsed.gearPlus || {}) },
           equipped: { ...DEFAULT_SAVE.equipped, ...(parsed.equipped || {}) },
           gachaPulls: Number(parsed.gachaPulls || 0),
           gachaPity: Number(parsed.gachaPity || 0),
@@ -150,6 +152,33 @@ window.PBStorage = (() => {
     if (evolved) s.codex.evolved[weaponId] = true;
   }
 
+  function getEffectiveGearStats(def, plus = 0) {
+    const p = Math.max(0, Math.floor(plus || 0));
+    const base = def?.stats || {};
+    const out = {};
+    const mult = 1 + p * 0.12; // +12% stat boost per +1 duplicate!
+    for (const [k, v] of Object.entries(base)) {
+      if (p === 0) {
+        out[k] = v;
+      } else if (k === 'maxHpFlat') {
+        out[k] = Math.max(v + p * 2, Math.round(v * mult));
+      } else if (k === 'rangedCut') {
+        out[k] = v >= 1.0 ? 1.0 : Math.min(0.95, Number((v + p * 0.03).toFixed(2)));
+      } else if (k === 'armorFlat') {
+        out[k] = v + Math.floor(p / 2);
+      } else if (k === 'amountFlat') {
+        out[k] = v + Math.floor(p / 5);
+      } else if (k === 'revives') {
+        out[k] = v;
+      } else if (k === 'cooldownMult') {
+        out[k] = Math.max(-0.35, Number((v * mult).toFixed(3)));
+      } else {
+        out[k] = Number((v * mult).toFixed(3));
+      }
+    }
+    return out;
+  }
+
   function getGearBonuses() {
     const s = get();
     const items = window.PBData?.GEAR_ITEMS || [];
@@ -172,8 +201,9 @@ window.PBStorage = (() => {
       const gid = s.equipped?.[slot];
       if (!gid) continue;
       const def = items.find(it => it.id === gid);
-      if (!def || !def.stats) continue;
-      for (const [k, v] of Object.entries(def.stats)) {
+      if (!def) continue;
+      const eff = getEffectiveGearStats(def, s.gearPlus?.[gid] || 0);
+      for (const [k, v] of Object.entries(eff)) {
         if (typeof out[k] === 'number') out[k] += v;
       }
     }
@@ -206,7 +236,11 @@ window.PBStorage = (() => {
     for (const slot of ['head', 'body', 'shield', 'weapon']) {
       const ownedForSlot = items.filter(it => it.slot === slot && s.gearOwned.includes(it.id));
       if (ownedForSlot.length === 0) continue;
-      ownedForSlot.sort((a, b) => (rarities[b.rarity]?.rank || 0) - (rarities[a.rarity]?.rank || 0));
+      ownedForSlot.sort((a, b) => {
+        const rankDiff = (rarities[b.rarity]?.rank || 0) - (rarities[a.rarity]?.rank || 0);
+        if (rankDiff !== 0) return rankDiff;
+        return (s.gearPlus?.[b.id] || 0) - (s.gearPlus?.[a.id] || 0);
+      });
       if (s.equipped[slot] !== ownedForSlot[0].id) {
         s.equipped[slot] = ownedForSlot[0].id;
         changed = true;
@@ -216,65 +250,81 @@ window.PBStorage = (() => {
     return changed;
   }
 
-  function pickRarity(useGuarantee) {
+  function pickRarity(mode = 'normal') {
+    // mode: 'normal' | 'guarantee' (10-pull 10th slot) | 'pity' (30-pull super pity: Rare 50% / Epic 35% / Legend 15%)
     const rarities = Object.values(window.PBData?.GEAR_RARITIES || {});
-    const total = rarities.reduce((acc, r) => acc + (useGuarantee ? r.guaranteeWeight : r.weight), 0);
+    const field = mode === 'pity' ? 'pityWeight' : (mode === 'guarantee' ? 'guaranteeWeight' : 'weight');
+    const total = rarities.reduce((acc, r) => acc + (r[field] || 0), 0);
     let roll = Math.random() * total;
     for (const r of rarities) {
-      const w = useGuarantee ? r.guaranteeWeight : r.weight;
+      const w = r[field] || 0;
       if (w <= 0) continue;
       roll -= w;
       if (roll <= 0) return r.id;
     }
-    return useGuarantee ? 'rare' : 'common';
+    return mode === 'normal' ? 'common' : 'rare';
   }
 
   function rollGacha(times = 1) {
     const s = get();
-    const cfg = window.PBData?.GACHA_CONFIG || { singleCost: 500, tenCost: 4500, pityLimit: 100 };
-    const rarities = window.PBData?.GEAR_RARITIES || {};
+    const cfg = window.PBData?.GACHA_CONFIG || { singleCost: 500, tenCost: 4500, pityLimit: 30 };
     const items = window.PBData?.GEAR_ITEMS || [];
     const count = times === 10 ? 10 : 1;
     const cost = count === 10 ? cfg.tenCost : cfg.singleCost;
     if (s.coins < cost) return { ok: false, reason: 'coins', cost };
 
     s.coins -= cost;
+    if (!s.gearPlus) s.gearPlus = {};
     const pulls = [];
-    let totalRefund = 0;
 
     for (let i = 0; i < count; i++) {
       s.gachaPulls = (s.gachaPulls || 0) + 1;
       s.gachaPity = (s.gachaPity || 0) + 1;
-      const isTenBonus = (count === 10 && i === count - 1);
+      const isPity = s.gachaPity >= cfg.pityLimit;
+      const isTenBonus = !isPity && (count === 10 && i === count - 1);
+
       let rarityId;
-      if (s.gachaPity >= cfg.pityLimit) {
-        rarityId = 'legend';
+      if (isPity) {
+        rarityId = pickRarity('pity');
+        s.gachaPity = 0;
+      } else if (isTenBonus) {
+        rarityId = pickRarity('guarantee');
       } else {
-        rarityId = pickRarity(isTenBonus);
+        rarityId = pickRarity('normal');
       }
-      if (rarityId === 'legend') s.gachaPity = 0;
 
       const pool = items.filter(it => it.rarity === rarityId);
       const picked = pool[Math.floor(Math.random() * pool.length)] || items[0];
       const isNew = !s.gearOwned.includes(picked.id);
-      let refundCoins = 0;
+      let newPlus = 0;
       if (isNew) {
         s.gearOwned.push(picked.id);
-        // Auto-equip automatically if that slot is currently empty!
+        s.gearPlus[picked.id] = 0;
         if (!s.equipped[picked.slot]) {
           s.equipped[picked.slot] = picked.id;
         }
       } else {
-        refundCoins = rarities[picked.rarity]?.refund || 25;
-        s.coins += refundCoins;
-        totalRefund += refundCoins;
+        newPlus = (s.gearPlus[picked.id] || 0) + 1;
+        s.gearPlus[picked.id] = newPlus;
       }
-      pulls.push({ item: picked, isNew, refundCoins });
+      pulls.push({ item: picked, isNew, newPlus, isPity, isTenBonus });
     }
 
     const firstAch = unlockAchievement('first_gacha');
     save();
-    return { ok: true, cost, pulls, totalRefund, firstAch };
+    return { ok: true, cost, pulls, firstAch };
+  }
+
+  function resetAll() {
+    try {
+      localStorage.removeItem(KEY);
+    } catch {
+      // Ignore storage errors
+    }
+    state = null;
+    load();
+    save();
+    return state;
   }
 
   function getShopBonuses() {
@@ -284,7 +334,7 @@ window.PBStorage = (() => {
       mightMult: 1 + (shop.might || 0) * 0.08 + g.mightMult,
       maxHpFlat: (shop.maxHp || 0) * 18 + g.maxHpFlat,
       speedMult: 1 + (shop.speed || 0) * 0.06 + g.speedMult,
-      cooldownMult: Math.max(0.48, 1 - (shop.cooldown || 0) * 0.05 + g.cooldownMult),
+      cooldownMult: Math.max(0.45, 1 - (shop.cooldown || 0) * 0.05 + g.cooldownMult),
       magnetMult: 1 + (shop.magnet || 0) * 0.2 + g.magnetMult,
       armorFlat: (shop.armor || 0) + g.armorFlat,
       greedMult: 1 + (shop.greed || 0) * 0.15,
@@ -302,12 +352,14 @@ window.PBStorage = (() => {
   return {
     get,
     save,
+    resetAll,
     addCoins,
     buyUpgrade,
     unlockCharacter,
     unlockAchievement,
     recordEnemyKill,
     recordWeaponSeen,
+    getEffectiveGearStats,
     getGearBonuses,
     equipGear,
     unequipSlot,

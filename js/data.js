@@ -972,17 +972,17 @@ window.PBData = (() => {
   ];
 
   const GEAR_RARITIES = {
-    common:   { id: 'common',   rank: 1, name: 'コモン',     color: '#475569', bg: '#f1f5f9', border: '#64748b', weight: 54, guaranteeWeight: 0,  refund: 50 },
-    uncommon: { id: 'uncommon', rank: 2, name: 'アンコモン', color: '#15803d', bg: '#dcfce7', border: '#16a34a', weight: 30, guaranteeWeight: 0,  refund: 100 },
-    rare:     { id: 'rare',     rank: 3, name: 'レア',       color: '#1d4ed8', bg: '#dbeafe', border: '#2563eb', weight: 10, guaranteeWeight: 78, refund: 200 },
-    epic:     { id: 'epic',     rank: 4, name: 'エピック',   color: '#7e22ce', bg: '#f3e8ff', border: '#9333ea', weight: 5,  guaranteeWeight: 19, refund: 450 },
-    legend:   { id: 'legend',   rank: 5, name: 'レジェンド', color: '#b45309', bg: '#fef3c7', border: '#f59e0b', weight: 1,  guaranteeWeight: 3,  refund: 1000 }
+    common:   { id: 'common',   rank: 1, name: 'コモン',     color: '#475569', bg: '#f1f5f9', border: '#64748b', weight: 54, guaranteeWeight: 0,  pityWeight: 0 },
+    uncommon: { id: 'uncommon', rank: 2, name: 'アンコモン', color: '#15803d', bg: '#dcfce7', border: '#16a34a', weight: 30, guaranteeWeight: 0,  pityWeight: 0 },
+    rare:     { id: 'rare',     rank: 3, name: 'レア',       color: '#1d4ed8', bg: '#dbeafe', border: '#2563eb', weight: 10, guaranteeWeight: 78, pityWeight: 50 },
+    epic:     { id: 'epic',     rank: 4, name: 'エピック',   color: '#7e22ce', bg: '#f3e8ff', border: '#9333ea', weight: 5,  guaranteeWeight: 19, pityWeight: 35 },
+    legend:   { id: 'legend',   rank: 5, name: 'レジェンド', color: '#b45309', bg: '#fef3c7', border: '#f59e0b', weight: 1,  guaranteeWeight: 3,  pityWeight: 15 }
   };
 
   const GACHA_CONFIG = {
     singleCost: 500,
     tenCost: 4500,
-    pityLimit: 100
+    pityLimit: 30
   };
 
   const GEAR_ITEMS = [
