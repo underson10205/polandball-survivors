@@ -356,7 +356,7 @@ button, input {
 
 .diff-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
 }
 
@@ -383,6 +383,11 @@ button, input {
 
 .diff-card.selected.normal-diff {
   background: #dbeafe;
+}
+
+.diff-card.selected.hard-diff {
+  background: #fee2e2;
+  border-color: #b91c1c;
 }
 
 /* Co-op Lobby */

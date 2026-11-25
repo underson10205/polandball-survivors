@@ -763,53 +763,53 @@ window.PBData = (() => {
     // === Stage 5 (深淵のマグマ魔境) 追加敵 ===
     nepal_demon: {
       id: 'nepal_demon', name: 'ネパール魔獣 (Rawr)', stageTag: '🔥 Stage 5 固有の敵',
-      hp: 155, speed: 132, damage: 18, radius: 19, xp: 14, score: 54,
+      hp: 310, speed: 132, damage: 18, radius: 19, xp: 14, score: 54,
       desc: 'Stage 5（マグマ魔境）に出現！ポーランドボール界最恐のギザギザ怪獣。鋭い牙で猛スピード襲撃！'
     },
     ohio_monster: {
       id: 'ohio_monster', name: 'オハイオ怪物 (Ohio Rawr)', stageTag: '🔥 Stage 5 固有の敵',
-      hp: 210, speed: 118, damage: 19, radius: 20, xp: 16, score: 62,
+      hp: 420, speed: 118, damage: 19, radius: 20, xp: 16, score: 62,
       desc: 'Stage 5（マグマ魔境）に出現！ツバメ尾の異形フラグ怪物。高い耐久力と凶暴な突進力を誇る！'
     },
     chile_snake: {
       id: 'chile_snake', name: 'チリ・ロングワーム', stageTag: '🔥 Stage 5 出現',
-      hp: 115, speed: 162, damage: 17, radius: 17, xp: 13, score: 50,
+      hp: 230, speed: 162, damage: 17, radius: 17, xp: 13, score: 50,
       desc: 'Stage 5（マグマ魔境）に出現！異様に細長い超高速チリボール。弾丸のように飛びかかってくる！'
     },
     vatican_mage: {
       id: 'vatican_mage', name: 'バチカン審判魔導ボール', stageTag: '🔥 Stage 5 出現',
-      hp: 175, speed: 88, damage: 17, radius: 19, xp: 16, score: 60, shooter: true,
+      hp: 350, speed: 88, damage: 17, radius: 19, xp: 16, score: 60, shooter: true,
       desc: 'Stage 5（マグマ魔境）に出現！聖冠を戴く高火力シューター。遠距離から灼熱の審判弾を連射！'
     },
     dark_cube: {
       id: 'dark_cube', name: 'ダーク・クォンタムキューブ', stageTag: '🔥 Stage 5 出現',
-      hp: 360, speed: 74, damage: 22, radius: 23, xp: 20, score: 75, isCube: true,
+      hp: 720, speed: 74, damage: 22, radius: 23, xp: 20, score: 75, isCube: true,
       desc: 'Stage 5（マグマ魔境）に出現！黒曜石と紅蓮の異次元立方体。宇宙キューブを遥かに凌ぐ超重装甲！'
     },
     // === Stage 6 (月面基地 — POLAN ON THE MOON!) 追加敵 ===
     moon_rover: {
       id: 'moon_rover', name: '月面探査ローバーボール', stageTag: '🌕 Stage 6 固有の敵',
-      hp: 195, speed: 145, damage: 21, radius: 19, xp: 17, score: 68,
+      hp: 488, speed: 145, damage: 21, radius: 19, xp: 17, score: 68,
       desc: 'Stage 6（月面基地）に出現！6輪駆動とレーザーアンテナを搭載した超高速月面探査機ボール！'
     },
     lunar_rabbit: {
       id: 'lunar_rabbit', name: '月面ウサギ重装兵', stageTag: '🌕 Stage 6 固有の敵',
-      hp: 255, speed: 134, damage: 23, radius: 20, xp: 19, score: 76,
+      hp: 638, speed: 134, damage: 23, radius: 20, xp: 19, score: 76,
       desc: 'Stage 6（月面基地）に出現！月の裏側を守る紅眼のウサギ耳精鋭部隊。高い耐久力と跳躍突進が脅威！'
     },
     astro_soviet: {
       id: 'astro_soviet', name: 'コスモノート・ソ連兵', stageTag: '🌕 Stage 6 出現',
-      hp: 230, speed: 98, damage: 22, radius: 20, xp: 20, score: 80, shooter: true,
+      hp: 575, speed: 98, damage: 22, radius: 20, xp: 20, score: 80, shooter: true,
       desc: 'Stage 6（月面基地）に出現！宇宙服をまとった月面ソ連砲撃兵。高威力の紅星プラズマ弾を連射！'
     },
     meteor_ball: {
       id: 'meteor_ball', name: '流星クレーターボール', stageTag: '🌕 Stage 6 出現',
-      hp: 155, speed: 178, damage: 22, radius: 17, xp: 16, score: 65,
+      hp: 388, speed: 178, damage: 22, radius: 17, xp: 16, score: 65,
       desc: 'Stage 6（月面基地）に出現！蒼白い閃光を纏い猛スピードで衝突してくる超高速隕石ボール！'
     },
     monolith_slab: {
       id: 'monolith_slab', name: '月面モノリス・スラブ', stageTag: '🌕 Stage 6 出現',
-      hp: 480, speed: 80, damage: 27, radius: 24, xp: 26, score: 98, isCube: true,
+      hp: 1200, speed: 80, damage: 27, radius: 24, xp: 26, score: 98, isCube: true,
       desc: 'Stage 6（月面基地）に出現！月面クレーターに眠っていた漆黒の超古代石碑。圧倒的な質量と装甲を誇る！'
     },
     // === Stage 1 (ヨーロッパ大草原) Bosses ===
@@ -1029,6 +1029,18 @@ window.PBData = (() => {
       spawnMult: 1.0,
       healBonus: 0,
       coinMult: 1.0
+    },
+    {
+      id: 'hard',
+      name: 'ハード',
+      icon: '🔥',
+      desc: '敵HP +50% / ボスHP +50% / 被ダメ +30% / 湧き増・コイン獲得 1.5倍（×1.5）',
+      enemyHpMult: 1.50,
+      bossHpMult: 1.50,
+      enemyDmgMult: 1.30,
+      spawnMult: 1.25,
+      healBonus: 0,
+      coinMult: 1.5
     }
   ];
 
@@ -1102,7 +1114,7 @@ window.PBData = (() => {
       name: '深淵のマグマ魔境 — INFERNO!',
       subtitle: 'Stage 5 — 宇宙を超えた最難関',
       desc: '宇宙すら凌ぐ灼熱の最終試練！スパルタ・巨大オハイオ・ローマ皇帝、最奥に「終末のオメガ・ライヒ」が降臨！',
-      bgmName: '♪ Moment',
+      bgmName: '♪ Do-Battle!!',
       midBosses: ['boss_sparta', 'boss_ohio_king', 'boss_rome_emperor'],
       finalBoss: 'boss_omega_reich',
       duration: 360,

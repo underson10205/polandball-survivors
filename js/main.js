@@ -231,7 +231,7 @@
     container.innerHTML = '';
     for (const d of (Data.DIFFICULTIES || [])) {
       const card = document.createElement('div');
-      card.className = 'diff-card' + (currentId === d.id ? ' selected' : '') + (d.id === 'normal' ? ' normal-diff' : '');
+      card.className = 'diff-card' + (currentId === d.id ? ' selected' : '') + (d.id === 'normal' ? ' normal-diff' : '') + (d.id === 'hard' ? ' hard-diff' : '');
       card.innerHTML = `
         <div style="font-weight:900;font-size:1rem;">${d.icon} ${d.name}${currentId === d.id ? ' ✓' : ''}</div>
         <div style="font-size:0.78rem;color:#475569;line-height:1.35;">${d.desc}</div>
@@ -1179,7 +1179,21 @@
     }
 
     const hudDiff = $('hud-diff');
-    if (hudDiff) hudDiff.style.display = (cfg.difficultyId === 'easy') ? 'inline-block' : 'none';
+    if (hudDiff) {
+      if (cfg.difficultyId === 'easy') {
+        hudDiff.style.display = 'inline-block';
+        hudDiff.style.background = '#dcfce7';
+        hudDiff.style.color = '#15803d';
+        hudDiff.textContent = '🌱 イージー (🪙×0.5)';
+      } else if (cfg.difficultyId === 'hard') {
+        hudDiff.style.display = 'inline-block';
+        hudDiff.style.background = '#fee2e2';
+        hudDiff.style.color = '#b91c1c';
+        hudDiff.textContent = '🔥 ハード (🪙×1.5)';
+      } else {
+        hudDiff.style.display = 'none';
+      }
+    }
 
     Engine.start(cfg);
   }
