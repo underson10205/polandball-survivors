@@ -760,6 +760,32 @@ window.PBData = (() => {
       hp: 92, speed: 120, damage: 12, radius: 18, xp: 9, score: 34,
       desc: 'Stage 4（古代砂漠）に出現！緑の五芒星を宿した砂漠のベルベル戦士。砂煙をあげて高速急接近！'
     },
+    // === Stage 5 (深淵のマグマ魔境) 追加敵 ===
+    nepal_demon: {
+      id: 'nepal_demon', name: 'ネパール魔獣 (Rawr)', stageTag: '🔥 Stage 5 固有の敵',
+      hp: 155, speed: 132, damage: 18, radius: 19, xp: 14, score: 54,
+      desc: 'Stage 5（マグマ魔境）に出現！ポーランドボール界最恐のギザギザ怪獣。鋭い牙で猛スピード襲撃！'
+    },
+    ohio_monster: {
+      id: 'ohio_monster', name: 'オハイオ怪物 (Ohio Rawr)', stageTag: '🔥 Stage 5 固有の敵',
+      hp: 210, speed: 118, damage: 19, radius: 20, xp: 16, score: 62,
+      desc: 'Stage 5（マグマ魔境）に出現！ツバメ尾の異形フラグ怪物。高い耐久力と凶暴な突進力を誇る！'
+    },
+    chile_snake: {
+      id: 'chile_snake', name: 'チリ・ロングワーム', stageTag: '🔥 Stage 5 出現',
+      hp: 115, speed: 162, damage: 17, radius: 17, xp: 13, score: 50,
+      desc: 'Stage 5（マグマ魔境）に出現！異様に細長い超高速チリボール。弾丸のように飛びかかってくる！'
+    },
+    vatican_mage: {
+      id: 'vatican_mage', name: 'バチカン審判魔導ボール', stageTag: '🔥 Stage 5 出現',
+      hp: 175, speed: 88, damage: 17, radius: 19, xp: 16, score: 60, shooter: true,
+      desc: 'Stage 5（マグマ魔境）に出現！聖冠を戴く高火力シューター。遠距離から灼熱の審判弾を連射！'
+    },
+    dark_cube: {
+      id: 'dark_cube', name: 'ダーク・クォンタムキューブ', stageTag: '🔥 Stage 5 出現',
+      hp: 360, speed: 74, damage: 22, radius: 23, xp: 20, score: 75, isCube: true,
+      desc: 'Stage 5（マグマ魔境）に出現！黒曜石と紅蓮の異次元立方体。宇宙キューブを遥かに凌ぐ超重装甲！'
+    },
     // === Stage 1 (ヨーロッパ大草原) Bosses ===
     boss_viking: {
       id: 'boss_viking', name: '巨大バイキング王', stageTag: '🌿 Stage 1 中ボス(1:30)',
@@ -886,6 +912,38 @@ window.PBData = (() => {
       alertCry: 'AWAKEN THE SANDS!!', dashCry: '🏜️ 砂嵐突進！', rageCry: '🔥 PHARAOH CURSE MODE!!',
       summonId: 'mali_ball',
       desc: 'Stage 4最終ボス！そびえ立つ黄金の大ピラミッド王！HP半分以下で黄金砂嵐＆マリ護衛召喚！'
+    },
+
+    // === Stage 5 (深淵のマグマ魔境 — INFERNO!) Bosses ===
+    boss_sparta: {
+      id: 'boss_sparta', name: 'スパルタ狂戦士王', stageTag: '🔥 Stage 5 中ボス(1:30)',
+      hp: 8800, speed: 126, damage: 36, radius: 42, xp: 180, score: 950,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true,
+      bulletPattern: 'fan7', bulletColor: '#ef4444', dashCry: '🛡️ THIS IS SPARTA!!',
+      desc: 'Stage 5（1分半）に出現する伝説の紅蓮戦士王。猛烈な盾突撃と紅蓮7連弾幕で圧殺する！'
+    },
+    boss_ohio_king: {
+      id: 'boss_ohio_king', name: '巨大オハイオ・リヴァイアサン', stageTag: '🔥 Stage 5 中ボス(3:00)',
+      hp: 19500, speed: 118, damage: 41, radius: 46, xp: 290, score: 1700,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletPattern: 'ring12', bulletColor: '#f97316', dashCry: '👹 ALWAYS HAS BEEN!!', summonId: 'ohio_monster',
+      desc: 'Stage 5（3分）に出現する異形フラグの王！灼熱の12方向弾幕＆オハイオ怪物を続々召喚！'
+    },
+    boss_rome_emperor: {
+      id: 'boss_rome_emperor', name: 'ローマ大帝国・カエサル', stageTag: '🔥 Stage 5 中ボス(4:30)',
+      hp: 34000, speed: 122, damage: 45, radius: 48, xp: 390, score: 2400,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletPattern: 'ring14', bulletColor: '#facc15', dashCry: '🏛️ SPQR 総進軍!!', summonId: 'nepal_demon',
+      desc: 'Stage 5（4分半）に出現する月桂冠の絶対皇帝。黄金14方向弾幕＆ネパール魔獣を召喚！'
+    },
+    boss_omega_reich: {
+      id: 'boss_omega_reich', name: '終末のオメガ・ライヒ', stageTag: '🔥 Stage 5 最終ボス(6:00)',
+      hp: 78000, speed: 128, damage: 52, radius: 54, xp: 1200, score: 9000,
+      isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletColor: '#f97316', bulletColorP2: '#a855f7',
+      alertCry: 'OMEGA ANSCHLUSS...', dashCry: '🔥 終末の審判!!', rageCry: '💀 OMEGA APOCALYPSE MODE!!',
+      summonId: 'nepal_demon',
+      desc: 'Stage 5最難関の最終ボス！宇宙のライヒタングルを超えた灼熱黒曜の終末形態。HP半分以下で紫炎螺旋弾幕＆連続突進！'
     }
   };
 
@@ -980,6 +1038,23 @@ window.PBData = (() => {
       difficulty: 1.55,
       coinMult: 1.60,
       badge: '🏜️ 上級・黄金ロマン'
+    },
+    {
+      id: 'inferno',
+      name: '深淵のマグマ魔境 — INFERNO!',
+      subtitle: 'Stage 5 — 宇宙を超えた最難関',
+      desc: '宇宙すら凌ぐ灼熱の最終試練！スパルタ・巨大オハイオ・ローマ皇帝、最奥に「終末のオメガ・ライヒ」が降臨！',
+      bgmName: '♪ Moment',
+      midBosses: ['boss_sparta', 'boss_ohio_king', 'boss_rome_emperor'],
+      finalBoss: 'boss_omega_reich',
+      duration: 360,
+      bg: '#2b0f16',
+      bgAccent: '#45121d',
+      propType: 'inferno',
+      difficulty: 2.15,
+      spawnMult: 1.22,
+      coinMult: 2.25,
+      badge: '🔥 極限・最難関'
     }
   ];
 
@@ -1006,6 +1081,7 @@ window.PBData = (() => {
     { id: 'defeat_ussr', name: '成層圏の覇者', desc: 'Stage 2 最終ボス「ソビエト連邦」を撃破', reward: 115, icon: '☁️' },
     { id: 'defeat_reichtangle', name: 'Guten Tag 撃退！', desc: 'Stage 3 最終ボス「ライヒタングル」を撃破', reward: 140, icon: '👑' },
     { id: 'defeat_pyramid', name: 'ピラミッドの覇者', desc: 'Stage 4 最終ボス「黄金ギザ・ファラオ王」を撃破', reward: 130, icon: '🏺' },
+    { id: 'defeat_omega_reich', name: '深淵の征服者', desc: 'Stage 5 最終ボス「終末のオメガ・ライヒ」を撃破', reward: 250, icon: '🔥' },
     { id: 'poland_space', name: 'Polan CAN into Space!', desc: 'ポーランドで宇宙軌道ステージをクリア', reward: 180, icon: '🪐' },
     { id: 'coop_play', name: '同盟締結！', desc: '2〜3人協力プレイで出撃する', reward: 40, icon: '🤝' },
     { id: 'coop_revive', name: '友情の蘇生', desc: '協力プレイでパートナーを蘇生させる', reward: 60, icon: '💖' },

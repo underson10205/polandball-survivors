@@ -2100,6 +2100,371 @@ window.PBRenderer = (() => {
         break;
       }
 
+      // === Stage 5 (深淵のマグマ魔境) Regular Enemies ===
+      case 'nepal_demon': {
+        // Classic Polandball Nepal Rawr (double jagged crimson/blue flag + sharp teeth!)
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.82, -r * 1.05);
+        ctx.lineTo(r * 0.92, -r * 0.15);
+        ctx.lineTo(r * 0.12, -r * 0.08);
+        ctx.lineTo(r * 0.98, r * 0.92);
+        ctx.lineTo(-r * 0.82, r * 0.92);
+        ctx.closePath();
+        ctx.fillStyle = '#dc143c';
+        ctx.fill();
+        ctx.lineWidth = Math.max(2.5, r * 0.15);
+        ctx.strokeStyle = '#1e3a8a';
+        ctx.stroke();
+        ctx.lineWidth = Math.max(1.8, r * 0.08);
+        ctx.strokeStyle = INK;
+        ctx.stroke();
+        // Jagged white fangs along the jaw!
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 3; i++) {
+          const tx = -r * 0.3 + i * r * 0.28;
+          ctx.beginPath();
+          ctx.moveTo(tx, r * 0.24);
+          ctx.lineTo(tx + r * 0.12, r * 0.56);
+          ctx.lineTo(tx + r * 0.24, r * 0.24);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // Tiny white sun/moon emblem
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(-r * 0.36, r * 0.58, r * 0.14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        drawEyes(ctx, r * 0.85, 'angry', lookX, lookY, { yOffset: -0.22, spacing: 0.32 });
+        break;
+      }
+
+      case 'ohio_monster': {
+        // Classic Polandball Ohio Rawr (swallowtail burgee flag with teeth!)
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.92, -r * 0.88);
+        ctx.lineTo(r * 1.04, -r * 0.58);
+        ctx.lineTo(r * 0.42, 0);
+        ctx.lineTo(r * 1.04, r * 0.58);
+        ctx.lineTo(-r * 0.92, r * 0.88);
+        ctx.closePath();
+        ctx.save();
+        ctx.clip();
+        // Red & white stripes
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(-r * 1.1, -r, r * 2.2, r * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-r * 1.1, -r * 0.45, r * 2.2, r * 0.28);
+        ctx.fillRect(-r * 1.1, r * 0.17, r * 2.2, r * 0.28);
+        // Blue hoist triangle with red-white O circle
+        ctx.fillStyle = '#1e3a8a';
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.95, -r * 0.92);
+        ctx.lineTo(r * 0.18, 0);
+        ctx.lineTo(-r * 0.95, r * 0.92);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-r * 0.48, 0, r * 0.26, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(-r * 0.48, 0, r * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.lineWidth = Math.max(2.2, r * 0.1);
+        ctx.strokeStyle = INK;
+        ctx.stroke();
+        // Sharp teeth in the swallowtail mouth!
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(r * 0.52, -r * 0.34); ctx.lineTo(r * 0.72, -r * 0.08); ctx.lineTo(r * 0.84, -r * 0.42);
+        ctx.moveTo(r * 0.52, r * 0.34); ctx.lineTo(r * 0.72, r * 0.08); ctx.lineTo(r * 0.84, r * 0.42);
+        ctx.fill();
+        ctx.restore();
+        drawEyes(ctx, r * 0.86, 'angry', lookX, lookY, { yOffset: -0.18, spacing: 0.32 });
+        break;
+      }
+
+      case 'chile_snake': {
+        // Classic Polandball Long Chile Worm!
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(-r * 1.38, -r * 0.62, r * 2.76, r * 1.24, r * 0.58);
+        ctx.save();
+        ctx.clip();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-r * 1.4, -r * 0.65, r * 2.8, r * 0.65);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(-r * 1.4, 0, r * 2.8, r * 0.65);
+        ctx.fillStyle = '#1d4ed8';
+        ctx.fillRect(-r * 1.4, -r * 0.65, r * 0.85, r * 0.65);
+        drawStar(ctx, -r * 0.96, -r * 0.32, 5, r * 0.2, r * 0.09, '#ffffff');
+        ctx.restore();
+        ctx.lineWidth = Math.max(2, r * 0.11);
+        ctx.strokeStyle = INK;
+        ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r * 0.82, 'angry', lookX, lookY, { yOffset: -0.05, spacing: 0.34 });
+        break;
+      }
+
+      case 'vatican_mage': {
+        // Stage 5 Shooter: Vatican Papal Mage!
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(-r, -r, r, r * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, -r, r, r * 2);
+          // Crossed keys emblem
+          ctx.strokeStyle = '#b45309';
+          ctx.lineWidth = Math.max(1.5, r * 0.09);
+          ctx.beginPath();
+          ctx.moveTo(r * 0.25, -r * 0.1); ctx.lineTo(r * 0.65, r * 0.35);
+          ctx.moveTo(r * 0.65, -r * 0.1); ctx.lineTo(r * 0.25, r * 0.35);
+          ctx.stroke();
+        });
+        // Tall Papal Miter Hat
+        ctx.save();
+        ctx.fillStyle = '#fef9c3';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.8, r * 0.09);
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.56, -r * 0.72);
+        ctx.lineTo(0, -r * 1.58);
+        ctx.lineTo(r * 0.56, -r * 0.72);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Crimson & gold cross on miter
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = Math.max(2, r * 0.1);
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 1.38); ctx.lineTo(0, -r * 0.84);
+        ctx.moveTo(-r * 0.2, -r * 1.12); ctx.lineTo(r * 0.2, -r * 1.12);
+        ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.06 });
+        break;
+      }
+
+      case 'dark_cube': {
+        // Stage 5 Heavy Tank: Obsidian & Crimson 4D Quantum Cube!
+        ctx.save();
+        ctx.fillStyle = '#18181b';
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = Math.max(2.5, r * 0.12);
+        ctx.fillRect(-r * 0.96, -r * 0.96, r * 1.92, r * 1.92);
+        ctx.strokeRect(-r * 0.96, -r * 0.96, r * 1.92, r * 1.92);
+        // Inner glowing crimson/purple hypercube frame
+        ctx.strokeStyle = '#a855f7';
+        ctx.lineWidth = Math.max(1.6, r * 0.08);
+        ctx.strokeRect(-r * 0.58, -r * 0.58, r * 1.16, r * 1.16);
+        // Corner diagonal tesseract edges
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.96, -r * 0.96); ctx.lineTo(-r * 0.58, -r * 0.58);
+        ctx.moveTo(r * 0.96, -r * 0.96); ctx.lineTo(r * 0.58, -r * 0.58);
+        ctx.moveTo(-r * 0.96, r * 0.96); ctx.lineTo(-r * 0.58, r * 0.58);
+        ctx.moveTo(r * 0.96, r * 0.96); ctx.lineTo(r * 0.58, r * 0.58);
+        ctx.stroke();
+        // Glowing orange eyes
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(-r * 0.26, -r * 0.08, r * 0.14, 0, Math.PI * 2);
+        ctx.arc(r * 0.26, -r * 0.08, r * 0.14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+
+      // === Stage 5 (深淵のマグマ魔境) Bosses ===
+      case 'boss_sparta': {
+        // Stage 5 Mid-Boss 1: Spartan Berserker King!
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#991b1b';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Golden Spartan Lambda Λ
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = Math.max(3, r * 0.16);
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.42, r * 0.56);
+          ctx.lineTo(0, -r * 0.38);
+          ctx.lineTo(r * 0.42, r * 0.56);
+          ctx.stroke();
+        });
+        // Bronze Spartan Helmet + Huge Crimson Horsehair Crest!
+        ctx.save();
+        ctx.fillStyle = '#dc2626';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2.5, r * 0.09);
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.78, r * 0.72, Math.PI * 1.05, -Math.PI * 0.05);
+        ctx.lineTo(r * 0.42, -r * 0.65);
+        ctx.lineTo(-r * 0.42, -r * 0.65);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#d97706';
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.45, r * 0.68, Math.PI, 0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.02 });
+        break;
+      }
+
+      case 'boss_ohio_king': {
+        // Stage 5 Mid-Boss 2: Giant Crowned Ohio Leviathan!
+        const pulse = 0.5 + 0.5 * Math.sin(time * 6);
+        ctx.save();
+        ctx.fillStyle = `rgba(249, 115, 22, ${0.22 + pulse * 0.16})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.02, -r * 0.96);
+        ctx.lineTo(r * 1.15, -r * 0.62);
+        ctx.lineTo(r * 0.44, 0);
+        ctx.lineTo(r * 1.15, r * 0.62);
+        ctx.lineTo(-r * 1.02, r * 0.96);
+        ctx.closePath();
+        ctx.save();
+        ctx.clip();
+        ctx.fillStyle = '#b91c1c';
+        ctx.fillRect(-r * 1.2, -r * 1.1, r * 2.5, r * 2.2);
+        ctx.fillStyle = '#fef2f2';
+        ctx.fillRect(-r * 1.2, -r * 0.46, r * 2.5, r * 0.28);
+        ctx.fillRect(-r * 1.2, r * 0.18, r * 2.5, r * 0.28);
+        ctx.fillStyle = '#1e3a8a';
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.05, -r); ctx.lineTo(r * 0.2, 0); ctx.lineTo(-r * 1.05, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(-r * 0.52, 0, r * 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath(); ctx.arc(-r * 0.52, 0, r * 0.18, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.lineWidth = Math.max(3, r * 0.1);
+        ctx.strokeStyle = INK;
+        ctx.stroke();
+        // Golden King Crown
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.55, -r * 0.9);
+        ctx.lineTo(-r * 0.65, -r * 1.48);
+        ctx.lineTo(-r * 0.22, -r * 1.15);
+        ctx.lineTo(0, -r * 1.56);
+        ctx.lineTo(r * 0.22, -r * 1.15);
+        ctx.lineTo(r * 0.65, -r * 1.48);
+        ctx.lineTo(r * 0.55, -r * 0.9);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r * 0.95, 'angry', lookX, lookY, { yOffset: -0.15, spacing: 0.34 });
+        break;
+      }
+
+      case 'boss_rome_emperor': {
+        // Stage 5 Mid-Boss 3: Roman Empire Caesar (SPQR + Golden Laurel Crown!)
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#991b1b';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = Math.max(2.5, r * 0.1);
+          ctx.strokeRect(-r * 0.66, -r * 0.66, r * 1.32, r * 1.32);
+          ctx.fillStyle = '#facc15';
+          ctx.font = `900 ${Math.round(r * 0.42)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('SPQR', 0, r * 0.36);
+        });
+        // Golden Imperial Laurel Wreath Crown
+        ctx.save();
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = Math.max(4, r * 0.16);
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.42, r * 0.74, Math.PI * 1.15, -Math.PI * 0.15);
+        ctx.stroke();
+        // Imperial purple gem at center
+        ctx.fillStyle = '#9333ea';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.08);
+        ctx.beginPath();
+        ctx.arc(0, -r * 1.14, r * 0.2, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.14 });
+        break;
+      }
+
+      case 'boss_omega_reich': {
+        // Stage 5 Final Boss: OMEGA REICH (Obsidian & Molten Magma Towering Reichtangle!)
+        const w = r * 1.46;
+        const h = r * 2.28;
+        const x0 = -w / 2;
+        const y0 = -h * 0.62;
+        const pulse = 0.5 + 0.5 * Math.sin(time * 7);
+        const pad = 9 + pulse * 7;
+        ctx.save();
+        // Dual fiery-violet apocalypse aura (lightweight)
+        ctx.fillStyle = `rgba(168, 85, 247, ${0.22 + pulse * 0.15})`;
+        ctx.fillRect(x0 - pad * 1.35, y0 - pad * 1.35, w + pad * 2.7, h + pad * 2.7);
+        ctx.fillStyle = `rgba(249, 115, 22, ${0.32 + pulse * 0.2})`;
+        ctx.fillRect(x0 - pad * 0.65, y0 - pad * 0.65, w + pad * 1.3, h + pad * 1.3);
+
+        // Obsidian, Molten Gold, and Crimson-Magma Bands
+        ctx.fillStyle = '#09090b';
+        ctx.fillRect(x0, y0, w, h / 3);
+        ctx.fillStyle = '#f97316';
+        ctx.fillRect(x0, y0 + h / 3, w, h / 3);
+        ctx.fillStyle = '#7f1d1d';
+        ctx.fillRect(x0, y0 + (h * 2) / 3, w, h / 3);
+
+        // Glowing golden Ω symbol in center band
+        ctx.fillStyle = '#fef08a';
+        ctx.font = `900 ${Math.round(r * 0.72)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Ω', 0, y0 + h * 0.51);
+
+        // Crisp ink outline
+        ctx.lineWidth = Math.max(3.5, r * 0.11);
+        ctx.strokeStyle = INK;
+        ctx.strokeRect(x0, y0, w, h);
+
+        // Spiked Obsidian-Gold Crown on top!
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.moveTo(x0 + w * 0.08, y0);
+        ctx.lineTo(x0, y0 - r * 0.58);
+        ctx.lineTo(x0 + w * 0.3, y0 - r * 0.24);
+        ctx.lineTo(0, y0 - r * 0.76);
+        ctx.lineTo(x0 + w * 0.7, y0 - r * 0.24);
+        ctx.lineTo(x0 + w, y0 - r * 0.58);
+        ctx.lineTo(x0 + w * 0.92, y0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // Piercing glowing golden-crimson pinpoint eyes!
+        const eyeY = y0 + h * 0.21;
+        const eyeR = Math.max(3, r * 0.11);
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(-w * 0.24, eyeY, eyeR * 1.45, 0, Math.PI * 2);
+        ctx.arc(w * 0.24, eyeY, eyeR * 1.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-w * 0.24, eyeY, eyeR * 0.7, 0, Math.PI * 2);
+        ctx.arc(w * 0.24, eyeY, eyeR * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+
       default:
         drawFlagCircle(ctx, r, () => {
           ctx.fillStyle = '#64748b';

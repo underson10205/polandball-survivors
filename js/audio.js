@@ -161,6 +161,7 @@ window.PBAudio = (() => {
     sky: { src: 'bgm/stage2_sky.mp3?v=8', label: '楽しく軽快に', volume: 0.44 },
     space: { src: 'bgm/stage3_space.mp3', label: 'Warp_Area', volume: 0.44 },
     desert: { src: 'bgm/stage4_desert.mp3', label: 'shuffle_shuffle', volume: 0.44 },
+    inferno: { src: 'bgm/stage5_inferno.mp3?v=32', label: 'Moment', volume: 0.45 },
     midboss: { src: 'bgm/boss_mid.mp3', label: 'Will_you_still_cry_', volume: 0.46 },
     finalboss: { src: 'bgm/boss_final.mp3', label: '全てを創造する者「Dominus_Deus」', volume: 0.48 }
   };

@@ -1299,7 +1299,9 @@ window.PBEngine = (() => {
     }
 
     // Regular wave spawns
-    const spawnRate = Math.min(11.5, (1.55 + t / 42) * (1 + (activePlayers - 1) * 0.35) * dCfg.spawnMult);
+    const stageSpawnMult = state.stage.spawnMult || 1.0;
+    const spawnCap = stageSpawnMult > 1 ? 13.5 : 11.5;
+    const spawnRate = Math.min(spawnCap, (1.55 + t / 42) * (1 + (activePlayers - 1) * 0.35) * dCfg.spawnMult * stageSpawnMult);
     state.spawnAccum += dt * spawnRate;
     while (state.spawnAccum >= 1 && state.enemies.length < ENEMY_CAP) {
       state.spawnAccum -= 1;
@@ -1310,6 +1312,13 @@ window.PBEngine = (() => {
   }
 
   function getWavePool(t, stageId) {
+    if (stageId === 'inferno') {
+      // Stage 5: 深淵のマグマ魔境 — ネパール魔獣・オハイオ怪物・チリワーム・バチカン審判魔導・ダークキューブ
+      if (t < 45) return ['nepal_demon', 'nepal_demon', 'ohio_monster', 'chile_snake', 'chile_snake', 'mali_ball'];
+      if (t < 130) return ['nepal_demon', 'ohio_monster', 'chile_snake', 'vatican_mage', 'dark_cube', 'mali_ball'];
+      if (t < 230) return ['nepal_demon', 'ohio_monster', 'ohio_monster', 'chile_snake', 'vatican_mage', 'dark_cube', 'dark_cube'];
+      return ['nepal_demon', 'ohio_monster', 'chile_snake', 'vatican_mage', 'vatican_mage', 'dark_cube', 'dark_cube', 'mali_ball'];
+    }
     if (stageId === 'desert') {
       // Stage 4: 黄金の古代砂漠 — サウジ・トルコ・古代ミイラ・モロッコ・マリ・砂漠石壁・疾風
       if (t < 50) return ['saudi_ball', 'saudi_ball', 'turkey_ball', 'morocco_ball', 'mali_ball'];
@@ -1681,6 +1690,7 @@ window.PBEngine = (() => {
       else if (e.type === 'boss_ussr') tryUnlockAch('defeat_ussr');
       else if (e.type === 'reichtangle') tryUnlockAch('defeat_reichtangle');
       else if (e.type === 'boss_pyramid') tryUnlockAch('defeat_pyramid');
+      else if (e.type === 'boss_omega_reich') tryUnlockAch('defeat_omega_reich');
       if (state.stage.id === 'space' && state.players.some(p => p.charId === 'poland')) {
         tryUnlockAch('poland_space');
       }
@@ -2714,6 +2724,17 @@ window.PBEngine = (() => {
       g.addColorStop(1, '#e2ae55');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
+    } else if (stage.propType === 'inferno') {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#18090e');
+      g.addColorStop(0.55, '#2b0f16');
+      g.addColorStop(1, '#45121d');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      // Deep molten horizon glow
+      const pulse = 0.5 + 0.5 * Math.sin(state.time * 2.2);
+      ctx.fillStyle = `rgba(239, 68, 68, ${0.08 + pulse * 0.05})`;
+      ctx.fillRect(0, h * 0.65, w, h * 0.35);
     } else {
       ctx.fillStyle = '#74b855';
       ctx.fillRect(0, 0, w, h);
@@ -2851,6 +2872,64 @@ window.PBEngine = (() => {
             ctx.beginPath();
             ctx.ellipse(px, py, 12, 8, -0.2, 0, Math.PI * 2);
             ctx.fill(); ctx.stroke();
+          }
+        } else if (stage.propType === 'inferno') {
+          const glow = 0.5 + 0.5 * Math.sin(state.time * 3.2 + r1 * 18);
+          // Charred obsidian basalt patches
+          if (r1 < 0.45) {
+            ctx.fillStyle = 'rgba(15, 5, 10, 0.45)';
+            ctx.beginPath();
+            ctx.ellipse(px, py, 36 + r2 * 24, 20 + r1 * 12, r2 * 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          if (r1 < 0.14) {
+            // Glowing molten magma pool
+            ctx.fillStyle = `rgba(239, 68, 68, ${0.42 + glow * 0.22})`;
+            ctx.beginPath();
+            ctx.ellipse(px, py, 28 + r2 * 12, 16 + r1 * 10, r1 * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = `rgba(253, 224, 71, ${0.48 + glow * 0.3})`;
+            ctx.beginPath();
+            ctx.ellipse(px - 3, py - 2, 13 + r2 * 6, 7 + r1 * 4, r1 * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (r1 > 0.82) {
+            // Jagged obsidian volcanic crystal spire
+            const cs = 16 + r2 * 12;
+            ctx.fillStyle = '#1e1b2e';
+            ctx.strokeStyle = '#f97316';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(px, py - cs);
+            ctx.lineTo(px + cs * 0.52, py + cs * 0.35);
+            ctx.lineTo(px - cs * 0.52, py + cs * 0.35);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#4c1d95';
+            ctx.beginPath();
+            ctx.moveTo(px, py - cs);
+            ctx.lineTo(px + cs * 0.52, py + cs * 0.35);
+            ctx.lineTo(px, py + cs * 0.35);
+            ctx.closePath();
+            ctx.fill();
+          } else if (r2 > 0.62) {
+            // Glowing lava fissure crack in obsidian floor
+            ctx.strokeStyle = `rgba(249, 115, 22, ${0.35 + glow * 0.35})`;
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.moveTo(px - 18, py - 6);
+            ctx.lineTo(px - 4, py + 4);
+            ctx.lineTo(px + 10, py - 5);
+            ctx.lineTo(px + 22, py + 6);
+            ctx.stroke();
+          }
+          // Drifting glowing embers
+          if (r2 > 0.35) {
+            const emberY = py - ((state.time * 24 + r1 * 80) % 55);
+            const emberX = px + Math.sin(state.time * 2.5 + r2 * 12) * 10;
+            ctx.fillStyle = r1 > 0.5 ? `rgba(253, 224, 71, ${0.5 + glow * 0.45})` : `rgba(251, 146, 60, ${0.5 + glow * 0.45})`;
+            ctx.beginPath();
+            ctx.arc(emberX, emberY, 1.8 + r1 * 1.8, 0, Math.PI * 2);
+            ctx.fill();
           }
         } else {
           // Twinkling stars & mini asteroids
