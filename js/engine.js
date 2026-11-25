@@ -1300,7 +1300,7 @@ window.PBEngine = (() => {
 
     // Regular wave spawns
     const stageSpawnMult = state.stage.spawnMult || 1.0;
-    const spawnCap = stageSpawnMult > 1 ? 13.5 : 11.5;
+    const spawnCap = 11.5 * stageSpawnMult;
     const spawnRate = Math.min(spawnCap, (1.55 + t / 42) * (1 + (activePlayers - 1) * 0.35) * dCfg.spawnMult * stageSpawnMult);
     state.spawnAccum += dt * spawnRate;
     while (state.spawnAccum >= 1 && state.enemies.length < ENEMY_CAP) {
@@ -1312,6 +1312,13 @@ window.PBEngine = (() => {
   }
 
   function getWavePool(t, stageId) {
+    if (stageId === 'moon') {
+      // Stage 6: 月面基地 — ローバー・月面ウサギ重装兵・コスモノートソ連兵・流星クレーター・月面モノリス
+      if (t < 45) return ['moon_rover', 'moon_rover', 'lunar_rabbit', 'meteor_ball', 'meteor_ball', 'mali_ball'];
+      if (t < 130) return ['moon_rover', 'lunar_rabbit', 'meteor_ball', 'astro_soviet', 'monolith_slab', 'mali_ball'];
+      if (t < 230) return ['moon_rover', 'lunar_rabbit', 'lunar_rabbit', 'meteor_ball', 'astro_soviet', 'monolith_slab', 'monolith_slab'];
+      return ['moon_rover', 'lunar_rabbit', 'meteor_ball', 'astro_soviet', 'astro_soviet', 'monolith_slab', 'monolith_slab', 'mali_ball'];
+    }
     if (stageId === 'inferno') {
       // Stage 5: 深淵のマグマ魔境 — ネパール魔獣・オハイオ怪物・チリワーム・バチカン審判魔導・ダークキューブ
       if (t < 45) return ['nepal_demon', 'nepal_demon', 'ohio_monster', 'chile_snake', 'chile_snake', 'mali_ball'];
@@ -1691,6 +1698,7 @@ window.PBEngine = (() => {
       else if (e.type === 'reichtangle') tryUnlockAch('defeat_reichtangle');
       else if (e.type === 'boss_pyramid') tryUnlockAch('defeat_pyramid');
       else if (e.type === 'boss_omega_reich') tryUnlockAch('defeat_omega_reich');
+      else if (e.type === 'boss_luna_reich') tryUnlockAch('defeat_luna_reich');
       if (state.stage.id === 'space' && state.players.some(p => p.charId === 'poland')) {
         tryUnlockAch('poland_space');
       }
@@ -2735,6 +2743,21 @@ window.PBEngine = (() => {
       const pulse = 0.5 + 0.5 * Math.sin(state.time * 2.2);
       ctx.fillStyle = `rgba(239, 68, 68, ${0.08 + pulse * 0.05})`;
       ctx.fillRect(0, h * 0.65, w, h * 0.35);
+    } else if (stage.propType === 'moon') {
+      // Silvery-slate lunar regolith surface
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#475569');
+      g.addColorStop(0.55, '#526072');
+      g.addColorStop(1, '#3b4656');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      // Soft bluish Earthshine ambient glow from upper corner
+      ctx.save();
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+      ctx.beginPath();
+      ctx.arc(w * 0.86, h * 0.14, Math.min(w, h) * 0.42, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     } else {
       ctx.fillStyle = '#74b855';
       ctx.fillRect(0, 0, w, h);
@@ -2929,6 +2952,64 @@ window.PBEngine = (() => {
             ctx.fillStyle = r1 > 0.5 ? `rgba(253, 224, 71, ${0.5 + glow * 0.45})` : `rgba(251, 146, 60, ${0.5 + glow * 0.45})`;
             ctx.beginPath();
             ctx.arc(emberX, emberY, 1.8 + r1 * 1.8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else if (stage.propType === 'moon') {
+          const glow = 0.5 + 0.5 * Math.sin(state.time * 2.8 + r1 * 16);
+          // Classic lunar impact craters with shaded bowls & sunlit rims
+          if (r1 < 0.44) {
+            const cr = 18 + r2 * 24;
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.42)';
+            ctx.beginPath();
+            ctx.ellipse(px, py, cr, cr * 0.68, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(203, 213, 225, 0.35)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(px, py, cr, cr * 0.68, 0, Math.PI * 0.9, Math.PI * 1.9);
+            ctx.stroke();
+          }
+          if (r1 > 0.85) {
+            // Glowing cyan lunar Helium-3 crystal cluster!
+            const cs = 13 + r2 * 10;
+            ctx.fillStyle = `rgba(56, 189, 248, ${0.55 + glow * 0.35})`;
+            ctx.strokeStyle = '#e0f2fe';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(px, py - cs);
+            ctx.lineTo(px + cs * 0.45, py + cs * 0.3);
+            ctx.lineTo(px - cs * 0.45, py + cs * 0.3);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+          } else if (r1 < 0.08) {
+            // Lunar base glowing radar beacon / mini Poland flag!
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(px, py + 8); ctx.lineTo(px, py - 18);
+            ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(px, py - 18, 14, 5);
+            ctx.fillStyle = '#dc143c';
+            ctx.fillRect(px, py - 13, 14, 5);
+            ctx.fillStyle = `rgba(56, 189, 248, ${0.4 + glow * 0.5})`;
+            ctx.beginPath();
+            ctx.arc(px, py - 19, 3, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (r2 > 0.72 && r1 > 0.44 && r1 <= 0.85) {
+            // Moon basalt boulder
+            ctx.fillStyle = '#64748b';
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(px, py, 11 + r1 * 5, 7 + r2 * 4, r1, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+          }
+          // Subtle sparkling moon dust motes
+          if (r2 < 0.25) {
+            ctx.fillStyle = `rgba(224, 242, 254, ${0.3 + glow * 0.45})`;
+            ctx.beginPath();
+            ctx.arc(px + 12, py - 10, 1.5 + r1 * 1.4, 0, Math.PI * 2);
             ctx.fill();
           }
         } else {

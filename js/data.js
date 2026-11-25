@@ -786,6 +786,32 @@ window.PBData = (() => {
       hp: 360, speed: 74, damage: 22, radius: 23, xp: 20, score: 75, isCube: true,
       desc: 'Stage 5（マグマ魔境）に出現！黒曜石と紅蓮の異次元立方体。宇宙キューブを遥かに凌ぐ超重装甲！'
     },
+    // === Stage 6 (月面基地 — POLAN ON THE MOON!) 追加敵 ===
+    moon_rover: {
+      id: 'moon_rover', name: '月面探査ローバーボール', stageTag: '🌕 Stage 6 固有の敵',
+      hp: 195, speed: 145, damage: 21, radius: 19, xp: 17, score: 68,
+      desc: 'Stage 6（月面基地）に出現！6輪駆動とレーザーアンテナを搭載した超高速月面探査機ボール！'
+    },
+    lunar_rabbit: {
+      id: 'lunar_rabbit', name: '月面ウサギ重装兵', stageTag: '🌕 Stage 6 固有の敵',
+      hp: 255, speed: 134, damage: 23, radius: 20, xp: 19, score: 76,
+      desc: 'Stage 6（月面基地）に出現！月の裏側を守る紅眼のウサギ耳精鋭部隊。高い耐久力と跳躍突進が脅威！'
+    },
+    astro_soviet: {
+      id: 'astro_soviet', name: 'コスモノート・ソ連兵', stageTag: '🌕 Stage 6 出現',
+      hp: 230, speed: 98, damage: 22, radius: 20, xp: 20, score: 80, shooter: true,
+      desc: 'Stage 6（月面基地）に出現！宇宙服をまとった月面ソ連砲撃兵。高威力の紅星プラズマ弾を連射！'
+    },
+    meteor_ball: {
+      id: 'meteor_ball', name: '流星クレーターボール', stageTag: '🌕 Stage 6 出現',
+      hp: 155, speed: 178, damage: 22, radius: 17, xp: 16, score: 65,
+      desc: 'Stage 6（月面基地）に出現！蒼白い閃光を纏い猛スピードで衝突してくる超高速隕石ボール！'
+    },
+    monolith_slab: {
+      id: 'monolith_slab', name: '月面モノリス・スラブ', stageTag: '🌕 Stage 6 出現',
+      hp: 480, speed: 80, damage: 27, radius: 24, xp: 26, score: 98, isCube: true,
+      desc: 'Stage 6（月面基地）に出現！月面クレーターに眠っていた漆黒の超古代石碑。圧倒的な質量と装甲を誇る！'
+    },
     // === Stage 1 (ヨーロッパ大草原) Bosses ===
     boss_viking: {
       id: 'boss_viking', name: '巨大バイキング王', stageTag: '🌿 Stage 1 中ボス(1:30)',
@@ -944,6 +970,38 @@ window.PBData = (() => {
       alertCry: 'OMEGA ANSCHLUSS...', dashCry: '🔥 終末の審判!!', rageCry: '💀 OMEGA APOCALYPSE MODE!!',
       summonId: 'nepal_demon',
       desc: 'Stage 5最難関の最終ボス！宇宙のライヒタングルを超えた灼熱黒曜の終末形態。HP半分以下で紫炎螺旋弾幕＆連続突進！'
+    },
+
+    // === Stage 6 (月面基地 — POLAN ON THE MOON!) Bosses ===
+    boss_apollo_mech: {
+      id: 'boss_apollo_mech', name: 'アポロ11号・重機動USA', stageTag: '🌕 Stage 6 中ボス(1:30)',
+      hp: 11500, speed: 132, damage: 42, radius: 44, xp: 230, score: 1250,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true,
+      bulletPattern: 'fan7', bulletColor: '#38bdf8', dashCry: '🚀 EAGLE HAS LANDED!!',
+      desc: 'Stage 6（1分半）に出現する月面着陸船アーマーUSA。超高速噴射突進＆蒼星7連弾幕！'
+    },
+    boss_lunar_bunny: {
+      id: 'boss_lunar_bunny', name: '月面ウサギ大将軍', stageTag: '🌕 Stage 6 中ボス(3:00)',
+      hp: 25500, speed: 130, damage: 47, radius: 47, xp: 360, score: 2200,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletPattern: 'ring14', bulletColor: '#f472b6', dashCry: '🌕 餅つき超重力波!!', summonId: 'lunar_rabbit',
+      desc: 'Stage 6（3分）に出現する月の裏側を統べる巨大ウサギ将軍。桜光14方向弾＆ウサギ重装兵を召喚！'
+    },
+    boss_sputnik_core: {
+      id: 'boss_sputnik_core', name: 'スプートニク・衛星要塞', stageTag: '🌕 Stage 6 中ボス(4:30)',
+      hp: 44000, speed: 122, damage: 52, radius: 50, xp: 490, score: 3200,
+      isBoss: true, isMidBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletPattern: 'ring14', bulletColor: '#ef4444', dashCry: '🛰️ BEEP BEEP LASER!!', summonId: 'astro_soviet',
+      desc: 'Stage 6（4分半）に出現する巨大銀球の軌道要塞。紅蓮14方向レーザー＆コスモノート兵を展開！'
+    },
+    boss_luna_reich: {
+      id: 'boss_luna_reich', name: '月面皇帝ルナ・ライヒ', stageTag: '🌕 Stage 6 最終ボス(6:00)',
+      hp: 105000, speed: 136, damage: 60, radius: 56, xp: 1600, score: 13000,
+      isBoss: true, isFinalBoss: true, dasher: true, shooter: true, summoner: true,
+      bulletColor: '#38bdf8', bulletColorP2: '#fde047',
+      alertCry: 'LUNA ANSCHLUSS...', dashCry: '🌕 月面大崩壊!!', rageCry: '⚡ ECLIPSE APOCALYPSE MODE!!',
+      summonId: 'moon_rover',
+      desc: 'Stage 6真の最難関・最終ボス！満月光輪を背負う白銀の月面皇帝。HP半分以下で蒼金螺旋弾幕＆超高速連続突進！'
     }
   };
 
@@ -1055,6 +1113,23 @@ window.PBData = (() => {
       spawnMult: 1.22,
       coinMult: 2.25,
       badge: '🔥 極限・最難関'
+    },
+    {
+      id: 'moon',
+      name: '月面基地 — POLAN ON THE MOON!',
+      subtitle: 'Stage 6 — 伝説の超極限・月面決戦',
+      desc: 'マグマ魔境すら超えた人類未踏の月面最終決戦！アポロ機甲USA・月面ウサギ将軍・スプートニク要塞、最奥に「月面皇帝ルナ・ライヒ」が降臨！',
+      bgmName: '♪ 作戦会議',
+      midBosses: ['boss_apollo_mech', 'boss_lunar_bunny', 'boss_sputnik_core'],
+      finalBoss: 'boss_luna_reich',
+      duration: 360,
+      bg: '#475569',
+      bgAccent: '#334155',
+      propType: 'moon',
+      difficulty: 2.60,
+      spawnMult: 1.38,
+      coinMult: 2.80,
+      badge: '🌕 伝説・超極限'
     }
   ];
 
@@ -1082,6 +1157,7 @@ window.PBData = (() => {
     { id: 'defeat_reichtangle', name: 'Guten Tag 撃退！', desc: 'Stage 3 最終ボス「ライヒタングル」を撃破', reward: 140, icon: '👑' },
     { id: 'defeat_pyramid', name: 'ピラミッドの覇者', desc: 'Stage 4 最終ボス「黄金ギザ・ファラオ王」を撃破', reward: 130, icon: '🏺' },
     { id: 'defeat_omega_reich', name: '深淵の征服者', desc: 'Stage 5 最終ボス「終末のオメガ・ライヒ」を撃破', reward: 250, icon: '🔥' },
+    { id: 'defeat_luna_reich', name: '月面制覇の伝説', desc: 'Stage 6 最終ボス「月面皇帝ルナ・ライヒ」を撃破', reward: 400, icon: '🌕' },
     { id: 'poland_space', name: 'Polan CAN into Space!', desc: 'ポーランドで宇宙軌道ステージをクリア', reward: 180, icon: '🪐' },
     { id: 'coop_play', name: '同盟締結！', desc: '2〜3人協力プレイで出撃する', reward: 40, icon: '🤝' },
     { id: 'coop_revive', name: '友情の蘇生', desc: '協力プレイでパートナーを蘇生させる', reward: 60, icon: '💖' },

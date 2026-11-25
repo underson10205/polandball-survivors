@@ -2465,6 +2465,326 @@ window.PBRenderer = (() => {
         break;
       }
 
+      // === Stage 6 (月面基地 — POLAN ON THE MOON!) Regular Enemies ===
+      case 'moon_rover': {
+        // Lunar Exploration Rover Ball (silver chassis + gold foil + wheels + dish!)
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillRect(-r, r * 0.22, r * 2, r * 0.78);
+          ctx.fillStyle = '#0ea5e9';
+          ctx.fillRect(-r * 0.65, -r * 0.45, r * 1.3, r * 0.36);
+        });
+        ctx.save();
+        // Radar dish on top
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.8, r * 0.09);
+        ctx.beginPath();
+        ctx.moveTo(0, -r); ctx.lineTo(0, -r * 1.35);
+        ctx.stroke();
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.arc(0, -r * 1.38, r * 0.28, Math.PI * 0.1, Math.PI * 0.9);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // 3 mini rover wheels at bottom
+        ctx.fillStyle = '#1e293b';
+        for (const wx of [-r * 0.6, 0, r * 0.6]) {
+          ctx.beginPath();
+          ctx.arc(wx, r * 0.96, r * 0.24, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        }
+        ctx.restore();
+        drawEyes(ctx, r * 0.85, 'angry', lookX, lookY, { yOffset: -0.2 });
+        break;
+      }
+
+      case 'lunar_rabbit': {
+        // Moon Rabbit Heavy Trooper (white ball + tall rabbit ears + golden crescent!)
+        ctx.save();
+        ctx.fillStyle = '#f8fafc';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2, r * 0.1);
+        // Tall rabbit ears
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(side * r * 0.42, -r * 1.18, r * 0.24, r * 0.62, side * 0.18, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#fda4af';
+          ctx.beginPath();
+          ctx.ellipse(side * r * 0.42, -r * 1.16, r * 0.11, r * 0.42, side * 0.18, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#f8fafc';
+        }
+        ctx.restore();
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Crimson lunar armor chest band
+          ctx.fillStyle = '#e11d48';
+          ctx.fillRect(-r, r * 0.32, r * 2, r * 0.68);
+          // Golden crescent moon emblem on forehead
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.arc(0, -r * 0.48, r * 0.22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#f8fafc';
+          ctx.beginPath();
+          ctx.arc(r * 0.08, -r * 0.52, r * 0.17, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: 0.02 });
+        break;
+      }
+
+      case 'astro_soviet': {
+        // Soviet Cosmonaut Shooter (helmet + CCCP red stripe + golden star!)
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          drawStar(ctx, -r * 0.45, -r * 0.42, 5, r * 0.24, r * 0.1, '#facc15');
+          // White spacesuit lower collar
+          ctx.fillStyle = '#f1f5f9';
+          ctx.fillRect(-r, r * 0.45, r * 2, r * 0.55);
+        });
+        // Glass Cosmonaut Helmet Rim
+        ctx.save();
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = Math.max(2.6, r * 0.14);
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.06, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(1.5, r * 0.07);
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.13, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.04 });
+        break;
+      }
+
+      case 'meteor_ball': {
+        // Blazing Cyan-Silver Asteroid Ball!
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#64748b';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Craters
+          ctx.fillStyle = '#334155';
+          ctx.beginPath();
+          ctx.arc(-r * 0.42, r * 0.36, r * 0.28, 0, Math.PI * 2);
+          ctx.arc(r * 0.48, -r * 0.42, r * 0.22, 0, Math.PI * 2);
+          ctx.fill();
+          // Glowing cyan energy cracks
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = Math.max(1.8, r * 0.1);
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.7, -r * 0.2); ctx.lineTo(0, r * 0.1); ctx.lineTo(r * 0.65, r * 0.4);
+          ctx.stroke();
+        });
+        drawEyes(ctx, r * 0.9, 'angry', lookX, lookY, { yOffset: -0.1 });
+        break;
+      }
+
+      case 'monolith_slab': {
+        // 2001 Lunar Monolith Slab (tall obsidian slab with cyan cosmic rim!)
+        ctx.save();
+        const w = r * 1.24;
+        const h = r * 2.05;
+        ctx.fillStyle = '#09090b';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = Math.max(2.5, r * 0.11);
+        ctx.fillRect(-w / 2, -h / 2, w, h);
+        ctx.strokeRect(-w / 2, -h / 2, w, h);
+        // Inner silver geometric glyph
+        ctx.strokeStyle = 'rgba(224, 242, 254, 0.55)';
+        ctx.lineWidth = Math.max(1.4, r * 0.06);
+        ctx.strokeRect(-w * 0.3, -h * 0.34, w * 0.6, h * 0.68);
+        // Glowing cyan slit eyes
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(-w * 0.34, -h * 0.18, w * 0.26, r * 0.14);
+        ctx.fillRect(w * 0.08, -h * 0.18, w * 0.26, r * 0.14);
+        ctx.restore();
+        break;
+      }
+
+      // === Stage 6 (月面基地) Bosses ===
+      case 'boss_apollo_mech': {
+        // Stage 6 Mid-Boss 1: Apollo 11 Heavy Lunar Mech USA!
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.fillStyle = '#dc2626';
+          for (let i = 0; i < 6; i++) {
+            ctx.fillRect(-r, -r + i * (r * 0.34), r * 2, r * 0.17);
+          }
+          ctx.fillStyle = '#1e3a8a';
+          ctx.fillRect(-r, -r, r * 1.05, r * 1.05);
+          // Gold lunar foil lower armor
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillRect(-r, r * 0.45, r * 2, r * 0.55);
+        });
+        // Gold Reflective Astronaut Visor + Side Lunar Thrusters
+        ctx.save();
+        ctx.fillStyle = '#facc15';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2.5, r * 0.08);
+        ctx.beginPath();
+        ctx.roundRect(-r * 0.72, -r * 0.34, r * 1.44, r * 0.52, r * 0.22);
+        ctx.fill(); ctx.stroke();
+        // Side rocket pods
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(-r * 1.24, -r * 0.2, r * 0.28, r * 0.75);
+        ctx.strokeRect(-r * 1.24, -r * 0.2, r * 0.28, r * 0.75);
+        ctx.fillRect(r * 0.96, -r * 0.2, r * 0.28, r * 0.75);
+        ctx.strokeRect(r * 0.96, -r * 0.2, r * 0.28, r * 0.75);
+        ctx.restore();
+        break;
+      }
+
+      case 'boss_lunar_bunny': {
+        // Stage 6 Mid-Boss 2: Giant Lunar Rabbit Shogun!
+        const pulse = 0.5 + 0.5 * Math.sin(time * 6);
+        ctx.save();
+        ctx.fillStyle = `rgba(244, 114, 182, ${0.2 + pulse * 0.15})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.22, 0, Math.PI * 2);
+        ctx.fill();
+        // Giant tall armored rabbit ears
+        ctx.fillStyle = '#f8fafc';
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(3, r * 0.09);
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(side * r * 0.45, -r * 1.18, r * 0.26, r * 0.65, side * 0.22, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#f472b6';
+          ctx.beginPath();
+          ctx.ellipse(side * r * 0.45, -r * 1.16, r * 0.12, r * 0.44, side * 0.22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#f8fafc';
+        }
+        ctx.restore();
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          // Giant crimson sun/moon disk in center
+          ctx.fillStyle = '#be123c';
+          ctx.beginPath();
+          ctx.arc(0, r * 0.15, r * 0.48, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        // Golden Shogun Crescent Helmet Crest!
+        ctx.save();
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = Math.max(4, r * 0.15);
+        ctx.beginPath();
+        ctx.arc(0, -r * 0.85, r * 0.42, Math.PI * 0.15, Math.PI * 0.85);
+        ctx.stroke();
+        ctx.restore();
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.06 });
+        break;
+      }
+
+      case 'boss_sputnik_core': {
+        // Stage 6 Mid-Boss 3: Giant Sputnik Orbital Fortress!
+        ctx.save();
+        // 4 Long Swept-Back Sputnik Antennae
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = Math.max(3.5, r * 0.12);
+        for (const ang of [-2.4, -1.9, -1.24, -0.74]) {
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(ang) * r * 0.8, Math.sin(ang) * r * 0.8);
+          ctx.lineTo(Math.cos(ang) * r * 1.65, Math.sin(ang) * r * 1.65);
+          ctx.stroke();
+        }
+        ctx.restore();
+        drawFlagCircle(ctx, r, () => {
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillRect(-r, 0, r * 2, r);
+          // Equatorial red bolt ring
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(-r, -r * 0.14, r * 2, r * 0.28);
+          // Giant golden star core
+          drawStar(ctx, 0, r * 0.42, 5, r * 0.34, r * 0.15, '#facc15');
+        });
+        drawEyes(ctx, r, 'angry', lookX, lookY, { yOffset: -0.28 });
+        break;
+      }
+
+      case 'boss_luna_reich': {
+        // Stage 6 Final Boss: LUNA REICH (Full-Moon Halo + Silver-Indigo Towering Reichtangle!)
+        const w = r * 1.5;
+        const h = r * 2.34;
+        const x0 = -w / 2;
+        const y0 = -h * 0.62;
+        const pulse = 0.5 + 0.5 * Math.sin(time * 7);
+        const pad = 10 + pulse * 8;
+        ctx.save();
+        // Luminous Full-Moon Halo behind boss!
+        ctx.fillStyle = `rgba(253, 224, 71, ${0.18 + pulse * 0.12})`;
+        ctx.beginPath();
+        ctx.arc(0, y0 + h * 0.22, r * 1.52, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(56, 189, 248, ${0.26 + pulse * 0.18})`;
+        ctx.fillRect(x0 - pad, y0 - pad, w + pad * 2, h + pad * 2);
+
+        // Midnight Indigo, Pure Lunar Silver, and Royal Cyan Bands
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x0, y0, w, h / 3);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(x0, y0 + h / 3, w, h / 3);
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(x0, y0 + (h * 2) / 3, w, h / 3);
+
+        // Golden Lunar Crescent Emblem in center band
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(0, y0 + h * 0.5, r * 0.34, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.arc(r * 0.12, y0 + h * 0.46, r * 0.26, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crisp ink outline
+        ctx.lineWidth = Math.max(3.5, r * 0.11);
+        ctx.strokeStyle = INK;
+        ctx.strokeRect(x0, y0, w, h);
+
+        // Golden Lunar Crown atop head!
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.moveTo(x0 + w * 0.08, y0);
+        ctx.lineTo(x0, y0 - r * 0.6);
+        ctx.lineTo(x0 + w * 0.3, y0 - r * 0.25);
+        ctx.lineTo(0, y0 - r * 0.8);
+        ctx.lineTo(x0 + w * 0.7, y0 - r * 0.25);
+        ctx.lineTo(x0 + w, y0 - r * 0.6);
+        ctx.lineTo(x0 + w * 0.92, y0);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // Blazing Cyan-White Pinpoint Eyes!
+        const eyeY = y0 + h * 0.21;
+        const eyeR = Math.max(3.2, r * 0.115);
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(-w * 0.24, eyeY, eyeR * 1.5, 0, Math.PI * 2);
+        ctx.arc(w * 0.24, eyeY, eyeR * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-w * 0.24, eyeY, eyeR * 0.72, 0, Math.PI * 2);
+        ctx.arc(w * 0.24, eyeY, eyeR * 0.72, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+
       default:
         drawFlagCircle(ctx, r, () => {
           ctx.fillStyle = '#64748b';
