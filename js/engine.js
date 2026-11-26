@@ -1418,6 +1418,10 @@ window.PBEngine = (() => {
       if (e.hitFlash > 0) e.hitFlash = Math.max(0, e.hitFlash - dt * 5);
       if (e.orbitHitCd > 0) e.orbitHitCd -= dt;
       if (e.slowTimer > 0) e.slowTimer -= dt;
+      if (e.speechTimer > 0) {
+        e.speechTimer -= dt;
+        if (e.speechTimer <= 0) e.speech = null;
+      }
 
       // Nearest alive player
       let target = alive[0];
@@ -1447,6 +1451,8 @@ window.PBEngine = (() => {
         state.shake = Math.max(state.shake, 14);
         Audio.playSfx('boss');
         const rageText = def.rageCry || '🔥 RAGE MODE!!';
+        e.speech = rageText;
+        e.speechTimer = 2.6;
         addFloatingText(e.x, e.y - 72, rageText, '#ef4444', true);
         if (state.mode === 'coop_host') {
           broadcastFx({ sfx: 'boss', shake: 14, text: rageText, x: e.x, y: e.y - 72, color: '#ef4444', big: true });
@@ -1472,6 +1478,8 @@ window.PBEngine = (() => {
             const cry = e.isFinalBoss
               ? (e.phase2 ? (def.rageCry || 'RAGE!!') : (def.dashCry || '突撃!!'))
               : (def.dashCry || '⚔️ 猛突撃！');
+            e.speech = cry;
+            e.speechTimer = 2.4;
             addFloatingText(e.x, e.y - e.radius - 16, cry, '#ef4444', true);
             if (state.mode === 'coop_host') broadcastFx({ text: cry, x: e.x, y: e.y - e.radius - 16, color: '#ef4444', big: true });
           }
@@ -1587,6 +1595,65 @@ window.PBEngine = (() => {
         }
       }
     }
+
+    updateEnemySpeech(dt);
+  }
+
+  // === POLANDBALL ENEMY SPEECH SYSTEM (Max 3〜4 visible on screen) ===
+  const MAX_ONSCREEN_SPEECHES = 3;
+
+  function countOnScreenSpeeches(cx, cy, cullX, cullY) {
+    if (!state || !state.enemies) return 0;
+    let count = 0;
+    for (const e of state.enemies) {
+      if (e.speech && Math.abs(e.x - cx) <= cullX && Math.abs(e.y - cy) <= cullY) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  function triggerEnemySpeech(e, category = 'idle', force = false) {
+    if (!e || (!force && e.speech)) return false;
+    const quotesObj = Data.ENEMY_QUOTES && Data.ENEMY_QUOTES[e.type];
+    if (!quotesObj) return false;
+    const pool = (category === 'hit' ? quotesObj.hit : quotesObj.idle) || quotesObj.idle;
+    if (!pool || pool.length === 0) return false;
+    const text = pool[Math.floor(Math.random() * pool.length)];
+    e.speech = text;
+    e.speechTimer = e.isBoss ? 2.5 : 2.1;
+    return true;
+  }
+
+  function updateEnemySpeech(dt) {
+    if (!state || !state.enemies || state.enemies.length === 0) return;
+    const cx = state.camera.x;
+    const cy = state.camera.y;
+    const cullX = (canvas.width || 800) / 2 + 25;
+    const cullY = (canvas.height || 600) / 2 + 25;
+
+    const activeCount = countOnScreenSpeeches(cx, cy, cullX, cullY);
+
+    if (state.enemySpeechTimer === undefined) state.enemySpeechTimer = 1.6;
+    state.enemySpeechTimer -= dt;
+
+    if (state.enemySpeechTimer <= 0) {
+      state.enemySpeechTimer = 1.6 + Math.random() * 1.4; // random mutter every ~1.6 - 3.0s
+      if (activeCount < MAX_ONSCREEN_SPEECHES) {
+        const candidates = state.enemies.filter(e => {
+          return !e.speech &&
+                 Math.abs(e.x - cx) <= cullX - 35 &&
+                 Math.abs(e.y - cy) <= cullY - 35;
+        });
+        if (candidates.length > 0) {
+          const bossCandidate = candidates.find(c => c.isBoss);
+          const pick = (bossCandidate && Math.random() < 0.35)
+            ? bossCandidate
+            : candidates[Math.floor(Math.random() * candidates.length)];
+          triggerEnemySpeech(pick, 'idle');
+        }
+      }
+    }
   }
 
   function damagePlayer(p, rawDamage) {
@@ -1653,8 +1720,25 @@ window.PBEngine = (() => {
 
     if (e.hp <= 0) {
       killEnemy(e);
-    } else if (Math.random() < 0.25) {
-      Audio.playSfx('hit');
+    } else {
+      if (Math.random() < 0.25) {
+        Audio.playSfx('hit');
+      }
+      // Polandball enemy speech reaction on hit
+      if (!e.speech && state) {
+        const cx = state.camera.x;
+        const cy = state.camera.y;
+        const cullX = (canvas.width || 800) / 2 + 25;
+        const cullY = (canvas.height || 600) / 2 + 25;
+        if (Math.abs(e.x - cx) <= cullX && Math.abs(e.y - cy) <= cullY) {
+          if (countOnScreenSpeeches(cx, cy, cullX, cullY) < MAX_ONSCREEN_SPEECHES) {
+            const hitChance = e.isBoss ? 0.22 : 0.045;
+            if (Math.random() < hitChance) {
+              triggerEnemySpeech(e, 'hit');
+            }
+          }
+        }
+      }
     }
   }
 
@@ -2614,7 +2698,12 @@ window.PBEngine = (() => {
         e.x += (e.targetX - e.x) * lerp;
         e.y += (e.targetY - e.y) * lerp;
       }
+      if (e.speechTimer > 0) {
+        e.speechTimer -= dt;
+        if (e.speechTimer <= 0) e.speech = null;
+      }
     }
+    updateEnemySpeech(dt);
 
     const me = getPlayerByPid(state.myPid) || state.players[0];
     if (me) {
@@ -3192,6 +3281,60 @@ window.PBEngine = (() => {
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(e.x - bw / 2, e.y - e.radius * 1.48, bw * pct, 6);
       }
+    }
+
+    // 4.5. Enemy Polandball Speech Bubbles (Max 3〜4 visible on screen)
+    for (const e of state.enemies) {
+      if (!e.speech || e.speechTimer <= 0) continue;
+      if (Math.abs(e.x - cx) > cullX + 50 || Math.abs(e.y - cy) > cullY + 50) continue;
+
+      ctx.save();
+      const alpha = Math.max(0, Math.min(1, e.speechTimer * 5, (2.4 - e.speechTimer) * 5));
+      ctx.globalAlpha = alpha;
+
+      const isBoss = !!e.isBoss;
+      ctx.font = isBoss ? '900 12px "M PLUS Rounded 1c", sans-serif' : '800 11px "M PLUS Rounded 1c", sans-serif';
+      const text = e.speech;
+      const tw = Math.max(38, ctx.measureText(text).width + 16);
+      const bh = isBoss ? 23 : 21;
+      const bx = e.x - tw / 2;
+      const topOffset = isBoss ? (e.radius * 1.48 + bh + 10) : (e.radius + bh + 7);
+      const by = e.y - topOffset;
+
+      // Speech bubble body
+      ctx.fillStyle = '#fffdf7';
+      ctx.strokeStyle = isBoss ? '#b91c1c' : '#1e293b';
+      ctx.lineWidth = isBoss ? 2.5 : 2.0;
+
+      ctx.beginPath();
+      ctx.roundRect(bx, by, tw, bh, 7);
+      ctx.fill();
+      ctx.stroke();
+
+      // Tail pointing to ball top
+      const tailTop = by + bh - 0.5;
+      const tailTipX = e.x;
+      const tailTipY = isBoss ? (e.y - e.radius * 1.48 - 4) : (e.y - e.radius - 2);
+      ctx.beginPath();
+      ctx.moveTo(e.x - 4, tailTop);
+      ctx.lineTo(tailTipX, tailTipY);
+      ctx.lineTo(e.x + 4, tailTop);
+      ctx.closePath();
+      ctx.fillStyle = '#fffdf7';
+      ctx.fill();
+      ctx.stroke();
+
+      // Overwrite tail seam
+      ctx.fillStyle = '#fffdf7';
+      ctx.fillRect(e.x - 3.5, tailTop - 1.5, 7, 2.5);
+
+      // Text inside bubble
+      ctx.fillStyle = isBoss ? '#991b1b' : '#0f172a';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, e.x, by + bh / 2 + 0.5);
+
+      ctx.restore();
     }
 
     // 5. Players + Orbital Teacups + Revival Rings + Emotes
