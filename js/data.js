@@ -487,7 +487,7 @@ window.PBData = (() => {
       evolvePassive: 'shield',
       evolvedName: 'レギオン大行進',
       evolvedIcon: '🏛️',
-      evolvedDesc: '全方位16本黄金投槍リング＆超貫通ファランクス重槍を連続投擲！軍団を粉砕する！',
+      evolvedDesc: '全方位8本黄金投槍リング＆超貫通ファランクス重槍を連続投擲！軍団を粉砕する！',
       desc: '敵を複数貫通する高速ローマ投槍を扇状に放つ。',
       color: '#b91c1c',
       type: 'fan',

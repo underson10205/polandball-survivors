@@ -262,17 +262,17 @@ window.PBEngine = (() => {
     const b = def.base;
     const lv = Math.min(def.maxLevel, w.level);
     const evo = w.evolved;
-    // Evolved Laser keeps full satellite power; Evolved Pilum gets massive legion barrage power!
+    // Evolved Laser keeps full satellite power; Evolved Pilum has balanced legion barrage
     const isEvoLaser = evo && w.id === 'laser';
     const isEvoPilum = evo && w.id === 'pilum';
 
-    const evoDmgMult = evo ? (isEvoLaser ? 1.9 : (isEvoPilum ? 2.25 : 1.58)) : 1;
-    const evoCdMult = evo ? (isEvoLaser ? 0.66 : (isEvoPilum ? 0.50 : 0.75)) : 1;
-    const evoCountAdd = evo ? (isEvoLaser ? 2 : (isEvoPilum ? 6 : 1)) : 0;
-    const evoAreaMult = evo ? (isEvoLaser ? 1.48 : (isEvoPilum ? 1.50 : 1.24)) : 1;
-    const evoSpeedMult = evo ? (isEvoLaser ? 1.22 : (isEvoPilum ? 1.30 : 1.18)) : 1;
+    const evoDmgMult = evo ? (isEvoLaser ? 1.9 : (isEvoPilum ? 1.75 : 1.58)) : 1;
+    const evoCdMult = evo ? (isEvoLaser ? 0.66 : (isEvoPilum ? 0.68 : 0.75)) : 1;
+    const evoCountAdd = evo ? (isEvoLaser ? 2 : (isEvoPilum ? 2 : 1)) : 0;
+    const evoAreaMult = evo ? (isEvoLaser ? 1.48 : (isEvoPilum ? 1.35 : 1.24)) : 1;
+    const evoSpeedMult = evo ? (isEvoLaser ? 1.22 : (isEvoPilum ? 1.25 : 1.18)) : 1;
     const evoDurMult = evo ? (isEvoLaser ? 1.65 : 1.40) : 1;
-    const evoKbMult = evo ? (isEvoLaser ? 1.6 : (isEvoPilum ? 1.85 : 1.40)) : 1;
+    const evoKbMult = evo ? (isEvoLaser ? 1.6 : (isEvoPilum ? 1.60 : 1.40)) : 1;
 
     let damage = b.damage * (1 + (lv - 1) * 0.35) * evoDmgMult;
     let cooldown = b.cooldown * Math.pow(0.915, lv - 1) * evoCdMult;
@@ -287,8 +287,8 @@ window.PBEngine = (() => {
     if (w.id === 'roar') count = 1;
     if (w.id === 'baguette') {
       pierce = (b.pierce || 12) + (lv - 1) * 3 + (evo ? 99 : 0);
-      duration = Math.max(2.8, duration * (evo ? 1.45 : 1.15));
-      if (evo) count = Math.max(5, count + 1);
+      duration = Math.max(2.8, duration * (evo ? 1.15 : 1.0));
+      if (evo) count = Math.min(4, Math.max(3, 3 + pStats.amount));
     }
 
     return {
@@ -885,7 +885,7 @@ window.PBEngine = (() => {
             radius: (w.evolved ? 18 : 17.5) * ws.area,
             damage: ws.damage,
             pierce: w.evolved ? 99 : ws.pierce,
-            life: w.evolved ? Math.max(3.6, ws.duration * 1.25) : Math.max(2.8, ws.duration * 0.95),
+            life: w.evolved ? Math.min(3.2, Math.max(2.6, ws.duration * 0.85)) : Math.max(2.8, ws.duration * 0.95),
             spin: 0,
             hitSet: new Map()
           });
@@ -920,8 +920,8 @@ window.PBEngine = (() => {
         Audio.playSfx('slash');
         if (w.evolved) {
           // --- EVOLVED: レギオン大行進 (Legion Grand March) ---
-          // 1. 360-degree radial Legion Ring of 16 golden javelins!
-          const ringCount = 16;
+          // 1. 360-degree radial Legion Ring of 8 golden javelins!
+          const ringCount = 8;
           for (let i = 0; i < ringCount; i++) {
             const a = (i * Math.PI * 2) / ringCount + state.time * 2;
             pushProjectile({
@@ -934,14 +934,14 @@ window.PBEngine = (() => {
               vx: Math.cos(a) * ws.speed,
               vy: Math.sin(a) * ws.speed,
               radius: 14 * ws.area,
-              damage: Math.round(ws.damage * 0.95),
+              damage: Math.round(ws.damage * 0.90),
               pierce: 99, // Infinite penetration for legion ring!
               life: 1.8,
               hitSet: new Map()
             });
           }
           // 2. Heavy Legion Phalanx spear salvo straight toward target!
-          const phalanxCount = Math.min(6, Math.max(3, ws.count));
+          const phalanxCount = Math.min(3, Math.max(2, Math.floor(ws.count / 2)));
           const phalanxSpread = 0.20;
           for (let i = 0; i < phalanxCount; i++) {
             const spreadA = (i - (phalanxCount - 1) / 2) * phalanxSpread;
@@ -958,7 +958,7 @@ window.PBEngine = (() => {
               vx: Math.cos(a) * (ws.speed * 1.25),
               vy: Math.sin(a) * (ws.speed * 1.25),
               radius: 18 * ws.area,
-              damage: Math.round(ws.damage * 1.45),
+              damage: Math.round(ws.damage * 1.35),
               pierce: 99,
               life: 2.0,
               hitSet: new Map()
