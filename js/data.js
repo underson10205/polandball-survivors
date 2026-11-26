@@ -447,16 +447,16 @@ window.PBData = (() => {
       evolvePassive: 'croissant',
       evolvedName: 'パリジャン・トルネード',
       evolvedIcon: '🌪️',
-      evolvedDesc: '焼きたての黄金バゲットが螺旋を描いて敵を切り裂きながら舞う！',
-      desc: '硬いバゲットを放物線状に投げ飛ばし、複数の敵を貫通する。',
+      evolvedDesc: '黄金バゲットが超高速螺旋トルネードとなって広範囲の敵を長持続でなぎ倒す！',
+      desc: '超硬質バゲットを豪快に放物線投擲！敵の大群を貫通しながら長時間切り裂く。',
       color: '#b45309',
       type: 'arc',
-      base: { damage: 28, cooldown: 1.5, count: 2, speed: 360, area: 1.0, pierce: 4 },
+      base: { damage: 34, cooldown: 1.30, count: 2, speed: 380, area: 1.05, pierce: 12, duration: 2.8 },
       levelUp: [
-        'バゲット +1 ＆ 貫通力UP',
+        'バゲット +1 ＆ 貫通力大幅UP',
         '威力大幅UP ＆ クールダウン短縮',
-        'バゲット +1 ＆ 範囲拡大',
-        '【MAX】威力・貫通力が大幅強化！'
+        'バゲット +1 ＆ 攻撃範囲・持続時間拡大',
+        '【MAX】威力・持続・貫通力が極限強化！'
       ]
     },
     bratwurst: {

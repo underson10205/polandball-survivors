@@ -285,6 +285,11 @@ window.PBEngine = (() => {
     if (w.id === 'katana' && lv >= 2) count = Math.max(count, 2);
     if (w.id === 'teacup' && evo) { count = Math.max(7, count + 1); duration = 999; cooldown = 0.1; }
     if (w.id === 'roar') count = 1;
+    if (w.id === 'baguette') {
+      pierce = (b.pierce || 12) + (lv - 1) * 3 + (evo ? 99 : 0);
+      duration = Math.max(2.8, duration * (evo ? 1.45 : 1.15));
+      if (evo) count = Math.max(5, count + 1);
+    }
 
     return {
       damage: Math.round(damage * pStats.might),
@@ -859,10 +864,10 @@ window.PBEngine = (() => {
       }
 
       case 'arc': {
-        // Pre-evolution Baguette at full original power; evolved tornado tuned to sweet spot
+        // France: Baguette high-piercing majestic arc & Evolved Parisian Tornado
         for (let i = 0; i < ws.count; i++) {
-          const spread = (i - (ws.count - 1) / 2) * 0.4;
-          const a = -Math.PI / 2 + spread + (p.lookX >= 0 ? 0.35 : -0.35);
+          const spread = (i - (ws.count - 1) / 2) * 0.38;
+          const a = -Math.PI / 2 + spread + (p.lookX >= 0 ? 0.32 : -0.32);
           pushProjectile({
             id: state.nextEid++,
             kind: 'baguette',
@@ -870,17 +875,17 @@ window.PBEngine = (() => {
             owner: p.pid,
             weapon: w,
             x: p.x, y: p.y,
-            vx: Math.cos(a) * ws.speed * 0.85,
-            vy: Math.sin(a) * ws.speed * 1.1,
-            gravity: w.evolved ? 0 : 620,
+            vx: Math.cos(a) * ws.speed * 0.95,
+            vy: Math.sin(a) * ws.speed * 1.05,
+            gravity: w.evolved ? 0 : 380,
             spiralAngle: (i * Math.PI * 2) / ws.count,
-            spiralR: 20,
+            spiralR: 24,
             originX: p.x,
             originY: p.y,
-            radius: (w.evolved ? 14.5 : 16) * ws.area,
+            radius: (w.evolved ? 18 : 17.5) * ws.area,
             damage: ws.damage,
-            pierce: ws.pierce,
-            life: w.evolved ? 1.85 : 1.75,
+            pierce: w.evolved ? 99 : ws.pierce,
+            life: w.evolved ? Math.max(3.6, ws.duration * 1.25) : Math.max(2.8, ws.duration * 0.95),
             spin: 0,
             hitSet: new Map()
           });
@@ -1864,10 +1869,10 @@ window.PBEngine = (() => {
           pr.vy = Math.sin(nextA) * pr.speed;
         }
       } else if (pr.kind === 'baguette') {
-        pr.spin += dt * 13;
+        pr.spin += dt * (pr.evolved ? 16 : 13);
         if (pr.evolved) {
-          pr.spiralAngle += dt * 5.1;
-          pr.spiralR += dt * 125;
+          pr.spiralAngle += dt * 5.4;
+          pr.spiralR += dt * 105;
           const owner = getPlayerByPid(pr.owner) || state.players[0];
           pr.x = owner.x + Math.cos(pr.spiralAngle) * pr.spiralR;
           pr.y = owner.y + Math.sin(pr.spiralAngle) * pr.spiralR;
