@@ -1750,12 +1750,6 @@ window.PBData = (() => {
       name: 'スペシャルプレゼント',
       coins: 20000,
       description: '20,000ゴールドコイン'
-    },
-    '7000': {
-      code: '7000',
-      name: 'ラッキーコインプレゼント',
-      coins: 7000,
-      description: '7,000ゴールドコイン'
     }
   };
 

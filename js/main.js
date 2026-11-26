@@ -1795,22 +1795,6 @@
     }
   });
 
-  // 1-click 7,000 Coin Claim Buttons
-  document.querySelectorAll('.btn-claim-7000').forEach(btn => {
-    btn.addEventListener('click', () => {
-      Audio.ensure();
-      Audio.playSfx('victory');
-      setTimeout(() => Audio.playSfx('coin'), 220);
-      const newTotal = Storage.addCoins(7000);
-      refreshCoins();
-      renderShop();
-      renderGacha();
-      showToast(`🎉 7,000コインを獲得しました！（所持: ${newTotal.toLocaleString()}🪙）`);
-      btn.style.transform = 'scale(1.15)';
-      setTimeout(() => { btn.style.transform = ''; }, 160);
-    });
-  });
-
 
   $('btn-gacha-1').addEventListener('click', () => { Audio.ensure(); performGachaPull(1); });
   $('btn-gacha-10').addEventListener('click', () => { Audio.ensure(); performGachaPull(10); });

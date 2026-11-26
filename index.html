@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ポーランドボール・サバイバーズ | 2〜3人協力対応 ヴァンサバアクション</title>
   <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット・スマホ最大3台でのオンライン協力プレイ対応。" />
-  <link rel="stylesheet" href="styles.css?v=38" />
+  <link rel="stylesheet" href="styles.css?v=39" />
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -23,10 +23,7 @@
         <canvas id="logo-ball-right" width="76" height="76"></canvas>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:4px 0 10px 0;">
-        <div class="coin-pill">🪙 所持コイン: <span id="title-coins">0</span></div>
-        <button id="btn-quick-coins" class="btn btn-gold btn-sm btn-claim-7000" style="padding:5px 12px;font-size:0.86rem;font-weight:900;border-radius:999px;">💰 7000コインもらう</button>
-      </div>
+      <div class="coin-pill">🪙 所持コイン: <span id="title-coins">0</span></div>
 
       <div class="title-actions-main">
         <button id="btn-solo" class="btn btn-primary">
@@ -45,7 +42,6 @@
         <button id="btn-codex" class="btn btn-sm">📖 図鑑・装備・進化</button>
         <button id="btn-ach" class="btn btn-sm">🏆 実績</button>
         <button id="btn-gift" class="btn btn-sm" style="background:#fef08a;border-color:#ca8a04;color:#854d0e;">🎁 プレゼント</button>
-        <button class="btn btn-gold btn-sm btn-claim-7000" style="font-weight:900;">💰 +7000コイン</button>
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:0.82rem;font-weight:800;color:#475569;">
@@ -64,7 +60,6 @@
         <h2>🎮 ソロ出撃 — キャラ＆ステージ選択</h2>
         <div style="display:flex;gap:8px;align-items:center;">
           <span class="coin-pill">🪙 <span id="solo-coins">0</span></span>
-          <button class="btn btn-gold btn-sm btn-claim-7000" style="padding:4px 9px;font-size:0.82rem;font-weight:900;">💰 +7000コイン</button>
           <button class="btn btn-sm" data-back="title">← もどる</button>
         </div>
       </div>
@@ -189,7 +184,6 @@
         <h2>🛒 永続強化ショップ ＆ キャラ解放</h2>
         <div style="display:flex;gap:8px;align-items:center;">
           <span class="coin-pill">🪙 <span id="shop-coins">0</span></span>
-          <button class="btn btn-gold btn-sm btn-claim-7000" style="padding:4px 9px;font-size:0.82rem;font-weight:900;">💰 +7000コイン</button>
           <button id="btn-shop-gift" class="btn btn-sm" style="background:#fef08a;border-color:#ca8a04;color:#854d0e;">🎁 コード入力</button>
           <button class="btn btn-sm" data-back="title">← もどる</button>
         </div>
@@ -208,7 +202,6 @@
         <h2>🎰 装備ガチャ ＆ ロードアウト</h2>
         <div style="display:flex;gap:8px;align-items:center;">
           <span class="coin-pill">🪙 <span id="gacha-coins">0</span></span>
-          <button class="btn btn-gold btn-sm btn-claim-7000" style="padding:4px 9px;font-size:0.82rem;font-weight:900;">💰 +7000コイン</button>
           <button id="btn-gacha-gift" class="btn btn-sm" style="background:#fef08a;border-color:#ca8a04;color:#854d0e;">🎁 コード入力</button>
           <button class="btn btn-sm" data-back="title">← もどる</button>
         </div>
@@ -442,12 +435,7 @@
       <div style="background:#f8fafc;border:2px dashed #cbd5e1;border-radius:12px;padding:10px;font-size:0.82rem;color:#64748b;text-align:left;">
         <div style="font-weight:900;color:#334155;margin-bottom:4px;">💡 ヒント＆案内:</div>
         <div>・コード「<strong>12345</strong>」入力で <strong>20,000ゴールドコイン</strong> をプレゼント！</div>
-        <div>・コード「<strong>7000</strong>」入力で <strong>7,000ゴールドコイン</strong> をプレゼント！</div>
-      </div>
-
-      <div style="margin-top:12px;background:#fefce8;border:2px solid #fde047;border-radius:12px;padding:10px;">
-        <div style="font-weight:900;color:#854d0e;font-size:0.84rem;margin-bottom:6px;">🪙 コード入力不要！ワンタップ受取</div>
-        <button class="btn btn-gold btn-claim-7000" style="width:100%;font-size:0.95rem;font-weight:900;padding:8px 12px;">💰 7,000コインをもらう！</button>
+        <div>・各コードは1回のみ使用可能です。</div>
       </div>
 
       <div style="margin-top:14px;">
@@ -463,12 +451,12 @@
   <script src="lib/qrcode.min.js"></script>
 
   <!-- Game Modules -->
-  <script src="js/data.js?v=38"></script>
-  <script src="js/polandballRenderer.js?v=38"></script>
-  <script src="js/audio.js?v=38"></script>
-  <script src="js/storage.js?v=38"></script>
-  <script src="js/network.js?v=38"></script>
-  <script src="js/engine.js?v=38"></script>
-  <script src="js/main.js?v=38"></script>
+  <script src="js/data.js?v=39"></script>
+  <script src="js/polandballRenderer.js?v=39"></script>
+  <script src="js/audio.js?v=39"></script>
+  <script src="js/storage.js?v=39"></script>
+  <script src="js/network.js?v=39"></script>
+  <script src="js/engine.js?v=39"></script>
+  <script src="js/main.js?v=39"></script>
 </body>
 </html>
