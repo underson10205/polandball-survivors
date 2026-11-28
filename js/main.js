@@ -671,6 +671,49 @@
     }
   }
 
+  // === PLAYER SPEECH PALETTE ===
+  function openSpeechPalette() {
+    Audio.ensure();
+    Audio.playSfx('click');
+    const modal = $('modal-speech-palette');
+    const grid = $('speech-palette-grid');
+    if (!modal || !grid) return;
+
+    grid.innerHTML = '';
+    const myCharId = Engine.getMyCharId?.() || Storage.get().selectedChar || 'poland';
+    const myCharDef = Data.CHARACTERS.find(c => c.id === myCharId);
+
+    // 1. Character Special Quote (Full width card on top)
+    const specialBtn = document.createElement('button');
+    specialBtn.className = 'speech-item-btn special';
+    specialBtn.innerHTML = `<span>⭐ 固有セリフ:</span> <strong>${myCharDef?.special || '🚀 Poland can into space!!'}</strong>`;
+    specialBtn.addEventListener('click', () => {
+      Engine.sendEmote('special');
+      closeSpeechPalette();
+    });
+    grid.appendChild(specialBtn);
+
+    // 2. All 19 other emotes in grid
+    for (const em of Data.EMOTES) {
+      if (em.id === 'special') continue;
+      const b = document.createElement('button');
+      b.className = 'speech-item-btn';
+      b.innerHTML = `<span style="font-size:1.15rem;">${em.icon}</span> <span>${em.label}</span>`;
+      b.addEventListener('click', () => {
+        Engine.sendEmote(em.id);
+        closeSpeechPalette();
+      });
+      grid.appendChild(b);
+    }
+
+    modal.classList.add('active');
+  }
+
+  function closeSpeechPalette() {
+    const modal = $('modal-speech-palette');
+    if (modal) modal.classList.remove('active');
+  }
+
   function renderCodex() {
     const content = $('codex-content');
     content.innerHTML = '';
@@ -1159,24 +1202,35 @@
     $('title-bg-canvas').style.display = 'none';
     $('hud').classList.add('active');
 
-    // Co-op emote bar
+    // Player Emote / Speech bar (active in both solo & co-op!)
     const emoteEl = $('hud-emotes');
     emoteEl.innerHTML = '';
-    if (cfg.mode !== 'solo') {
-      emoteEl.classList.add('active');
-      for (const em of Data.EMOTES) {
-        const b = document.createElement('button');
-        b.className = 'emote-btn';
-        b.textContent = `${em.icon} ${em.label}`;
-        b.addEventListener('click', (e) => {
-          e.stopPropagation();
-          Engine.sendEmote(em.id);
-        });
-        emoteEl.appendChild(b);
-      }
-    } else {
-      emoteEl.classList.remove('active');
+    emoteEl.classList.add('active');
+
+    const quickIds = ['special', 'kurwa', 'nice', 'help'];
+    for (const id of quickIds) {
+      const em = Data.EMOTES.find(e => e.id === id);
+      if (!em) continue;
+      const b = document.createElement('button');
+      b.className = 'emote-btn' + (id === 'special' ? ' emote-btn-special' : '');
+      b.textContent = `${em.icon} ${em.label}`;
+      b.title = em.label;
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        Engine.sendEmote(em.id);
+      });
+      emoteEl.appendChild(b);
     }
+
+    const moreBtn = document.createElement('button');
+    moreBtn.className = 'emote-btn emote-btn-more';
+    moreBtn.textContent = '💬 セリフ一覧';
+    moreBtn.title = 'プレイヤーの全セリフ一覧を開く (キーボード: C/T)';
+    moreBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openSpeechPalette();
+    });
+    emoteEl.appendChild(moreBtn);
 
     const hudDiff = $('hud-diff');
     if (hudDiff) {
@@ -1654,6 +1708,24 @@
       }
       return;
     }
+    if ($('modal-speech-palette')?.classList.contains('active')) {
+      if (e.code === 'Escape' || e.code === 'KeyC' || e.code === 'KeyT') {
+        e.preventDefault();
+        closeSpeechPalette();
+      }
+      return;
+    }
+    if (Engine.isRunning()) {
+      if (e.code === 'KeyC' || e.code === 'KeyT') {
+        e.preventDefault();
+        openSpeechPalette();
+        return;
+      }
+      if (e.code === 'Digit1') { Engine.sendEmote('special'); return; }
+      if (e.code === 'Digit2') { Engine.sendEmote('kurwa'); return; }
+      if (e.code === 'Digit3') { Engine.sendEmote('nice'); return; }
+      if (e.code === 'Digit4') { Engine.sendEmote('help'); return; }
+    }
     if (e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
       if (Engine.isRunning()) {
         e.preventDefault();
@@ -1786,6 +1858,17 @@
   });
   $('modal-gift')?.addEventListener('click', (e) => {
     if (e.target === $('modal-gift')) closeGiftModal();
+  });
+  $('btn-close-speech')?.addEventListener('click', () => {
+    Audio.playSfx('click');
+    closeSpeechPalette();
+  });
+  $('btn-close-speech-x')?.addEventListener('click', () => {
+    Audio.playSfx('click');
+    closeSpeechPalette();
+  });
+  $('modal-speech-palette')?.addEventListener('click', (e) => {
+    if (e.target === $('modal-speech-palette')) closeSpeechPalette();
   });
   $('btn-redeem-code')?.addEventListener('click', handleRedeemGiftCode);
   $('input-gift-code')?.addEventListener('keydown', (e) => {

@@ -11,7 +11,9 @@ window.PBData = (() => {
       unlockCost: 0,
       stats: { maxHp: 110, speed: 195, might: 1.0, cooldown: 1.0, area: 1.0, amount: 0, armor: 0, regen: 0.15, magnet: 85, xpMult: 1.15 },
       passiveDesc: '経験値 +15% / 移動速度 +5%',
-      badgeColor: '#dc143c'
+      badgeColor: '#dc143c',
+      special: '🚀 Poland can into space!!',
+      levelQuotes: ['🚀 レベルアップ！宇宙へ一歩前進！', '💥 Kurwa!! 負けないぞ！', '🥟 ピエロギパワー全開！']
     },
     {
       id: 'japan',
@@ -23,7 +25,9 @@ window.PBData = (() => {
       unlockCost: 0,
       stats: { maxHp: 100, speed: 200, might: 1.05, cooldown: 0.88, area: 1.0, amount: 0, armor: 0, regen: 0.1, magnet: 80, xpMult: 1.0 },
       passiveDesc: '攻撃クールダウン -12% / 攻撃力 +5%',
-      badgeColor: '#bc002d'
+      badgeColor: '#bc002d',
+      special: '🌸 我が名は日出づる国！',
+      levelQuotes: ['🌸 腕が上がったでござる！', '🍣 スシ＆カタナの真髄！', '⚡ 一閃！敵を討つ！']
     },
     {
       id: 'usa',
@@ -35,7 +39,9 @@ window.PBData = (() => {
       unlockCost: 0,
       stats: { maxHp: 120, speed: 185, might: 1.0, cooldown: 1.0, area: 1.05, amount: 1, armor: 0, regen: 0, magnet: 80, xpMult: 1.0 },
       passiveDesc: '全武器の発射数 +1 / 最大HP +20',
-      badgeColor: '#1d4ed8'
+      badgeColor: '#1d4ed8',
+      special: '🦅 Freedom & Democracy!!',
+      levelQuotes: ['🦅 自由度がアップしたぜ！', '💥 全弾発射！ファイヤー！', '🛢️ 石油の匂いがするぜ！']
     },
     {
       id: 'uk',
@@ -47,7 +53,9 @@ window.PBData = (() => {
       unlockCost: 0,
       stats: { maxHp: 105, speed: 190, might: 1.0, cooldown: 0.96, area: 1.2, amount: 0, armor: 1, regen: 0.1, magnet: 90, xpMult: 1.0 },
       passiveDesc: '攻撃範囲 +20% / アーマー +1',
-      badgeColor: '#1e3a8a'
+      badgeColor: '#1e3a8a',
+      special: '☕ More tea, please!',
+      levelQuotes: ['☕ どんな修羅場でもティータイム。', '🎩 英国紳士の嗜みです。', '🫖 アフタヌーン・ストーム！']
     },
     {
       id: 'france',
@@ -59,7 +67,9 @@ window.PBData = (() => {
       unlockCost: 0,
       stats: { maxHp: 125, speed: 192, might: 1.0, cooldown: 1.0, area: 1.0, amount: 0, armor: 0, regen: 0.7, magnet: 85, xpMult: 1.0 },
       passiveDesc: 'HP自然回復 +0.7/秒 / 最大HP +25',
-      badgeColor: '#2563eb'
+      badgeColor: '#2563eb',
+      special: '🥖 C\'est magnifique! バゲット！',
+      levelQuotes: ['🥖 超硬質バゲットを食らえ！', '🍷 トレビアン！芸術的だ！', '🥐 クロワッサン補給完了！']
     },
     {
       id: 'germany',
@@ -71,7 +81,9 @@ window.PBData = (() => {
       unlockCost: 0,
       stats: { maxHp: 130, speed: 186, might: 1.12, cooldown: 0.95, area: 1.0, amount: 0, armor: 2, regen: 0.1, magnet: 80, xpMult: 1.0 },
       passiveDesc: 'アーマー +2 / 攻撃力 +12%',
-      badgeColor: '#ca8a04'
+      badgeColor: '#ca8a04',
+      special: '⚙️ 効率的（Effizient）に粉砕する！',
+      levelQuotes: ['⚙️ Arbeit! 働け！効率向上！', '⚡ アウトバーン全開だ！', '🌭 完璧なビール＆ソーセージ！']
     },
     {
       id: 'italy',
@@ -83,7 +95,9 @@ window.PBData = (() => {
       unlockCost: 0,
       stats: { maxHp: 112, speed: 206, might: 1.04, cooldown: 0.96, area: 1.15, amount: 0, armor: 0, regen: 0.45, magnet: 90, xpMult: 1.05 },
       passiveDesc: '攻撃範囲 +15% / 移動速度 +8% / HP回復 +0.45/秒',
-      badgeColor: '#16a34a'
+      badgeColor: '#16a34a',
+      special: '🍕 Mamma Mia! ピッツァパワー！',
+      levelQuotes: ['🍕 マンマ・ミーア！うますぎる！', '🍝 パスタが茹で上がったぜ！', '🛵 チャオ！追いつけるかい？']
     },
     {
       id: 'russia',
@@ -95,7 +109,9 @@ window.PBData = (() => {
       unlockCost: 0,
       stats: { maxHp: 155, speed: 176, might: 1.15, cooldown: 0.98, area: 1.1, amount: 0, armor: 2, regen: 0.25, magnet: 85, xpMult: 1.0 },
       passiveDesc: '最大HP +55 / 攻撃力 +15% / アーマー +2',
-      badgeColor: '#1d4ed8'
+      badgeColor: '#1d4ed8',
+      special: '🐻 シベリア送りにしてやる！',
+      levelQuotes: ['🐻 冬将軍の目覚めだ！', '❄️ 極寒のブリザードを浴びよ！', '🥣 ボルシチで力が湧いてきた！']
     },
     {
       id: 'spain',
@@ -107,7 +123,9 @@ window.PBData = (() => {
       unlockCost: 0,
       stats: { maxHp: 118, speed: 204, might: 1.08, cooldown: 0.94, area: 1.08, amount: 0, armor: 1, regen: 0.25, magnet: 90, xpMult: 1.05 },
       passiveDesc: '攻撃力 +8% / 移動速度 +7% / CD -6%',
-      badgeColor: '#aa151b'
+      badgeColor: '#aa151b',
+      special: '💃 情熱のオレ！シエスタは後だ！',
+      levelQuotes: ['💃 ¡Olé! 情熱のステップ！', '🐂 闘牛士の華麗なる舞！', '🥘 パエリア食って気合十分！']
     },
     {
       id: 'sweden',
@@ -119,7 +137,9 @@ window.PBData = (() => {
       unlockCost: 300,
       stats: { maxHp: 120, speed: 196, might: 1.08, cooldown: 0.86, area: 1.16, amount: 0, armor: 1, regen: 0.2, magnet: 95, xpMult: 1.05 },
       passiveDesc: '攻撃クールダウン -14% / 攻撃範囲 +16%',
-      badgeColor: '#0284c7'
+      badgeColor: '#0284c7',
+      special: '🇸🇪 IKEA家具のように分解する！',
+      levelQuotes: ['🇸🇪 北欧の六角レンチパワー！', '⚡ 雷神の怒りを見よ！', '🧆 ミートボールうまい！']
     },
     {
       id: 'spqr',
@@ -131,7 +151,9 @@ window.PBData = (() => {
       unlockCost: 380,
       stats: { maxHp: 150, speed: 188, might: 1.18, cooldown: 0.96, area: 1.1, amount: 0, armor: 2, regen: 0.2, magnet: 85, xpMult: 1.0 },
       passiveDesc: '最大HP +50 / 攻撃力 +18% / アーマー +2',
-      badgeColor: '#991b1b'
+      badgeColor: '#991b1b',
+      special: '🏛️ 来た、見た、勝った！（Veni vidi vici）',
+      levelQuotes: ['🏛️ ローマは不滅だ！', '🔱 レギオン前進！粉砕せよ！', '👑 カエサルの栄光あれ！']
     },
     {
       id: 'nepal',
@@ -143,7 +165,9 @@ window.PBData = (() => {
       unlockCost: 500,
       stats: { maxHp: 115, speed: 222, might: 1.12, cooldown: 0.92, area: 1.12, amount: 0, armor: 0, regen: 0.2, magnet: 95, xpMult: 1.05 },
       passiveDesc: '移動速度 +18% / 攻撃範囲 +12%',
-      badgeColor: '#be123c'
+      badgeColor: '#be123c',
+      special: '🇳🇵 ギザギザ咆哮！グルカ魂！',
+      levelQuotes: ['🇳🇵 ガオー！食いちぎるぞ！', '📢 エベレストの大雪崩！', '🏔️ ヒマラヤの頂に立つ！']
     },
     {
       id: 'singapore',
@@ -155,7 +179,9 @@ window.PBData = (() => {
       unlockCost: 580,
       stats: { maxHp: 102, speed: 226, might: 1.08, cooldown: 0.89, area: 1.05, amount: 0, armor: 0, regen: 0.15, magnet: 115, xpMult: 1.22 },
       passiveDesc: '移動速度 +20% / 経験値 +22% / CD -11%',
-      badgeColor: '#e11d48'
+      badgeColor: '#e11d48',
+      special: '🇸🇬 ファイン・シティの掟を守れ！',
+      levelQuotes: ['🇸🇬 ポイ捨て厳禁！罰金だ！', '🦁 マーライオン水流砲！', '🔺 三角形の規律！']
     },
     {
       id: 'portugal',
@@ -167,7 +193,9 @@ window.PBData = (() => {
       unlockCost: 640,
       stats: { maxHp: 128, speed: 202, might: 1.12, cooldown: 0.92, area: 1.12, amount: 0, armor: 1, regen: 0.3, magnet: 105, xpMult: 1.12 },
       passiveDesc: '攻撃力 +12% / 攻撃範囲 +12% / 経験値 +12%',
-      badgeColor: '#047857'
+      badgeColor: '#047857',
+      special: '🚢 大航海時代、ふたたび出航！',
+      levelQuotes: ['🚢 帆を上げろ！新大陸発見！', '🧭 羅針盤が勝利を指している！', '🌊 荒波を乗り越えろ！']
     },
     {
       id: 'israel',
@@ -179,7 +207,9 @@ window.PBData = (() => {
       unlockCost: 700,
       stats: { maxHp: 105, speed: 198, might: 1.1, cooldown: 0.9, area: 1.05, amount: 0, armor: 1, regen: 0.15, magnet: 145, xpMult: 1.15 },
       passiveDesc: '回収範囲 +70% / 経験値 +15% / CD -10%',
-      badgeColor: '#0284c7'
+      badgeColor: '#0284c7',
+      special: '🔺 四次元ハイパー物理学の勝利！',
+      levelQuotes: ['🔺 超立方体物理演算完了！', '🛰️ 軌道レーザー照射！', '🧠 科学力で圧倒する！']
     },
     {
       id: 'switzerland',
@@ -191,7 +221,9 @@ window.PBData = (() => {
       unlockCost: 850,
       stats: { maxHp: 145, speed: 190, might: 1.08, cooldown: 0.94, area: 1.15, amount: 0, armor: 3, regen: 1.6, magnet: 95, xpMult: 1.05 },
       passiveDesc: 'HP自然回復 +1.6/秒 / アーマー +3 / 最大HP +45',
-      badgeColor: '#dc2626'
+      badgeColor: '#dc2626',
+      special: '🇨🇭 永世中立だが自衛は容赦しない！',
+      levelQuotes: ['🇨🇭 領空侵犯は即撃墜だ！', '🧀 アルプスチーズの盾！', '⌚ 狂いなき時計仕掛けの迎撃！']
     }
   ];
 
@@ -1667,10 +1699,26 @@ window.PBData = (() => {
   ];
 
   const EMOTES = [
-    { id: 'help', label: '助けろ！', icon: '🆘' },
+    { id: 'special', label: '固有セリフ', icon: '⭐', isSpecial: true },
+    { id: 'kurwa', label: 'Kurwa!', icon: '💥' },
+    { id: 'space', label: '宇宙へ！', icon: '🚀' },
     { id: 'nice', label: 'ナイス！', icon: '👍' },
+    { id: 'thanks', label: 'ありがとう！', icon: '🙏' },
+    { id: 'sorry', label: 'ごめん！', icon: '💦' },
+    { id: 'help', label: '助けて！', icon: '🆘' },
     { id: 'gather', label: '集合！', icon: '🤝' },
-    { id: 'space', label: '宇宙へ！', icon: '🚀' }
+    { id: 'charge', label: '突撃ー！', icon: '⚔️' },
+    { id: 'boss', label: 'ボス狙え！', icon: '🎯' },
+    { id: 'heal', label: '回復くれ！', icon: '🍲' },
+    { id: 'leave_it', label: 'まかせろ！', icon: '💪' },
+    { id: 'oh_no', label: 'ヤバい！', icon: '😱' },
+    { id: 'victory', label: '勝ったー！', icon: '🏆' },
+    { id: 'freedom', label: 'Freedom!!', icon: '🗽' },
+    { id: 'tea', label: '紅茶の時間だ', icon: '☕' },
+    { id: 'nippon', label: '大和魂！', icon: '🌸' },
+    { id: 'arbeit', label: '仕事（Arbeit）だ', icon: '⚙️' },
+    { id: 'baguette', label: 'パン食らえ！', icon: '🥖' },
+    { id: 'pasta', label: 'マンマミーア！', icon: '🍕' }
   ];
 
   const HEAL_ITEMS = [

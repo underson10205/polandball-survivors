@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ポーランドボール・サバイバーズ | 2〜3人協力対応 ヴァンサバアクション</title>
   <meta name="description" content="ポーランドボールたちが各国ネタ武器＆進化で敵軍団をなぎ倒すヴァンサバライクアクション！PC・タブレット・スマホ最大3台でのオンライン協力プレイ対応。" />
-  <link rel="stylesheet" href="styles.css?v=39" />
+  <link rel="stylesheet" href="styles.css?v=40" />
 </head>
 <body>
   <canvas id="game-canvas"></canvas>
@@ -444,6 +444,24 @@
     </div>
   </div>
 
+  <!-- === MODAL: SPEECH PALETTE === -->
+  <div id="modal-speech-palette" class="modal-backdrop">
+    <div class="modal-card" style="max-width:540px;text-align:center;position:relative;">
+      <button id="btn-close-speech-x" class="modal-close-corner" title="閉じる" aria-label="閉じる">✕</button>
+      <div style="font-size:2.2rem;line-height:1;margin-bottom:6px;">💬</div>
+      <div style="font-size:1.4rem;font-weight:900;color:var(--ink);margin-bottom:2px;">プレイヤーのセリフ一覧</div>
+      <div style="font-size:0.84rem;font-weight:800;color:#64748b;margin-bottom:12px;">
+        タップするとキャラクターが吹き出しで喋ります！（ソロ・協力プレイ共通）
+      </div>
+
+      <div id="speech-palette-grid" class="speech-grid"></div>
+
+      <div style="margin-top:14px;">
+        <button id="btn-close-speech" class="btn btn-sm" style="min-width:120px;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
 
   <!-- Local Bundled Libraries (No external CDN dependency!) -->
@@ -451,12 +469,12 @@
   <script src="lib/qrcode.min.js"></script>
 
   <!-- Game Modules -->
-  <script src="js/data.js?v=39"></script>
-  <script src="js/polandballRenderer.js?v=39"></script>
-  <script src="js/audio.js?v=39"></script>
-  <script src="js/storage.js?v=39"></script>
-  <script src="js/network.js?v=39"></script>
-  <script src="js/engine.js?v=39"></script>
-  <script src="js/main.js?v=39"></script>
+  <script src="js/data.js?v=40"></script>
+  <script src="js/polandballRenderer.js?v=40"></script>
+  <script src="js/audio.js?v=40"></script>
+  <script src="js/storage.js?v=40"></script>
+  <script src="js/network.js?v=40"></script>
+  <script src="js/engine.js?v=40"></script>
+  <script src="js/main.js?v=40"></script>
 </body>
 </html>

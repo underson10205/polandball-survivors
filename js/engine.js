@@ -431,19 +431,66 @@ window.PBEngine = (() => {
     localInput.dash = true;
   }
 
-  function sendEmote(emoteId) {
-    if (!state || !state.running) return;
-    const def = Data.EMOTES.find(e => e.id === emoteId);
-    if (!def) return;
-    const text = `${def.icon} ${def.label}`;
+  function getMyCharId() {
+    if (!state || !state.running) return null;
     const me = getPlayerByPid(state.myPid);
-    if (me) { me.emote = text; me.emoteTimer = 2.6; }
+    return me ? me.charId : null;
+  }
+
+  function sendEmote(emoteId, customText = null) {
+    if (!state || !state.running) return;
+    const me = getPlayerByPid(state.myPid);
+    let text = customText;
+    if (!text) {
+      if (emoteId === 'special') {
+        const charDef = me ? Data.CHARACTERS.find(c => c.id === me.charId) : null;
+        text = charDef ? charDef.special : '🚀 Poland can into space!!';
+      } else {
+        const def = Data.EMOTES.find(e => e.id === emoteId);
+        if (!def) return;
+        text = `${def.icon} ${def.label}`;
+      }
+    }
+    if (me) {
+      me.emote = text;
+      me.emoteTimer = 2.8;
+      me.lastAutoSpeechTime = state.time;
+    }
     Audio.playSfx('emote');
 
     if (state.mode === 'coop_guest') {
       Net.send('emote', { text });
     } else if (state.mode === 'coop_host') {
       Net.send('emote', { pid: state.myPid, text });
+    }
+  }
+
+  function triggerPlayerAutoSpeech(p, eventType) {
+    if (!state || !state.running || !p || p.dead) return;
+    if (p.emote && p.emoteTimer > 0.8) return;
+    if (state.time - (p.lastAutoSpeechTime || 0) < 5.5) return;
+    const charDef = Data.CHARACTERS.find(c => c.id === p.charId);
+    let pool = [];
+    if (eventType === 'levelup') {
+      pool = charDef?.levelQuotes || ['⚡ レベルアップ！強くなった！', '✨ 力がみなぎる！', charDef?.special];
+    } else if (eventType === 'evolve') {
+      pool = ['🌟 武器進化！究極奥義！', '✨ 真の力が覚醒した！', charDef?.special];
+    } else if (eventType === 'lowhp') {
+      pool = ['😱 Kurwa! 死ぬ！', '🆘 助けて！HPがヤバい！', '💦 メディックー！'];
+    } else if (eventType === 'boss_kill') {
+      pool = ['🏆 ボス撃破！ざまあみろ！', '🎉 我らの勝利だ！', charDef?.special];
+    } else if (eventType === 'food') {
+      pool = ['😋 うまい！回復した！', '🍲 ごちそうさま！', '✨ 生き返った！'];
+    }
+    pool = (pool || []).filter(Boolean);
+    if (!pool.length) return;
+    const text = pool[Math.floor(Math.random() * pool.length)];
+    p.emote = text;
+    p.emoteTimer = 2.5;
+    p.lastAutoSpeechTime = state.time;
+    if (p.pid === state.myPid) {
+      if (state.mode === 'coop_guest') Net.send('emote', { text });
+      else if (state.mode === 'coop_host') Net.send('emote', { pid: state.myPid, text });
     }
   }
 
@@ -1673,6 +1720,10 @@ window.PBEngine = (() => {
     addFloatingText(p.x, p.y - 24, `-${dmg}`, '#fb7185', false);
     if (state.mode === 'coop_host') broadcastFx({ sfx: 'hurt', shake: 5 });
 
+    if (p.hp > 0 && p.hp < p.maxHp * 0.28) {
+      triggerPlayerAutoSpeech(p, 'lowhp');
+    }
+
     if (p.hp <= 0) {
       if (p.revivesLeft > 0) {
         p.revivesLeft--;
@@ -1760,6 +1811,10 @@ window.PBEngine = (() => {
 
     spawnBurst(e.x, e.y, e.isBoss ? '#facc15' : '#f8fafc', e.isBoss ? 32 : 7);
     Audio.playSfx(e.isBoss ? 'explosion' : 'kill');
+    if (e.isBoss) {
+      const me = getPlayerByPid(state.myPid);
+      if (me) triggerPlayerAutoSpeech(me, 'boss_kill');
+    }
 
     // Drop XP gem
     state.pickups.push({
@@ -2132,6 +2187,7 @@ window.PBEngine = (() => {
       state.coinsEarned += bonus;
       Audio.playSfx('coin');
     } else if (pk.kind === 'heal') {
+      triggerPlayerAutoSpeech(collector, 'food');
       const hDef = (Data.HEAL_ITEMS && Data.HEAL_ITEMS[pk.tier || 0]) || { tier: 0, heal: 35, floatText: '🥟 +35 HP', floatCol: '#4ade80' };
       const healAmt = pk.val || hDef.heal;
       for (const p of state.players) {
@@ -2403,6 +2459,7 @@ window.PBEngine = (() => {
         if (state.evolvedCount >= 3) tryUnlockAch('three_evolves');
         spawnBurst(p.x, p.y, '#fde047', 26);
         addFloatingText(p.x, p.y - 36, `★ ${Data.WEAPONS[w.id].evolvedName}!`, '#fde047', true);
+        triggerPlayerAutoSpeech(p, 'evolve');
       }
     } else if (choice.kind === 'weapon') {
       const existing = p.weapons.find(x => x.id === choice.id);
@@ -2410,6 +2467,7 @@ window.PBEngine = (() => {
       else p.weapons.push({ id: choice.id, level: 1, evolved: false, cd: 0.2, damageDealt: 0 });
       Storage.recordWeaponSeen(choice.id, false);
       Audio.playSfx('click');
+      triggerPlayerAutoSpeech(p, 'levelup');
     } else if (choice.kind === 'passive') {
       p.passives[choice.id] = Math.min(Data.PASSIVES[choice.id].maxLevel, (p.passives[choice.id] || 0) + 1);
       if (choice.id === 'burger') {
@@ -2417,6 +2475,7 @@ window.PBEngine = (() => {
         p.hp = Math.min(p.maxHp, p.hp + 25);
       }
       Audio.playSfx('click');
+      triggerPlayerAutoSpeech(p, 'levelup');
     } else if (choice.kind === 'heal_bonus') {
       const healAmt = choice.heal || 50;
       p.hp = Math.min(p.maxHp, p.hp + healAmt);
@@ -2424,6 +2483,7 @@ window.PBEngine = (() => {
       if (choice.speedBoost) p.speedBoostTimer = Math.max(p.speedBoostTimer || 0, choice.speedBoost);
       Audio.playSfx(choice.invuln >= 3 ? 'levelup' : 'revive');
       addFloatingText(p.x, p.y - 28, `${choice.icon} +${healAmt} HP`, '#4ade80', true);
+      triggerPlayerAutoSpeech(p, 'food');
     } else if (choice.kind === 'coin_bonus') {
       const diffMult = state.difficulty?.coinMult ?? 1.0;
       state.coinsEarned += Math.max(1, Math.round(15 * diffMult));
@@ -3480,20 +3540,35 @@ window.PBEngine = (() => {
       // Speech Bubble Emote!
       if (p.emote) {
         ctx.save();
-        ctx.font = '800 13px "M PLUS Rounded 1c", sans-serif';
-        const tw = ctx.measureText(p.emote).width + 18;
+        ctx.font = '900 13px "M PLUS Rounded 1c", sans-serif';
+        const tw = Math.max(48, ctx.measureText(p.emote).width + 18);
+        const bh = 25;
         const bx = p.x - tw / 2;
-        const by = p.y - p.radius * 2.5 - 26;
+        const by = p.y - p.radius - bh - 10;
         ctx.fillStyle = '#fffdf7';
-        ctx.strokeStyle = '#1a1d26';
-        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2.4;
         ctx.beginPath();
-        ctx.roundRect(bx, by, tw, 26, 10);
+        ctx.roundRect(bx, by, tw, bh, 8);
         ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#1a1d26';
+
+        // Down-pointing comic tail
+        const tailTop = by + bh - 0.5;
+        const tailTipX = p.x;
+        const tailTipY = p.y - p.radius - 2;
+        ctx.beginPath();
+        ctx.moveTo(p.x - 5, tailTop);
+        ctx.lineTo(tailTipX, tailTipY);
+        ctx.lineTo(p.x + 5, tailTop);
+        ctx.closePath();
+        ctx.fillStyle = '#fffdf7';
+        ctx.fill(); ctx.stroke();
+        ctx.fillRect(p.x - 4, tailTop - 1.5, 8, 2.5);
+
+        ctx.fillStyle = '#0f172a';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(p.emote, p.x, by + 13);
+        ctx.fillText(p.emote, p.x, by + bh / 2 + 0.5);
         ctx.restore();
       }
     }
@@ -3900,6 +3975,8 @@ window.PBEngine = (() => {
     setLocalInput,
     triggerDash,
     sendEmote,
+    triggerPlayerAutoSpeech,
+    getMyCharId,
     pickLocalUpgrade,
     closeBossChest,
     continueEndless,
